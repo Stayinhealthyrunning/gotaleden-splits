@@ -3,104 +3,95 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0d5964">
   <title>Gotaleden Splits</title>
-  <meta name="description" content="Analysverktyg för Gotaleden Stafett & Ultra. Individuellt 75/35 och Stafett 75/35.">
+  <meta name="description" content="Resultat, passeringar och stafettanalys för Gotaleden Stafett & Ultra 2026.">
   <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
   <header class="hero">
-    <div class="hero__veil"></div>
-    <div class="hero__content">
+    <div class="hero__inner">
       <p class="eyebrow">GÖTEBORG · FLODA · ALINGSÅS</p>
-      <h1>Gotaleden Splits</h1>
-      <p class="lead">Analysera premiäråret längs vårskog, vitsippor och blå sjöar.</p>
-      <div class="route-line" aria-label="Banans orter">
-        Göteborg <span>—</span> Skatås <span>—</span> Kåsjön <span>—</span> Jonsered <span>—</span>
-        Lerum <span>—</span> Floda <span>—</span> Tollered <span>—</span> Norsesund <span>—</span>
-        Västra Bodarna <span>—</span> Alingsås
-      </div>
+      <h1>Gotaleden <em>Splits</em></h1>
+      <p class="lead">Premiäråret 2026, från måltid till varje officiell passering.</p>
+      <p class="route-line">Göteborg <i></i> Skatås <i></i> Kåsjön <i></i> Jonsered <i></i> Lerum <i></i> Floda <i></i> Tollered <i></i> Norsesund <i></i> Västra Bodarna <i></i> Alingsås</p>
     </div>
   </header>
 
   <main>
-    <section class="race-switcher" aria-label="Välj lopp">
-      <button data-race="individual-75-2026" class="active">Individuellt 75</button>
+    <nav class="race-switcher" aria-label="Välj lopp">
+      <button data-race="individual-75-2026">Individuellt 75</button>
       <button data-race="individual-35-2026">Individuellt 35</button>
       <button data-race="relay-75-2026">Stafett 75</button>
       <button data-race="relay-35-2026">Stafett 35</button>
+    </nav>
+
+    <section class="intro panel">
+      <div><p class="eyebrow dark">GOTALEDEN STAFETT & ULTRA · 9 MAJ 2026</p><h2 id="race-title">Laddar…</h2><p id="race-subtitle"></p></div>
+      <a class="source-link" href="https://live.eqtiming.com/77906" rel="noreferrer">Officiella resultat ↗</a>
     </section>
 
-    <section class="summary-grid">
-      <article class="card">
-        <span class="label">Deltagare / lag</span>
-        <strong id="record-count">–</strong>
+    <section class="kpis" id="kpis" aria-label="Nyckeltal"></section>
+
+    <section class="dashboard-grid">
+      <article class="panel chart-panel">
+        <div class="section-heading"><div><p class="eyebrow dark">MÅLGÅNG</p><h2>Tidsfördelning</h2></div><span class="hint">Fullföljande</span></div>
+        <div id="finish-chart" class="chart" aria-label="Histogram över måltider"></div>
       </article>
-      <article class="card">
-        <span class="label">Fullföljde</span>
-        <strong id="finished-count">–</strong>
-      </article>
-      <article class="card">
-        <span class="label">GPX-distans</span>
-        <strong id="gpx-distance">–</strong>
-      </article>
-      <article class="card">
-        <span class="label">Datastatus</span>
-        <strong class="small">Målresultat importerade</strong>
+      <article class="panel chart-panel">
+        <div class="section-heading"><div><p class="eyebrow dark">STARTFÄLT</p><h2>Klassfördelning</h2></div></div>
+        <div id="class-chart" class="chart" aria-label="Fördelning per klass"></div>
       </article>
     </section>
 
-    <section class="panel">
-      <div>
-        <p class="eyebrow dark">PREMIÄRÅRET 2026</p>
-        <h2 id="race-title">Individuellt 75</h2>
-        <p id="race-note">
-          Grunddatabasen är importerad. Nästa datasteg är fulla mellantider från EQ Timings publika resultatdata.
-        </p>
+    <section class="panel split-panel">
+      <div class="section-heading">
+        <div><p class="eyebrow dark">PASSERINGSANALYS</p><h2>Fart längs banan</h2><p>Medianfart per delsträcka baserad enbart på publicerade passeringar.</p></div>
+        <span class="data-chip" id="split-coverage"></span>
       </div>
-      <div class="data-badge">607 poster totalt · 4 lopp</div>
+      <div id="pace-chart" class="chart wide"></div>
     </section>
 
-    <section class="panel table-panel">
-      <div class="panel-heading">
-        <div>
-          <p class="eyebrow dark">RESULTATGRUND</p>
-          <h2>Första resultaten</h2>
+    <section class="panel relay-only" id="relay-insights" hidden>
+      <div class="section-heading"><div><p class="eyebrow dark">STAFETT</p><h2>Lag och etappbelastning</h2></div></div>
+      <div id="relay-stats" class="relay-stats"></div>
+    </section>
+
+    <section class="panel results-panel">
+      <div class="section-heading results-heading">
+        <div><p class="eyebrow dark">RESULTAT</p><h2>Sök och utforska</h2><p>Klicka på en rad för komplett deltagar- eller lagvy.</p></div>
+        <div class="filters">
+          <input id="search" type="search" placeholder="Namn, lag, klubb eller startnummer" aria-label="Sök resultat">
+          <select id="class-filter" aria-label="Filtrera klass"><option value="">Alla klasser</option></select>
+          <select id="status-filter" aria-label="Filtrera status"><option value="">Alla statusar</option><option>FINISHED</option><option>DNF</option><option>DNS</option><option>DSQ</option></select>
         </div>
-        <input id="search" type="search" placeholder="Sök namn, lag eller startnummer">
       </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Plats</th>
-              <th>Namn / lag</th>
-              <th>Klass</th>
-              <th>Tid</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="results-body"></tbody>
-        </table>
-      </div>
-      <p class="footnote">Denna första version visar målresultat. Mellantider importeras när EQ Timings publika splitdata har kartlagts.</p>
+      <div class="table-wrap"><table><thead><tr>
+        <th><button data-sort="overall_place">Plats</button></th><th><button data-sort="name">Namn / lag</button></th>
+        <th><button data-sort="class_name">Klass</button></th><th><button data-sort="finish_seconds">Tid</button></th>
+        <th>Status</th><th><span class="sr-only">Jämför</span></th>
+      </tr></thead><tbody id="results-body"></tbody></table></div>
+      <div class="table-footer"><span id="result-count"></span><button class="ghost" id="show-more">Visa fler</button></div>
     </section>
 
-    <section class="panel route-panel">
-      <div>
-        <p class="eyebrow dark">BANAN</p>
-        <h2>En gemensam officiell GPX</h2>
-        <p>Alla fyra lopp använder samma rutt. 35 km-vyerna startar i Floda på närmaste punkt till 57.80629, 12.35532.</p>
-      </div>
-      <div class="route-stats">
-        <span>Hela GPX-rutten <strong id="full-route-distance">–</strong></span>
-        <span>Floda–Alingsås <strong id="short-route-distance">–</strong></span>
-      </div>
+    <section class="panel comparison-panel">
+      <div class="section-heading"><div><p class="eyebrow dark">JÄMFÖR</p><h2>Upp till fem på samma bana</h2><p>Välj med + i resultatlistan. Kurvorna visar officiell ackumulerad tid.</p></div><button class="ghost" id="clear-comparison">Rensa</button></div>
+      <div id="comparison-empty" class="empty">Välj deltagare eller lag för att jämföra passeringar.</div>
+      <div id="comparison-chart" class="chart wide"></div>
+    </section>
+
+    <section class="panel replay-panel">
+      <div class="section-heading"><div><p class="eyebrow dark">BANREPLAY</p><h2>Följ loppet på GPX-rutten</h2><p>Position mellan officiella passeringar är en tydligt markerad linjär uppskattning.</p></div><span class="data-chip">GPX + officiella tider</span></div>
+      <div class="replay-canvas-wrap"><canvas id="replay-canvas" width="1100" height="360"></canvas></div>
+      <div class="replay-controls"><button id="replay-toggle">▶ Spela</button><input id="replay-time" type="range" min="0" max="1000" value="0"><output id="replay-clock">0:00:00</output></div>
     </section>
   </main>
 
-  <footer>
-    Gotaleden Splits · Fristående analysprojekt · Källdata: EQ Timing och officiell GPX
-  </footer>
+  <dialog id="detail-dialog"><button class="dialog-close" aria-label="Stäng">×</button><div id="detail-content"></div></dialog>
+  <footer>Gotaleden Splits · Fristående analys · Officiell data från EQ Timing · Banans geometri från officiell GPX</footer>
+  <script src="assets/data-index.js"></script>
+  <script src="assets/charts.js"></script>
+  <script src="assets/replay.js"></script>
   <script src="assets/app.js"></script>
 </body>
 </html>

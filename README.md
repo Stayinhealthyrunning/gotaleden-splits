@@ -1,71 +1,51 @@
 # Gotaleden Splits
 
-Fristående analysverktyg för **Gotaleden Stafett & Ultra**.
+Fristående analysverktyg för **Gotaleden Stafett & Ultra 2026**. Webbplatsen har fyra separata
+lägen: Individuellt 75, Individuellt 35, Stafett 75 och Stafett 35.
 
-## Fyra sektioner
+## Datakällor
 
-- Individuellt 75
-- Individuellt 35
-- Stafett 75
-- Stafett 35
+- Officiell kombinerad EQ Timing-resultatlista: 607 deltagare och lag.
+- EQ Timings publika contestant-endpoint: 4 059 faktiska passeringar efter att nollvärda
+  DNS-/kontrollplatshållare filtrerats bort.
+- Officiell XML-startlista: verifierad etapp–löpare-koppling för stafetter.
+- `data/source/gpx/Gotaleden_Ultra_75km-30april.gpx`: enda geometrikälla för banan.
 
-Projektet återanvänder arkitekturprinciper från Ultravasan Analys men har egen datamodell för stafettlag och egen grafisk identitet.
+Alla råfält bevaras i SQLite `raw_json`. Webbfilen är avsiktligt kompakt. Saknade passeringar och
+löparkopplingar förblir saknade; inga tider eller relationer fabriceras. Nolhaga är en officiell
+tidtagningspunkt men inte en stafettväxling.
 
-## Data som ingår i denna första grund
+## Bygg och uppdatera
 
-Officiella EQ Timing-exporter från premiäråret 2026:
-
-| Sektion | EQ Timing-lopp | Poster |
-|---|---|---:|
-| Individuellt 75 | Ultra 75 km | 274 |
-| Individuellt 35 | Sprint 35 km | 163 |
-| Stafett 75 | Stafett 75 km | 121 |
-| Stafett 35 | Stafett 35 km | 49 |
-
-Alla originalkolumner bevaras. De aktuella CSV-filerna innehåller endast målpassagen, så mellanpassager måste kompletteras från EQ Timings publika resultattjänst/API.
-
-## Bana
-
-`data/source/gpx/Gotaleden_Ultra_75km-30april.gpx` är enda source of truth för banans geometri.
-
-35 km-loppen använder samma rutt från Floda, cirka `57.80629, 12.35532`.
-
-Byggscriptet hittar närmaste GPX-punkt automatiskt och skapar `docs/data/route.json`.
-
-## Bygg data
+Den publika snapshoten finns incheckad för reproducerbara byggen. En ny snapshot hämtas uttryckligen:
 
 ```bash
+python tools/fetch_eqtiming_public.py --refresh
 python tools/build_project_data.py
 ```
 
-Det skapar:
+Bygget skapar SQLite-databasen, kompakt webbdata under `docs/data/` och diagnostik under `reports/`.
 
-- `data/gotaleden.sqlite`
-- `docs/data/results-2026.json`
-- `docs/data/route.json`
-- `reports/import-summary-2026.json`
-- `reports/eqtiming-files-analysis.json`
-- `reports/relay-member-import-report.json`
-- `reports/eqtiming-missing-data.json`
+## Analyswebb
 
-Bygget använder den officiella, kombinerade resultatfilen som primär resultatkälla och XML-startlistans
-kodade stafettposter som källa för verifierad etapp–löpare-mappning. Originalfilerna under
-`data/source/eqtiming/` läses endast och bevaras byte-för-byte.
+Den statiska GitHub Pages-sidan i `docs/` innehåller:
+
+- måltids- och klassfördelning;
+- medianfart per delsträcka;
+- sökbara och sorterbara resultat;
+- individ- och lagdetaljer med officiella passeringar;
+- stafettbelastning och verifierade etappkopplingar;
+- jämförelse av upp till fem deltagare eller lag;
+- GPX-replay med tydligt märkt uppskattning mellan officiella passeringar.
+
+Frontendens uppdelning i dataindex, diagram, replay och vylogik följer mogna arkitekturidéer från
+Ultravasan Analys, men implementation, datamodell och visuell identitet är Gotaledens egna.
 
 ## Tester
 
 ```bash
-python -m unittest discover -s tests
+python -m unittest discover -s tests -v
 ```
 
-## Webbplats
-
-Statisk webbplats finns i `docs/` och är förberedd för GitHub Pages.
-
-Designriktning: Gotaledens identitet, Göteborg/Västkust, vårskog, vitsippor, skimrande blå sjöar och ljus vårgrönska.
-
-## Viktigt om stafettdata
-
-Den kombinerade resultatfilen ger lagnamn och en ordnad medlemslista. XML-startlistan ger kodade
-etapposter. En etapp kopplas till en löpare endast när XML-koden, rätt starttid och namnevidensen
-är konsekventa. Tomma positioner blir `missing` och motsägelser blir `conflict`; inget namn gissas.
+Testerna verifierar bland annat fyra lopp, källintegritet, splitimport, Nolhagas roll, stafettregler,
+rådata, GPX-slicing och att den statiska sidan refererar till alla analysmoduler.
