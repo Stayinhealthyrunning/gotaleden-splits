@@ -1,62 +1,32 @@
-let DATA;
-let ROUTE;
-let currentRace = "individual-75-2026";
+(function(){
+  "use strict";
+  const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+  const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const fmtTime=value=>{if(value==null)return "–";const s=Math.round(value),h=Math.floor(s/3600),m=Math.floor(s%3600/60);return `${h}:${String(m).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`};
+  const median=values=>{const a=values.filter(Number.isFinite).sort((x,y)=>x-y);if(!a.length)return null;const i=Math.floor(a.length/2);return a.length%2?a[i]:(a[i-1]+a[i])/2};
+  const pace=value=>{if(value==null)return "–";const seconds=Math.round(value*60);return `${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,"0")} min/km`};
+  const raceNames={"individual-75-2026":"Individuellt 75","individual-35-2026":"Individuellt 35","relay-75-2026":"Stafett 75","relay-35-2026":"Stafett 35"};
+  let data,route,index,currentRace,sortKey="overall_place",sortDirection=1,visible=50,comparison=[],replay;
+  const state={records:[],splits:[],checkpoints:[]};
 
-const fmtTime = seconds => {
-  if (seconds == null) return "–";
-  const s = Math.round(seconds);
-  const h = Math.floor(s / 3600);
-  const m = Math.floor((s % 3600) / 60);
-  const sec = s % 60;
-  return `${h}:${String(m).padStart(2,"0")}:${String(sec).padStart(2,"0")}`;
-};
-
-function render() {
-  const race = DATA.races[currentRace];
-  const records = race.records;
-  const query = document.querySelector("#search").value.trim().toLowerCase();
-  const filtered = records.filter(r => {
-    const text = `${r.name || ""} ${r.bib || ""} ${r.class_name || ""}`.toLowerCase();
-    return !query || text.includes(query);
-  });
-
-  document.querySelector("#race-title").textContent = race.section;
-  document.querySelector("#record-count").textContent = records.length.toLocaleString("sv-SE");
-  document.querySelector("#finished-count").textContent = records.filter(r => r.status === "FINISHED").length.toLocaleString("sv-SE");
-  document.querySelector("#gpx-distance").textContent = `${race.gpx_distance_km.toFixed(1)} km`;
-
-  const body = document.querySelector("#results-body");
-  body.innerHTML = filtered
-    .sort((a,b) => (a.overall_place ?? 999999) - (b.overall_place ?? 999999))
-    .slice(0, 40)
-    .map(r => `<tr>
-      <td>${r.overall_place ?? "–"}</td>
-      <td><strong>${r.name}</strong>${r.bib ? `<br><small>#${r.bib}</small>` : ""}</td>
-      <td>${r.class_name || "–"}</td>
-      <td>${r.finish_time_formatted || fmtTime(r.finish_seconds)}</td>
-      <td>${r.status}</td>
-    </tr>`).join("");
-
-  document.querySelectorAll(".race-switcher button").forEach(btn => {
-    btn.classList.toggle("active", btn.dataset.race === currentRace);
-  });
-}
-
-Promise.all([
-  fetch("data/results-2026.json").then(r => r.json()),
-  fetch("data/route.json").then(r => r.json())
-]).then(([data, route]) => {
-  DATA = data;
-  ROUTE = route;
-  document.querySelector("#full-route-distance").textContent = `${route.full_distance_km.toFixed(1)} km`;
-  document.querySelector("#short-route-distance").textContent = `${route.floda_start.remaining_distance_km.toFixed(1)} km`;
-  render();
-});
-
-document.querySelectorAll(".race-switcher button").forEach(btn => {
-  btn.addEventListener("click", () => {
-    currentRace = btn.dataset.race;
-    render();
-  });
-});
-document.querySelector("#search").addEventListener("input", render);
+  function raceFromLocation(){const key=new URLSearchParams(location.search).get("race")||localStorage.getItem("gotaleden-race");return raceNames[key]?key:"individual-75-2026"}
+  function chooseRace(key){currentRace=key;localStorage.setItem("gotaleden-race",key);const url=new URL(location);url.searchParams.set("race",key);history.replaceState(null,"",url);comparison=[];visible=50;render()}
+  function setState(){const race=data.races[currentRace];state.records=race.records;state.splits=data.splits.filter(s=>s.race_key===currentRace);state.checkpoints=data.checkpoints[currentRace];return race}
+  function render(){const race=setState();$$('[data-race]').forEach(b=>b.classList.toggle("active",b.dataset.race===currentRace));$("#race-title").textContent=race.section;$("#race-subtitle").textContent=`${race.source_race_name} · ${race.gpx_distance_km.toFixed(1)} km enligt GPX · ${race.type==="relay"?"lag → etapp → löpare":"löpare → kontroll → delsträcka"}`;renderKpis(race);renderOverview(race);renderFilters();renderTable();renderRelay();renderComparison();updateReplay()}
+  function renderKpis(race){const finished=state.records.filter(r=>r.status==="FINISHED"),times=finished.map(r=>r.finish_seconds),withSplits=state.records.filter(r=>r.split_count>1).length;const items=[[race.type==="relay"?"Lag":"Deltagare",state.records.length.toLocaleString("sv-SE")],["Fullföljde",finished.length.toLocaleString("sv-SE")],["Median",fmtTime(median(times))],["Snabbaste",fmtTime(Math.min(...times))],["Split-täckning",`${withSplits}/${state.records.length}`]];$("#kpis").innerHTML=items.map(x=>`<article class="kpi"><span>${x[0]}</span><strong>${x[1]}</strong></article>`).join("")}
+  function renderOverview(){const finished=state.records.filter(r=>r.status==="FINISHED");$("#finish-chart").innerHTML=GCharts.histogram(finished.map(r=>r.finish_seconds));const classes=Object.entries(state.records.reduce((a,r)=>(a[r.class_name||"Okänd"]=(a[r.class_name||"Okänd"]||0)+1,a),{})).sort((a,b)=>b[1]-a[1]);$("#class-chart").innerHTML=GCharts.bars(classes);const cps=state.checkpoints.filter(c=>c.is_timing_point);const values=cps.map(cp=>median(state.splits.filter(s=>s.checkpoint===cp.key&&s.pace_min_per_km).map(s=>s.pace_min_per_km)));$("#pace-chart").innerHTML=GCharts.lines([{name:"Medianfart",values}],cps.map(c=>c.name),v=>pace(v).replace(" min/km",""));const covered=new Set(state.splits.filter(s=>!s.is_finish_only_export).map(s=>s.bib)).size;$("#split-coverage").textContent=`${covered} med passeringar`}
+  function renderFilters(){const selected=$("#class-filter").value,classes=[...new Set(state.records.map(r=>r.class_name).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"sv"));$("#class-filter").innerHTML='<option value="">Alla klasser</option>'+classes.map(c=>`<option ${c===selected?"selected":""}>${esc(c)}</option>`).join("")}
+  function filtered(){const q=$("#search").value.trim().toLocaleLowerCase("sv"),klass=$("#class-filter").value,status=$("#status-filter").value;return state.records.filter(r=>(!q||`${r.name} ${r.bib} ${r.club||""}`.toLocaleLowerCase("sv").includes(q))&&(!klass||r.class_name===klass)&&(!status||r.status===status)).sort((a,b)=>{const av=a[sortKey],bv=b[sortKey];if(av==null)return 1;if(bv==null)return-1;return(typeof av==="string"?av.localeCompare(bv,"sv"):(av-bv))*sortDirection})}
+  function renderTable(){const rows=filtered(),shown=rows.slice(0,visible);$("#results-body").innerHTML=shown.map(r=>{const selected=comparison.some(x=>x.bib===r.bib);return `<tr data-bib="${esc(r.bib)}"><td>${r.overall_place??"–"}</td><td><strong>${esc(r.name)}</strong><br><small>#${esc(r.bib)}${r.club?` · ${esc(r.club)}`:""}</small></td><td>${esc(r.class_name||"–")}</td><td>${r.finish_time_formatted&&r.finish_time_formatted!=="DNF"&&r.finish_time_formatted!=="DNS"?esc(r.finish_time_formatted):fmtTime(r.finish_seconds)}</td><td><span class="status ${esc(r.status)}">${esc(r.status)}</span></td><td><button class="compare-add ${selected?"selected":""}" data-compare="${esc(r.bib)}" title="Lägg till i jämförelse">${selected?"✓":"+"}</button></td></tr>`}).join("");$("#result-count").textContent=`Visar ${shown.length} av ${rows.length}`;$("#show-more").hidden=shown.length===rows.length;$$('#results-body tr[data-bib]').forEach(row=>row.addEventListener("click",e=>{if(!e.target.closest("[data-compare]"))openDetail(row.dataset.bib)}));$$('[data-compare]').forEach(b=>b.addEventListener("click",()=>toggleComparison(b.dataset.compare)))}
+  function toggleComparison(bib){const existing=comparison.findIndex(x=>x.bib===bib);if(existing>=0)comparison.splice(existing,1);else if(comparison.length<5){const record=state.records.find(r=>r.bib===bib);if(record)comparison.push(record)}renderTable();renderComparison();updateReplay()}
+  function renderComparison(){const cps=state.checkpoints.filter(c=>c.is_timing_point);const series=comparison.map(r=>{const splits=index.splits(currentRace,r.bib),by=new Map(splits.map(s=>[s.checkpoint,s]));return{name:r.name,values:cps.map(c=>by.get(c.key)?.elapsed_seconds??null)}});$("#comparison-empty").hidden=series.length>0;$("#comparison-chart").innerHTML=GCharts.lines(series,cps.map(c=>c.name),fmtTime)}
+  function renderRelay(){const isRelay=data.races[currentRace].type==="relay";$("#relay-insights").hidden=!isRelay;if(!isRelay)return;const coverage=data.meta.relay_coverage[currentRace],assignments=data.relay_leg_assignments.filter(a=>a.race_key===currentRace),verified=assignments.filter(a=>a.assignment_status.startsWith("verified_")),repeat=coverage.people_running_multiple_legs;const items=[["Lag",coverage.teams],["Verifierade etapper",`${verified.length}/${coverage.possible_leg_slots}`],["Kompletta lag",coverage.complete_teams],["Fleretappslöpare",repeat]];$("#relay-stats").innerHTML=items.map(x=>`<div class="relay-stat"><span>${x[0]}</span><strong>${x[1]}</strong></div>`).join("")}
+  function openDetail(bib){const r=state.records.find(x=>x.bib===bib),splits=index.splits(currentRace,bib),cpMap=new Map(state.checkpoints.map(c=>[c.key,c]));let html=`<div class="detail-head"><div><p class="eyebrow dark">${data.races[currentRace].type==="relay"?"LAG":"DELTAGARE"} · #${esc(r.bib)}</p><h2>${esc(r.name)}</h2></div><strong>${r.overall_place?`#${r.overall_place}`:esc(r.status)}</strong></div><div class="detail-meta"><span>${esc(r.class_name||"Okänd klass")}</span>${r.club?`<span>${esc(r.club)}</span>`:""}${r.nation?`<span>${esc(r.nation)}</span>`:""}<span>${fmtTime(r.finish_seconds)}</span></div>`;
+    if(data.races[currentRace].type==="relay"){const assignments=index.assignments(currentRace,bib);html+=`<h3>Etapper och löpare</h3><div>${assignments.map(a=>`<div class="runner"><b>${a.leg_no}</b><span class="${a.runner_name?"":"missing"}">${esc(a.runner_name||"Löparkoppling saknas")}</span><small>${esc(a.assignment_status.replaceAll("_"," "))}</small></div>`).join("")}</div>`}
+    html+=`<h3>Officiella passeringar</h3>`;if(!splits.length)html+='<div class="empty">Inga passeringar publicerade.</div>';else html+=`<div class="table-wrap"><table class="split-table"><thead><tr><th>Kontroll</th><th>Ack. tid</th><th>Delsträcka</th><th>Tempo</th><th>Plats</th></tr></thead><tbody>${splits.map(s=>`<tr><td>${esc(cpMap.get(s.checkpoint)?.name||s.source_point_name)}</td><td>${fmtTime(s.elapsed_seconds)}</td><td>${fmtTime(s.split_seconds)}</td><td>${pace(s.pace_min_per_km)}</td><td>${s.place_overall??"–"}</td></tr>`).join("")}</tbody></table></div>`;$("#detail-content").innerHTML=html;$("#detail-dialog").showModal()}
+  function replayRunners(){const chosen=comparison.length?comparison:state.records.filter(r=>r.status==="FINISHED"&&r.split_count>1).slice(0,3);const offset=currentRace.includes("35")?route.floda_start.cumulative_km_from_gothenburg:0;const cpDistance=new Map(state.checkpoints.map(c=>[c.key,c.distance_km]));return chosen.map(r=>({name:r.name,splits:index.splits(currentRace,r.bib).map(s=>({...s,distance:cpDistance.get(s.checkpoint)??0})),offset}))}
+  function updateReplay(){if(!replay)return;replay.set(replayRunners());const time=replay.seek(Number($("#replay-time").value)/1000);$("#replay-clock").value=fmtTime(time)}
+  async function init(){[data,route]=await Promise.all([fetch("data/results-2026.json").then(r=>{if(!r.ok)throw Error(r.status);return r.json()}),fetch("data/route.json").then(r=>r.json())]);index=GDataIndex.create(data);currentRace=raceFromLocation();replay=GReplay.create($("#replay-canvas"),route);render()}
+  $$('[data-race]').forEach(b=>b.addEventListener("click",()=>chooseRace(b.dataset.race)));["#search","#class-filter","#status-filter"].forEach(s=>$(s).addEventListener(s==="#search"?"input":"change",()=>{visible=50;renderTable()}));$$('[data-sort]').forEach(b=>b.addEventListener("click",()=>{sortDirection=sortKey===b.dataset.sort?-sortDirection:1;sortKey=b.dataset.sort;renderTable()}));$("#show-more").addEventListener("click",()=>{visible+=50;renderTable()});$("#clear-comparison").addEventListener("click",()=>{comparison=[];renderTable();renderComparison();updateReplay()});$(".dialog-close").addEventListener("click",()=>$("#detail-dialog").close());$("#replay-time").addEventListener("input",e=>$("#replay-clock").value=fmtTime(replay.seek(Number(e.target.value)/1000)));$("#replay-toggle").addEventListener("click",e=>{const playing=replay.play((progress,time)=>{$("#replay-time").value=Math.round(progress*1000);$("#replay-clock").value=fmtTime(time)});e.target.textContent=playing?"Ⅱ Pausa":"▶ Spela"});
+  init().catch(error=>{console.error(error);document.querySelector("main").innerHTML=`<section class="panel"><h2>Data kunde inte laddas</h2><p>Starta sidan via en lokal webbserver eller GitHub Pages.</p></section>`});
+})();
