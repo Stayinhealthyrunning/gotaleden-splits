@@ -332,4 +332,6 @@ def import_all():
     print(json.dumps(report, ensure_ascii=False, indent=2))
 
 if __name__ == "__main__":
-    import_all()
+    from build_official_data import import_all_official
+
+    import_all_official()

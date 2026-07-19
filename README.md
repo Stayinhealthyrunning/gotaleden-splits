@@ -44,6 +44,13 @@ Det skapar:
 - `docs/data/results-2026.json`
 - `docs/data/route.json`
 - `reports/import-summary-2026.json`
+- `reports/eqtiming-files-analysis.json`
+- `reports/relay-member-import-report.json`
+- `reports/eqtiming-missing-data.json`
+
+Bygget använder den officiella, kombinerade resultatfilen som primär resultatkälla och XML-startlistans
+kodade stafettposter som källa för verifierad etapp–löpare-mappning. Originalfilerna under
+`data/source/eqtiming/` läses endast och bevaras byte-för-byte.
 
 ## Tester
 
@@ -59,5 +66,6 @@ Designriktning: Gotaledens identitet, Göteborg/Västkust, vårskog, vitsippor, 
 
 ## Viktigt om stafettdata
 
-CSV-exporten ger lagnamn och ett listat personnamn men inte en verifierad komplett koppling mellan lagmedlem och etapp.
-Systemet behandlar därför stafetten på lagnivå tills bättre källdata finns.
+Den kombinerade resultatfilen ger lagnamn och en ordnad medlemslista. XML-startlistan ger kodade
+etapposter. En etapp kopplas till en löpare endast när XML-koden, rätt starttid och namnevidensen
+är konsekventa. Tomma positioner blir `missing` och motsägelser blir `conflict`; inget namn gissas.

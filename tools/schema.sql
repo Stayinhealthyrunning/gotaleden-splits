@@ -37,8 +37,11 @@ CREATE TABLE IF NOT EXISTS checkpoints (
 
 CREATE TABLE IF NOT EXISTS athletes (
   id INTEGER PRIMARY KEY,
+  source_external_id TEXT UNIQUE,
   canonical_name TEXT NOT NULL,
   normalized_name TEXT NOT NULL,
+  first_name TEXT,
+  last_name TEXT,
   sex TEXT,
   nationality TEXT,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -46,10 +49,12 @@ CREATE TABLE IF NOT EXISTS athletes (
 
 CREATE TABLE IF NOT EXISTS teams (
   id INTEGER PRIMARY KEY,
+  source_external_id TEXT NOT NULL UNIQUE,
   team_name TEXT NOT NULL,
   normalized_name TEXT NOT NULL,
   class_name TEXT,
   listed_contact_name TEXT,
+  member_list_raw TEXT,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -57,7 +62,9 @@ CREATE TABLE IF NOT EXISTS team_members (
   id INTEGER PRIMARY KEY,
   team_id INTEGER NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
   athlete_id INTEGER NOT NULL REFERENCES athletes(id) ON DELETE CASCADE,
+  member_name_as_published TEXT NOT NULL,
   source_evidence TEXT,
+  raw_json TEXT,
   UNIQUE(team_id, athlete_id)
 );
 
@@ -71,6 +78,8 @@ CREATE TABLE IF NOT EXISTS results (
   team_id INTEGER REFERENCES teams(id),
   bib TEXT,
   name_as_published TEXT NOT NULL,
+  first_name TEXT,
+  last_name TEXT,
   listed_contact_name TEXT,
   sex TEXT,
   class_name TEXT,
@@ -79,10 +88,13 @@ CREATE TABLE IF NOT EXISTS results (
   status TEXT NOT NULL,
   finish_seconds REAL,
   finish_milliseconds INTEGER,
+  gross_seconds REAL,
+  net_seconds REAL,
   overall_place INTEGER,
   gender_place INTEGER,
   class_place INTEGER,
   start_time TEXT,
+  wave_start TEXT,
   passing_time TEXT,
   role_km REAL,
   raw_json TEXT NOT NULL,
@@ -109,8 +121,12 @@ CREATE TABLE IF NOT EXISTS relay_leg_assignments (
   result_id INTEGER NOT NULL REFERENCES results(id) ON DELETE CASCADE,
   leg_no INTEGER NOT NULL,
   athlete_id INTEGER REFERENCES athletes(id),
-  assignment_status TEXT NOT NULL DEFAULT 'unknown',
+  runner_name_as_published TEXT,
+  assignment_status TEXT NOT NULL DEFAULT 'missing'
+    CHECK(assignment_status IN ('verified_xml','verified_xml_and_result_list','missing','conflict')),
   source_evidence TEXT,
+  source_start_number TEXT,
+  raw_json TEXT,
   UNIQUE(result_id, leg_no)
 );
 
