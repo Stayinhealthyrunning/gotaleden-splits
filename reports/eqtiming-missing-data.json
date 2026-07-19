@@ -1,0 +1,33 @@
+{
+  "event_id": 77906,
+  "intermediate_splits_found": false,
+  "available": "Finish result and finish time for FINISHED records; official start-list member/leg evidence for relays.",
+  "missing_by_race": {
+    "individual-75-2026": [
+      "Skatås",
+      "Kåsjön",
+      "Jonsered",
+      "Lerum",
+      "Floda",
+      "Tollered",
+      "Norsesund",
+      "Västra Bodarna"
+    ],
+    "individual-35-2026": [
+      "Tollered",
+      "Norsesund",
+      "Västra Bodarna"
+    ],
+    "relay-75-2026": [
+      "cumulative team time at every exchange",
+      "actual leg time",
+      "team placing after every leg"
+    ],
+    "relay-35-2026": [
+      "cumulative team time at every exchange",
+      "actual leg time",
+      "team placing after every leg"
+    ]
+  },
+  "rule": "No missing split, passing, leg time, or placing is interpolated or fabricated."
+}

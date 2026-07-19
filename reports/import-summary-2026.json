@@ -7,6 +7,8 @@
     "official_results_url": "https://live.eqtiming.com/77906",
     "official_site_url": "https://www.gotaledenstafettultra.se/"
   },
+  "primary_result_source": "Resultlist-77906-20260719155435.csv",
+  "primary_relay_leg_source": "Startlist-77906-20260719155427.xml",
   "route": {
     "point_count": 13842,
     "full_distance_km": 77.1194,
@@ -120,8 +122,8 @@
         "DNS": 55
       },
       "classes": {
-        "Män": 213,
-        "Kvinnor": 61
+        "Kvinnor": 61,
+        "Män": 213
       },
       "point_names": [
         "Mål"
@@ -225,8 +227,8 @@
         "DNS": 34
       },
       "classes": {
-        "Män": 94,
-        "Kvinnor": 69
+        "Kvinnor": 69,
+        "Män": 94
       },
       "point_names": [
         "Mål"
@@ -326,14 +328,14 @@
       ],
       "statuses": {
         "FINISHED": 109,
-        "DNF": 1,
-        "DNS": 11
+        "DNS": 11,
+        "DNF": 1
       },
       "classes": {
-        "Män": 19,
-        "Mixed ej tävling - Fri fördelning": 81,
         "Kvinnor": 5,
-        "Mixed tävling - Minst hälften kvinnor": 16
+        "Mixed ej tävling - Fri fördelning": 81,
+        "Mixed tävling - Minst hälften kvinnor": 16,
+        "Män": 19
       },
       "point_names": [
         "Mål"
@@ -437,10 +439,10 @@
         "DNS": 3
       },
       "classes": {
-        "Män": 2,
         "Kvinnor": 5,
+        "Mixed ej tävling - Fri fördelning": 26,
         "Mixed tävling - Minst hälften kvinnor": 16,
-        "Mixed ej tävling - Fri fördelning": 26
+        "Män": 2
       },
       "point_names": [
         "Mål"
@@ -452,8 +454,8 @@
     }
   },
   "limitations": [
-    "Startfilerna innehåller endast PointName=Mål; mellanpassager finns inte som separata CSV-rader.",
-    "Stafettfilerna innehåller lagnamn och ett listat personnamn, men ingen verifierad komplett koppling mellan lagmedlem och etapp.",
-    "Alla 81 originalkolumner bevaras i raw-fältet och i SQLite raw_json."
+    "The official files contain no separate checkpoint passages or intermediate times.",
+    "Empty XML leg names are stored as missing and conflicts are never verified assignments.",
+    "All original fields from primary, legacy 81-column, and cross-validation rows are preserved in raw_json."
   ]
 }
