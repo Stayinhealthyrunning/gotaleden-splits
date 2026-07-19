@@ -31,6 +31,9 @@ CREATE TABLE IF NOT EXISTS checkpoints (
   sequence_no INTEGER NOT NULL,
   nominal_distance_km REAL,
   gpx_distance_km REAL,
+  is_timing_point INTEGER NOT NULL DEFAULT 1,
+  is_relay_exchange INTEGER NOT NULL DEFAULT 0,
+  source_station_uid TEXT,
   UNIQUE(race_id, checkpoint_key),
   UNIQUE(race_id, sequence_no)
 );
@@ -111,6 +114,11 @@ CREATE TABLE IF NOT EXISTS splits (
   place_gender INTEGER,
   place_class INTEGER,
   source_point_name TEXT,
+  split_seconds REAL,
+  split_distance_km REAL,
+  speed_kmh REAL,
+  pace_min_per_km REAL,
+  passage_time TEXT,
   is_finish_only_export INTEGER NOT NULL DEFAULT 0,
   raw_json TEXT,
   UNIQUE(result_id, checkpoint_id)

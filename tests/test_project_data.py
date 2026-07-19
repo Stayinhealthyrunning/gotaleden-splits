@@ -148,11 +148,13 @@ class ProjectDataTests(unittest.TestCase):
         self.assertIn("_unlabelled_22", raw["primary_result_file"]["row"])
         self.assertIn("Resultlist-77906-20260719155309.csv", raw["cross_validation"])
 
-    def test_current_official_files_have_no_intermediate_splits(self):
-        self.assertFalse(self.results["meta"]["intermediate_splits_available"])
+    def test_csv_files_are_finish_only_but_public_snapshot_has_splits(self):
+        self.assertTrue(self.results["meta"]["intermediate_splits_available"])
+        self.assertGreater(len(self.results["splits"]), 3000)
         for race in self.report["races"].values():
             self.assertEqual(race["point_names"], ["Mål"])
             self.assertEqual(race["intermediate_split_rows_in_csv"], 0)
+            self.assertGreater(race["public_api_split_rows"], 0)
 
     def test_all_source_files_are_byte_unchanged(self):
         source_dir = ROOT / "data/source/eqtiming"

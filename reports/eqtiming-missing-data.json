@@ -1,33 +1,11 @@
 {
   "event_id": 77906,
-  "intermediate_splits_found": false,
-  "available": "Finish result and finish time for FINISHED records; official start-list member/leg evidence for relays.",
-  "missing_by_race": {
-    "individual-75-2026": [
-      "Skatås",
-      "Kåsjön",
-      "Jonsered",
-      "Lerum",
-      "Floda",
-      "Tollered",
-      "Norsesund",
-      "Västra Bodarna"
-    ],
-    "individual-35-2026": [
-      "Tollered",
-      "Norsesund",
-      "Västra Bodarna"
-    ],
-    "relay-75-2026": [
-      "cumulative team time at every exchange",
-      "actual leg time",
-      "team placing after every leg"
-    ],
-    "relay-35-2026": [
-      "cumulative team time at every exchange",
-      "actual leg time",
-      "team placing after every leg"
-    ]
-  },
+  "intermediate_splits_found": true,
+  "available": "Official cumulative passages, split times, pace, speed and placings from EQ Timing's public contestant endpoint.",
+  "known_limitations": [
+    "DNS records and some DNF records have no or incomplete passages.",
+    "Nolhaga is a timing point, not a relay exchange.",
+    "A relay runner is attached to a leg only when separate start-list evidence verifies the mapping."
+  ],
   "rule": "No missing split, passing, leg time, or placing is interpolated or fabricated."
 }
