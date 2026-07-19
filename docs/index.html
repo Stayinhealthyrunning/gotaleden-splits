@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gotaleden Splits</title>
+  <meta name="description" content="Analysverktyg för Gotaleden Stafett & Ultra. Individuellt 75/35 och Stafett 75/35.">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <header class="hero">
+    <div class="hero__veil"></div>
+    <div class="hero__content">
+      <p class="eyebrow">GÖTEBORG · FLODA · ALINGSÅS</p>
+      <h1>Gotaleden Splits</h1>
+      <p class="lead">Analysera premiäråret längs vårskog, vitsippor och blå sjöar.</p>
+      <div class="route-line" aria-label="Banans orter">
+        Göteborg <span>—</span> Skatås <span>—</span> Kåsjön <span>—</span> Jonsered <span>—</span>
+        Lerum <span>—</span> Floda <span>—</span> Tollered <span>—</span> Norsesund <span>—</span>
+        Västra Bodarna <span>—</span> Alingsås
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="race-switcher" aria-label="Välj lopp">
+      <button data-race="individual-75-2026" class="active">Individuellt 75</button>
+      <button data-race="individual-35-2026">Individuellt 35</button>
+      <button data-race="relay-75-2026">Stafett 75</button>
+      <button data-race="relay-35-2026">Stafett 35</button>
+    </section>
+
+    <section class="summary-grid">
+      <article class="card">
+        <span class="label">Deltagare / lag</span>
+        <strong id="record-count">–</strong>
+      </article>
+      <article class="card">
+        <span class="label">Fullföljde</span>
+        <strong id="finished-count">–</strong>
+      </article>
+      <article class="card">
+        <span class="label">GPX-distans</span>
+        <strong id="gpx-distance">–</strong>
+      </article>
+      <article class="card">
+        <span class="label">Datastatus</span>
+        <strong class="small">Målresultat importerade</strong>
+      </article>
+    </section>
+
+    <section class="panel">
+      <div>
+        <p class="eyebrow dark">PREMIÄRÅRET 2026</p>
+        <h2 id="race-title">Individuellt 75</h2>
+        <p id="race-note">
+          Grunddatabasen är importerad. Nästa datasteg är fulla mellantider från EQ Timings publika resultatdata.
+        </p>
+      </div>
+      <div class="data-badge">607 poster totalt · 4 lopp</div>
+    </section>
+
+    <section class="panel table-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow dark">RESULTATGRUND</p>
+          <h2>Första resultaten</h2>
+        </div>
+        <input id="search" type="search" placeholder="Sök namn, lag eller startnummer">
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Plats</th>
+              <th>Namn / lag</th>
+              <th>Klass</th>
+              <th>Tid</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="results-body"></tbody>
+        </table>
+      </div>
+      <p class="footnote">Denna första version visar målresultat. Mellantider importeras när EQ Timings publika splitdata har kartlagts.</p>
+    </section>
+
+    <section class="panel route-panel">
+      <div>
+        <p class="eyebrow dark">BANAN</p>
+        <h2>En gemensam officiell GPX</h2>
+        <p>Alla fyra lopp använder samma rutt. 35 km-vyerna startar i Floda på närmaste punkt till 57.80629, 12.35532.</p>
+      </div>
+      <div class="route-stats">
+        <span>Hela GPX-rutten <strong id="full-route-distance">–</strong></span>
+        <span>Floda–Alingsås <strong id="short-route-distance">–</strong></span>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Gotaleden Splits · Fristående analysprojekt · Källdata: EQ Timing och officiell GPX
+  </footer>
+  <script src="assets/app.js"></script>
+</body>
+</html>
