@@ -1,0 +1,153 @@
+{
+  "event": {
+    "name": "Gotaleden Stafett & Ultra",
+    "year": 2026,
+    "date": "2026-05-09",
+    "eqtiming_event_id": 77906,
+    "official_results_url": "https://live.eqtiming.com/77906",
+    "official_site_url": "https://www.gotaledenstafettultra.se/"
+  },
+  "route": {
+    "source_gpx": "data/source/gpx/Gotaleden_Ultra_75km-30april.gpx",
+    "floda_start": {
+      "lat": 57.80629,
+      "lon": 12.35532
+    },
+    "official_elevation_gain_m": 1403,
+    "official_elevation_loss_m": 1343
+  },
+  "races": [
+    {
+      "race_key": "individual-75-2026",
+      "section": "Individuellt 75",
+      "source_race_name": "Ultra 75 km",
+      "type": "individual",
+      "source_csv": "data/source/eqtiming/individual-75-2026.csv",
+      "nominal_distance_km": 78.0,
+      "start_time": "07:00:00",
+      "route_start": "gothenburg",
+      "checkpoints": [
+        "gothenburg",
+        "skatas",
+        "kasjon",
+        "jonsered",
+        "lerum",
+        "floda",
+        "tollered",
+        "norsesund",
+        "vastra_bodarna",
+        "alingsas"
+      ]
+    },
+    {
+      "race_key": "individual-35-2026",
+      "section": "Individuellt 35",
+      "source_race_name": "Sprint 35 km",
+      "type": "individual",
+      "source_csv": "data/source/eqtiming/individual-35-2026.csv",
+      "nominal_distance_km": 36.5,
+      "start_time": "12:00:00",
+      "route_start": "floda",
+      "checkpoints": [
+        "floda",
+        "tollered",
+        "norsesund",
+        "vastra_bodarna",
+        "alingsas"
+      ]
+    },
+    {
+      "race_key": "relay-75-2026",
+      "section": "Stafett 75",
+      "source_race_name": "Stafett 75 km",
+      "type": "relay",
+      "source_csv": "data/source/eqtiming/relay-75-2026.csv",
+      "nominal_distance_km": 78.0,
+      "start_time": "08:00:00",
+      "route_start": "gothenburg",
+      "checkpoints": [
+        "gothenburg",
+        "skatas",
+        "kasjon",
+        "jonsered",
+        "lerum",
+        "floda",
+        "tollered",
+        "norsesund",
+        "vastra_bodarna",
+        "alingsas"
+      ]
+    },
+    {
+      "race_key": "relay-35-2026",
+      "section": "Stafett 35",
+      "source_race_name": "Stafett 35 km",
+      "type": "relay",
+      "source_csv": "data/source/eqtiming/relay-35-2026.csv",
+      "nominal_distance_km": 36.5,
+      "start_time": "12:00:00",
+      "route_start": "floda",
+      "checkpoints": [
+        "floda",
+        "tollered",
+        "norsesund",
+        "vastra_bodarna",
+        "alingsas"
+      ]
+    }
+  ],
+  "checkpoints": [
+    {
+      "key": "gothenburg",
+      "name": "Göteborg",
+      "nominal_cumulative_km_75": 0.0
+    },
+    {
+      "key": "skatas",
+      "name": "Skatås",
+      "nominal_cumulative_km_75": 4.5
+    },
+    {
+      "key": "kasjon",
+      "name": "Kåsjön",
+      "nominal_cumulative_km_75": 15.0
+    },
+    {
+      "key": "jonsered",
+      "name": "Jonsered",
+      "nominal_cumulative_km_75": 22.5
+    },
+    {
+      "key": "lerum",
+      "name": "Lerum",
+      "nominal_cumulative_km_75": 32.5
+    },
+    {
+      "key": "floda",
+      "name": "Floda",
+      "nominal_cumulative_km_75": 41.5,
+      "lat": 57.80629,
+      "lon": 12.35532
+    },
+    {
+      "key": "tollered",
+      "name": "Tollered",
+      "nominal_cumulative_km_75": 49.5
+    },
+    {
+      "key": "norsesund",
+      "name": "Norsesund",
+      "nominal_cumulative_km_75": 61.5
+    },
+    {
+      "key": "vastra_bodarna",
+      "name": "Västra Bodarna",
+      "nominal_cumulative_km_75": 68.0
+    },
+    {
+      "key": "alingsas",
+      "name": "Alingsås",
+      "nominal_cumulative_km_75": 78.0
+    }
+  ]
+}
