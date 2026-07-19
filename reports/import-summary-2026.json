@@ -131,7 +131,9 @@
       "role_km_values": [
         78.0
       ],
-      "intermediate_split_rows_in_csv": 0
+      "intermediate_split_rows_in_csv": 0,
+      "public_api_split_rows": 2121,
+      "records_with_public_api_splits": 221
     },
     "individual-35-2026": {
       "section": "Individuellt 35",
@@ -236,7 +238,9 @@
       "role_km_values": [
         36.5
       ],
-      "intermediate_split_rows_in_csv": 0
+      "intermediate_split_rows_in_csv": 0,
+      "public_api_split_rows": 638,
+      "records_with_public_api_splits": 129
     },
     "relay-75-2026": {
       "section": "Stafett 75",
@@ -343,7 +347,9 @@
       "role_km_values": [
         78.0
       ],
-      "intermediate_split_rows_in_csv": 0
+      "intermediate_split_rows_in_csv": 0,
+      "public_api_split_rows": 1077,
+      "records_with_public_api_splits": 110
     },
     "relay-35-2026": {
       "section": "Stafett 35",
@@ -450,12 +456,15 @@
       "role_km_values": [
         36.5
       ],
-      "intermediate_split_rows_in_csv": 0
+      "intermediate_split_rows_in_csv": 0,
+      "public_api_split_rows": 223,
+      "records_with_public_api_splits": 46
     }
   },
   "limitations": [
-    "The official files contain no separate checkpoint passages or intermediate times.",
+    "CSV exports contain finish results only; official passages come from the cached public EQ Timing endpoint.",
     "Empty XML leg names are stored as missing and conflicts are never verified assignments.",
-    "All original fields from primary, legacy 81-column, and cross-validation rows are preserved in raw_json."
+    "Missing passages are retained as missing and never interpolated.",
+    "All original fields from CSV, XML and public JSON sources are preserved in raw_json."
   ]
 }

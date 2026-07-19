@@ -28,15 +28,19 @@ Assignments får status `verified_xml_and_result_list` när XML och medlemsposit
 `verified_xml` när bara XML ger ett namn, `missing` när XML saknar namn/post och `conflict` vid
 motsägelse. `missing` och `conflict` får aldrig ett `athlete_id`.
 
-## Kvarvarande datalucka
+## Publika passeringar och kvarvarande luckor
 
-Ingen av de officiella filerna innehåller separata passager vid Skatås, Kåsjön, Jonsered, Lerum,
-Floda, Tollered, Norsesund eller Västra Bodarna. De innehåller inte heller ackumulerad lagtids-passage,
-faktisk etapptid eller placering efter varje stafettetapp. Endast befintliga målresultat lagras som
-splits; inga mellantider fabriceras.
+CSV-filerna saknar separata passager, men den publika endpointen
+`/api/Contestants/77906?passes=true` ger ackumulerad tid, delsträckstid, fart, tempo och placering.
+En validerad snapshot för exakt de 607 startnumren finns under `data/source/eqtiming/api/`.
+
+EQ Timing returnerar även nollvärda kontrollplatshållare för DNS och ännu ej nådda kontroller. Dessa
+lagras i råsnapshoten men importeras inte som passeringar. Nolhaga (77,8 km / 36,3 km) importeras som
+tidtagningspunkt, inte stafettväxling. Saknade tider och osäkra etapp–löpare-relationer lämnas tomma.
 
 Detaljer finns i:
 
 - `reports/eqtiming-files-analysis.json`
 - `reports/relay-member-import-report.json`
 - `reports/eqtiming-missing-data.json`
+- `reports/eqtiming-api-discovery.md`

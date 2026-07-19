@@ -36,6 +36,7 @@
         "tollered",
         "norsesund",
         "vastra_bodarna",
+        "nolhaga",
         "alingsas"
       ]
     },
@@ -53,6 +54,7 @@
         "tollered",
         "norsesund",
         "vastra_bodarna",
+        "nolhaga",
         "alingsas"
       ]
     },
@@ -75,6 +77,7 @@
         "tollered",
         "norsesund",
         "vastra_bodarna",
+        "nolhaga",
         "alingsas"
       ]
     },
@@ -92,6 +95,7 @@
         "tollered",
         "norsesund",
         "vastra_bodarna",
+        "nolhaga",
         "alingsas"
       ]
     }
@@ -100,54 +104,81 @@
     {
       "key": "gothenburg",
       "name": "Göteborg",
-      "nominal_cumulative_km_75": 0.0
+      "nominal_cumulative_km_75": 0.0,
+      "is_timing_point": false,
+      "is_relay_exchange": false
     },
     {
       "key": "skatas",
       "name": "Skatås",
-      "nominal_cumulative_km_75": 4.5
+      "nominal_cumulative_km_75": 4.5,
+      "is_timing_point": true,
+      "is_relay_exchange": true
     },
     {
       "key": "kasjon",
       "name": "Kåsjön",
-      "nominal_cumulative_km_75": 15.0
+      "nominal_cumulative_km_75": 15.0,
+      "is_timing_point": true,
+      "is_relay_exchange": true
     },
     {
       "key": "jonsered",
       "name": "Jonsered",
-      "nominal_cumulative_km_75": 22.5
+      "nominal_cumulative_km_75": 22.5,
+      "is_timing_point": true,
+      "is_relay_exchange": true
     },
     {
       "key": "lerum",
       "name": "Lerum",
-      "nominal_cumulative_km_75": 32.5
+      "nominal_cumulative_km_75": 32.5,
+      "is_timing_point": true,
+      "is_relay_exchange": true
     },
     {
       "key": "floda",
       "name": "Floda",
       "nominal_cumulative_km_75": 41.5,
+      "is_timing_point": true,
+      "is_relay_exchange": true,
       "lat": 57.80629,
       "lon": 12.35532
     },
     {
       "key": "tollered",
       "name": "Tollered",
-      "nominal_cumulative_km_75": 49.5
+      "nominal_cumulative_km_75": 49.5,
+      "is_timing_point": true,
+      "is_relay_exchange": true
     },
     {
       "key": "norsesund",
       "name": "Norsesund",
-      "nominal_cumulative_km_75": 61.5
+      "nominal_cumulative_km_75": 61.5,
+      "is_timing_point": true,
+      "is_relay_exchange": true
     },
     {
       "key": "vastra_bodarna",
       "name": "Västra Bodarna",
-      "nominal_cumulative_km_75": 68.0
+      "nominal_cumulative_km_75": 68.0,
+      "is_timing_point": true,
+      "is_relay_exchange": true
+    },
+    {
+      "key": "nolhaga",
+      "name": "Nolhaga",
+      "nominal_cumulative_km_75": 77.8,
+      "is_timing_point": true,
+      "is_relay_exchange": false
     },
     {
       "key": "alingsas",
-      "name": "Alingsås",
-      "nominal_cumulative_km_75": 78.0
+      "name": "Mål",
+      "nominal_cumulative_km_75": 78.0,
+      "is_timing_point": true,
+      "is_relay_exchange": true
     }
   ]
 }

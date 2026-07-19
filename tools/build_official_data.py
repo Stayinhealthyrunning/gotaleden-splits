@@ -48,6 +48,35 @@ EXPECTED_COUNTS = {
     "relay-75-2026": 121,
     "relay-35-2026": 49,
 }
+PUBLIC_API_SNAPSHOT = ROOT / "data" / "source" / "eqtiming" / "api" / "event-77906-contestants.json"
+SOURCE_POINT_KEYS = {
+    "Skatås": "skatas",
+    "Kåsjön": "kasjon",
+    "Jonsered": "jonsered",
+    "Lerum": "lerum",
+    "Floda": "floda",
+    "Tollered": "tollered",
+    "Norsesund": "norsesund",
+    "V:a Bodarna": "vastra_bodarna",
+    "Nolhaga": "nolhaga",
+    "Mål": "alingsas",
+}
+
+
+def _load_public_contestants() -> dict[str, dict[str, Any]]:
+    payload = json.loads(PUBLIC_API_SNAPSHOT.read_text(encoding="utf-8"))
+    contestants = payload.get("contestants", {})
+    if payload.get("event_id") != 77906 or payload.get("response_count") != 607 or not payload.get("passes_included"):
+        raise ValueError(f"Incomplete public EQ Timing snapshot: {PUBLIC_API_SNAPSHOT}")
+    return {str(key): value for key, value in contestants.items()}
+
+
+def _public_passes(contestant: dict[str, Any]) -> list[dict[str, Any]]:
+    legs = contestant.get("EtappeDeltaker") or {}
+    passages: list[dict[str, Any]] = []
+    for leg in legs.values():
+        passages.extend((leg.get("Passeringer") or {}).values())
+    return sorted(passages, key=lambda item: int((item.get("StasjonsOppsett") or {}).get("Sortering") or 0))
 
 
 def _legacy_rows(race: dict[str, Any]) -> tuple[list[str], list[dict[str, str]]]:
@@ -79,6 +108,7 @@ def _insert_catalog(conn: sqlite3.Connection, config: dict[str, Any], route: dic
                 ("eqtiming_official_resultlist", PRIMARY_RESULTS, "https://live.eqtiming.com/77906", "csv"),
                 ("eqtiming_startlist_xml", PRIMARY_RELAY_LEGS, "https://live.eqtiming.com/77906", "xml"),
                 ("eqtiming_legacy_csv", "EQ Timing 81-column finish exports", "https://live.eqtiming.com/77906", "csv"),
+                ("eqtiming_public_api", "EQ Timing public contestant snapshot", "https://live.eqtiming.com/api/Contestants/77906?passes=true", "json"),
             ],
         )
     checkpoints = {checkpoint["key"]: checkpoint for checkpoint in config["checkpoints"]}
@@ -100,8 +130,10 @@ def _insert_catalog(conn: sqlite3.Connection, config: dict[str, Any], route: dic
                 nominal -= checkpoints["floda"]["nominal_cumulative_km_75"]
             with conn:
                 conn.execute(
-                    "INSERT INTO checkpoints(race_id,checkpoint_key,name,sequence_no,nominal_distance_km) VALUES(?,?,?,?,?)",
-                    (race_id, key, checkpoint["name"], sequence, nominal),
+                    """INSERT INTO checkpoints(race_id,checkpoint_key,name,sequence_no,nominal_distance_km,
+                       is_timing_point,is_relay_exchange) VALUES(?,?,?,?,?,?,?)""",
+                    (race_id, key, checkpoint["name"], sequence, nominal,
+                     int(checkpoint.get("is_timing_point", True)), int(checkpoint.get("is_relay_exchange", False))),
                 )
         finish_id = conn.execute(
             "SELECT id FROM checkpoints WHERE race_id=? AND checkpoint_key=?", (race_id, race["checkpoints"][-1])
@@ -113,10 +145,12 @@ def _insert_catalog(conn: sqlite3.Connection, config: dict[str, Any], route: dic
 def _raw_sources(
     race: dict[str, Any], bib: str, primary: dict[str, Any], legacy: dict[str, Any],
     cross_indexes: dict[str, dict[tuple[str, str], dict[str, Any]]], start_index: dict[tuple[str, str], dict[str, Any]],
+    public_contestant: dict[str, Any],
 ) -> dict[str, Any]:
     payload: dict[str, Any] = {
         "primary_result_file": {"file": PRIMARY_RESULTS, "row": primary},
         "legacy_finish_export": {"file": race["source_csv"], "row": legacy},
+        "public_contestant_api": {"file": str(PUBLIC_API_SNAPSHOT.relative_to(ROOT)).replace("\\", "/"), "row": public_contestant},
         "cross_validation": {},
     }
     for file_name, index in cross_indexes.items():
@@ -133,6 +167,7 @@ def _insert_results(
     conn: sqlite3.Connection, config: dict[str, Any], catalog: dict[str, tuple[int, int, float]],
     primary_by_race: dict[str, list[dict[str, Any]]], cross_indexes: dict[str, dict[tuple[str, str], dict[str, Any]]],
     start_index: dict[tuple[str, str], dict[str, Any]], route: dict[str, Any],
+    public_by_bib: dict[str, dict[str, Any]],
 ) -> tuple[dict[str, Any], dict[str, Any], dict[tuple[str, str], int], dict[tuple[str, str], int], list[dict[str, Any]]]:
     source_id = conn.execute("SELECT id FROM sources WHERE code='eqtiming_official_resultlist'").fetchone()[0]
     web_races: dict[str, Any] = {}
@@ -175,7 +210,13 @@ def _insert_results(
             finish_seconds = gross_seconds if gross_seconds is not None else (legacy_ms / 1000 if legacy_ms is not None else None)
             finish_ms = round(finish_seconds * 1000) if finish_seconds is not None else None
             net_ms = to_int(legacy.get("NetTime")) if status == "FINISHED" else None
-            raw = _raw_sources(race, bib, primary, legacy, cross_indexes, start_index)
+            public_contestant = public_by_bib.get(bib)
+            if not public_contestant:
+                raise ValueError(f"Public EQ Timing snapshot is missing bib {bib}")
+            public_stage = ((public_contestant.get("Pulje") or {}).get("Navn"))
+            if public_stage != race["source_race_name"]:
+                raise ValueError(f"Public EQ Timing race mismatch for bib {bib}: {public_stage}")
+            raw = _raw_sources(race, bib, primary, legacy, cross_indexes, start_index, public_contestant)
             athlete_id = team_id = None
             if entity_type == "athlete":
                 with conn:
@@ -212,7 +253,54 @@ def _insert_results(
                 )
             result_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
             result_ids[(race_key, bib)] = result_id
-            if finish_seconds is not None:
+            public_passes = _public_passes(public_contestant)
+            checkpoint_ids = {
+                row[0]: row[1] for row in conn.execute(
+                    "SELECT checkpoint_key,id FROM checkpoints WHERE race_id=?", (race_id,)
+                ).fetchall()
+            }
+            imported_passes = 0
+            for passage in public_passes:
+                station = passage.get("StasjonsOppsett") or {}
+                source_name = official_clean(station.get("Navn"))
+                checkpoint_key = SOURCE_POINT_KEYS.get(source_name or "")
+                if checkpoint_key not in checkpoint_ids:
+                    continue
+                placing = passage.get("Plassering") or {}
+                split = passage.get("Splitt") or {}
+                elapsed = to_int(passage.get("AkkumulertTid"))
+                # EQ Timing includes zero-valued placeholder passages for DNS and
+                # not-yet-reached controls. They are schema slots, not timings.
+                if elapsed is None or elapsed <= 0:
+                    continue
+                with conn:
+                    conn.execute(
+                        "UPDATE checkpoints SET source_station_uid=COALESCE(source_station_uid,?) WHERE id=?",
+                        (str(station.get("UID") or "") or None, checkpoint_ids[checkpoint_key]),
+                    )
+                    conn.execute(
+                        """INSERT INTO splits(result_id,checkpoint_id,elapsed_seconds,place_overall,place_gender,
+                           place_class,source_point_name,split_seconds,split_distance_km,speed_kmh,pace_min_per_km,
+                           passage_time,is_finish_only_export,raw_json) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                        (result_id, checkpoint_ids[checkpoint_key], elapsed / 1000, to_int(placing.get("Total")),
+                         to_int(placing.get("Kjonn")), to_int(placing.get("Klasse")), source_name,
+                         (to_int(split.get("Tid")) or 0) / 1000 if split.get("Tid") is not None else None,
+                         to_float(split.get("Km")), to_float(split.get("Hastighet")), to_float(split.get("Tempo")),
+                         official_clean(passage.get("Tid")), 0,
+                         json.dumps(passage, ensure_ascii=False, separators=(",", ":"))),
+                    )
+                imported_passes += 1
+                web_splits.append({
+                    "race_key": race_key, "bib": bib, "checkpoint": checkpoint_key,
+                    "elapsed_seconds": elapsed / 1000,
+                    "split_seconds": (to_int(split.get("Tid")) or 0) / 1000 if split.get("Tid") is not None else None,
+                    "split_distance_km": to_float(split.get("Km")), "speed_kmh": to_float(split.get("Hastighet")),
+                    "pace_min_per_km": to_float(split.get("Tempo")), "passage_time": official_clean(passage.get("Tid")),
+                    "place_overall": to_int(placing.get("Total")), "place_gender": to_int(placing.get("Kjonn")),
+                    "place_class": to_int(placing.get("Klasse")), "source_point_name": source_name,
+                    "is_finish_only_export": False,
+                })
+            if finish_seconds is not None and not imported_passes:
                 with conn:
                     conn.execute(
                         """INSERT INTO splits(result_id,checkpoint_id,elapsed_seconds,place_overall,place_gender,
@@ -234,7 +322,7 @@ def _insert_results(
                 "overall_place": to_int(primary.get("Rank Total")), "gender_place": to_int(primary.get("Rank Gender")),
                 "class_place": to_int(primary.get("Rank Class")), "start_time": clean(legacy.get("Starttime")),
                 "passing_time": official_clean(primary.get("TimeOfDay")), "role_km": to_float(legacy.get("RoleKm")),
-                "finish_point_only": True, "raw": raw,
+                "finish_point_only": not bool(imported_passes), "split_count": imported_passes,
             })
         web_races[race_key] = {
             "race_key": race_key, "section": race["section"], "source_race_name": race["source_race_name"],
@@ -248,6 +336,8 @@ def _insert_results(
             "point_names": sorted({clean(row.get("PointName")) for row in legacy_rows if clean(row.get("PointName"))}),
             "role_km_values": sorted({to_float(row.get("RoleKm")) for row in legacy_rows if to_float(row.get("RoleKm")) is not None}),
             "intermediate_split_rows_in_csv": sum(1 for row in legacy_rows if clean(row.get("PointName")) not in {None, "Mål"}),
+            "public_api_split_rows": sum(record["split_count"] for record in records),
+            "records_with_public_api_splits": sum(1 for record in records if record["split_count"] > 0),
         }
     return web_races, report_races, result_ids, team_ids, web_splits
 
@@ -388,14 +478,13 @@ def _write_reports(
         ROOT / "reports" / "eqtiming-missing-data.json",
         {
             "event_id": 77906,
-            "intermediate_splits_found": False,
-            "available": "Finish result and finish time for FINISHED records; official start-list member/leg evidence for relays.",
-            "missing_by_race": {
-                "individual-75-2026": ["Skatås", "Kåsjön", "Jonsered", "Lerum", "Floda", "Tollered", "Norsesund", "Västra Bodarna"],
-                "individual-35-2026": ["Tollered", "Norsesund", "Västra Bodarna"],
-                "relay-75-2026": ["cumulative team time at every exchange", "actual leg time", "team placing after every leg"],
-                "relay-35-2026": ["cumulative team time at every exchange", "actual leg time", "team placing after every leg"],
-            },
+            "intermediate_splits_found": True,
+            "available": "Official cumulative passages, split times, pace, speed and placings from EQ Timing's public contestant endpoint.",
+            "known_limitations": [
+                "DNS records and some DNF records have no or incomplete passages.",
+                "Nolhaga is a timing point, not a relay exchange.",
+                "A relay runner is attached to a leg only when separate start-list evidence verifies the mapping.",
+            ],
             "rule": "No missing split, passing, leg time, or placing is interpolated or fabricated.",
         },
     )
@@ -408,6 +497,7 @@ def import_all_official() -> None:
     WEB_ROUTE.parent.mkdir(parents=True, exist_ok=True)
     WEB_ROUTE.write_text(json.dumps(route, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     primary_rows = load_primary_results()
+    public_by_bib = _load_public_contestants()
     primary_by_race = {
         race["race_key"]: [row for row in primary_rows if row.get("Stage") == race["source_race_name"]]
         for race in config["races"]
@@ -431,7 +521,7 @@ def import_all_official() -> None:
     conn = prepare_db()
     catalog = _insert_catalog(conn, config, route)
     web_races, report_races, result_ids, team_ids, web_splits = _insert_results(
-        conn, config, catalog, primary_by_race, cross_indexes, start_index, route
+        conn, config, catalog, primary_by_race, cross_indexes, start_index, route, public_by_bib
     )
     relay_report, web_teams, web_members, web_assignments = _insert_relay_data(
         conn, primary_by_race, assignments_by_race, patterns, result_ids, team_ids
@@ -446,9 +536,10 @@ def import_all_official() -> None:
                   "floda_start": route["floda_start"]},
         "races": report_races,
         "limitations": [
-            "The official files contain no separate checkpoint passages or intermediate times.",
+            "CSV exports contain finish results only; official passages come from the cached public EQ Timing endpoint.",
             "Empty XML leg names are stored as missing and conflicts are never verified assignments.",
-            "All original fields from primary, legacy 81-column, and cross-validation rows are preserved in raw_json.",
+            "Missing passages are retained as missing and never interpolated.",
+            "All original fields from CSV, XML and public JSON sources are preserved in raw_json.",
         ],
     }
     files_analysis = analyze_source_files()
@@ -457,8 +548,23 @@ def import_all_official() -> None:
         "meta": {
             "project": "Gotaleden Splits", "event": config["event"],
             "primary_result_source": PRIMARY_RESULTS, "primary_relay_leg_source": PRIMARY_RELAY_LEGS,
-            "raw_fields_preserved": True, "intermediate_splits_available": False,
+            "public_api_source": str(PUBLIC_API_SNAPSHOT.relative_to(ROOT)).replace("\\", "/"),
+            "raw_fields_preserved": True, "intermediate_splits_available": True,
             "relay_coverage": relay_report["races"],
+        },
+        "checkpoints": {
+            race["race_key"]: [
+                {
+                    "key": key,
+                    "name": next(item["name"] for item in config["checkpoints"] if item["key"] == key),
+                    "distance_km": next(item["nominal_cumulative_km_75"] for item in config["checkpoints"] if item["key"] == key)
+                        - (41.5 if race["route_start"] == "floda" else 0),
+                    "is_timing_point": next(item.get("is_timing_point", True) for item in config["checkpoints"] if item["key"] == key),
+                    "is_relay_exchange": next(item.get("is_relay_exchange", False) for item in config["checkpoints"] if item["key"] == key),
+                }
+                for key in race["checkpoints"]
+            ]
+            for race in config["races"]
         },
         "races": web_races, "splits": web_splits, "teams": web_teams,
         "team_members": web_members, "relay_leg_assignments": web_assignments,
