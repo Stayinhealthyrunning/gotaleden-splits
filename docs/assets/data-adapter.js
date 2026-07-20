@@ -84,8 +84,8 @@
       const from=anchors[index-1],to=anchors[index],share=(target-from.elapsedSeconds)/(to.elapsedSeconds-from.elapsedSeconds||1);return from.distance+(to.distance-from.distance)*share;
     }
     function stateAtTime(profileValue,time){
-      const distance=distanceAtTime(profileValue,time),anchors=profileValue.anchors;let index=1;while(index<anchors.length&&anchors[index].distance<distance)index++;const from=anchors[Math.max(0,index-1)],to=anchors[Math.min(index,anchors.length-1)],segment=profileValue.segments[Math.max(0,index-1)]||null,share=(distance-from.distance)/(to.distance-from.distance||1),place=finite(from.placeOverall)&&finite(to.placeOverall)?Math.round(Number(from.placeOverall)+(Number(to.placeOverall)-Number(from.placeOverall))*share):(to.placeOverall||from.placeOverall);
-      return{distance,from,to,segment,place,finished:time>=profileValue.maxTime&&profileValue.finish,stopped:time>=profileValue.maxTime&&!profileValue.finish};
+      const distance=distanceAtTime(profileValue,time),anchors=profileValue.anchors;let index=1;while(index<anchors.length&&anchors[index].distance<distance)index++;const from=anchors[Math.max(0,index-1)],to=anchors[Math.min(index,anchors.length-1)],segment=profileValue.segments[Math.max(0,index-1)]||null,share=(distance-from.distance)/(to.distance-from.distance||1),interpolatePlace=key=>finite(from[key])&&finite(to[key])?Math.round(Number(from[key])+(Number(to[key])-Number(from[key]))*share):(to[key]||from[key]||null);
+      return{distance,from,to,segment,place:interpolatePlace('placeOverall'),classPlace:interpolatePlace('placeClass'),genderPlace:interpolatePlace('placeGender'),finished:time>=profileValue.maxTime&&profileValue.finish,stopped:time>=profileValue.maxTime&&!profileValue.finish};
     }
     function filtered(raceKey,filters={}){
       const query=String(filters.query||'').trim().toLocaleLowerCase('sv'),club=String(filters.club||'').trim().toLocaleLowerCase('sv');
