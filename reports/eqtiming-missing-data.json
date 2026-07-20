@@ -1,0 +1,11 @@
+{
+  "event_id": 77906,
+  "intermediate_splits_found": true,
+  "available": "Official cumulative passages, split times, pace, speed and placings from EQ Timing's public contestant endpoint.",
+  "known_limitations": [
+    "DNS records and some DNF records have no or incomplete passages.",
+    "Nolhaga is a timing point, not a relay exchange.",
+    "A relay runner is attached to a leg only when separate start-list evidence verifies the mapping."
+  ],
+  "rule": "No missing split, passing, leg time, or placing is interpolated or fabricated."
+}
