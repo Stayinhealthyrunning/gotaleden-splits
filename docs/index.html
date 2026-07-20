@@ -2,101 +2,162 @@
 <html lang="sv">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#0d5964">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Gotaleden Splits – fördjupad analys av Gotaleden Stafett & Ultra 2026.">
   <title>Gotaleden Splits</title>
-  <meta name="description" content="Resultat, passeringar och stafettanalys för Gotaleden Stafett & Ultra 2026.">
-  <link rel="stylesheet" href="assets/style.css">
+  <link rel="stylesheet" href="assets/style.css?v=20260720-uiport1">
 </head>
 <body>
   <header class="hero">
+    <div class="hero__glow"></div>
     <div class="hero__inner">
       <p class="eyebrow">GÖTEBORG · FLODA · ALINGSÅS</p>
       <h1>Gotaleden <em>Splits</em></h1>
-      <p class="lead">Premiäråret 2026, från måltid till varje officiell passering.</p>
-      <p class="route-line">Göteborg <i></i> Skatås <i></i> Kåsjön <i></i> Jonsered <i></i> Lerum <i></i> Floda <i></i> Tollered <i></i> Norsesund <i></i> Västra Bodarna <i></i> Alingsås</p>
+      <p class="hero__lead">Följ loppet kontroll för kontroll. Upptäck tempot, placeringarna och berättelsen längs leden.</p>
+      <div class="hero__route" aria-label="Banans orter">
+        <span>Göteborg</span><i></i><span>Skatås</span><i></i><span>Kåsjön</span><i></i><span>Jonsered</span><i></i><span>Lerum</span><i></i><span>Floda</span><i></i><span>Tollered</span><i></i><span>Norsesund</span><i></i><span>Västra Bodarna</span><i></i><span>Alingsås</span>
+      </div>
     </div>
   </header>
 
   <main>
-    <nav class="race-switcher" aria-label="Välj lopp">
-      <button data-race="individual-75-2026">Individuellt 75</button>
-      <button data-race="individual-35-2026">Individuellt 35</button>
-      <button data-race="relay-75-2026">Stafett 75</button>
-      <button data-race="relay-35-2026">Stafett 35</button>
+    <nav class="race-switch" aria-label="Välj lopp" role="tablist">
+      <button class="active" data-race="individual-75-2026" role="tab" aria-selected="true"><span>Individuellt</span><strong>75</strong><small>Göteborg–Alingsås</small></button>
+      <button data-race="individual-35-2026" role="tab" aria-selected="false"><span>Individuellt</span><strong>35</strong><small>Floda–Alingsås</small></button>
+      <button data-race="relay-75-2026" role="tab" aria-selected="false"><span>Stafett</span><strong>75</strong><small>Göteborg–Alingsås</small></button>
+      <button data-race="relay-35-2026" role="tab" aria-selected="false"><span>Stafett</span><strong>35</strong><small>Floda–Alingsås</small></button>
     </nav>
 
-    <section class="intro panel">
-      <div><p class="eyebrow dark">GOTALEDEN STAFETT & ULTRA · 9 MAJ 2026</p><h2 id="race-title">Laddar…</h2><p id="race-subtitle"></p></div>
-      <a class="source-link" href="https://live.eqtiming.com/77906" rel="noreferrer">Officiella resultat ↗</a>
-    </section>
-
-    <section class="kpis" id="kpis" aria-label="Nyckeltal"></section>
-
-    <section class="dashboard-grid">
-      <article class="panel chart-panel">
-        <div class="section-heading"><div><p class="eyebrow dark">MÅLGÅNG</p><h2>Tidsfördelning</h2></div><span class="hint">Fullföljande</span></div>
-        <div id="finish-chart" class="chart" aria-label="Histogram över måltider"></div>
-      </article>
-      <article class="panel chart-panel">
-        <div class="section-heading"><div><p class="eyebrow dark">STARTFÄLT</p><h2>Klassfördelning</h2></div></div>
-        <div id="class-chart" class="chart" aria-label="Fördelning per klass"></div>
-      </article>
-    </section>
-
-    <section class="panel split-panel">
-      <div class="section-heading">
-        <div><p class="eyebrow dark">PASSERINGSANALYS</p><h2>Fart längs banan</h2><p>Medianfart per delsträcka baserad enbart på publicerade passeringar.</p></div>
-        <span class="data-chip" id="split-coverage"></span>
+    <nav class="analysis-nav" aria-label="Analysnavigation">
+      <div class="analysis-nav__scroll">
+        <button class="active" data-target="overview">Översikt</button>
+        <button data-target="statistics">Statistik</button>
+        <button data-target="gender">Genusperspektiv</button>
+        <button data-target="segments">Delsträckelabbet</button>
+        <button data-target="clubs">Klubb & ort</button>
+        <button data-target="map-duel">Kartduell</button>
+        <button data-target="results">Resultat</button>
       </div>
-      <div id="pace-chart" class="chart wide"></div>
-    </section>
+      <button class="share-view" id="share-view" type="button">Dela vy</button>
+    </nav>
 
-    <section class="panel relay-only" id="relay-insights" hidden>
-      <div class="section-heading"><div><p class="eyebrow dark">STAFETT</p><h2>Lag och checkpointtäckning</h2></div></div>
-      <div id="relay-stats" class="relay-stats"></div>
-    </section>
-
-    <section class="panel results-panel">
-      <div class="section-heading results-heading">
-        <div><p class="eyebrow dark">RESULTAT</p><h2>Sök och utforska</h2><p>Klicka på en rad för komplett deltagar- eller lagvy.</p></div>
-        <div class="filters">
-          <input id="search" type="search" placeholder="Namn, lag, klubb eller startnummer" aria-label="Sök resultat">
-          <select id="class-filter" aria-label="Filtrera klass"><option value="">Alla klasser</option></select>
-          <select id="status-filter" aria-label="Filtrera status"><option value="">Alla statusar</option><option>FINISHED</option><option>DNF</option><option>DNS</option><option>DSQ</option></select>
-        </div>
+    <section class="panel runner-lookup" id="runner-lookup">
+      <div>
+        <p class="eyebrow ink">INDIVIDUELL LOPPANALYS</p>
+        <h2 id="lookup-title">Analysera en löpares lopp</h2>
+        <p id="lookup-copy">Sök på namn eller startnummer och öppna en komplett profil med mellantider, placering, tempo, percentil och replay.</p>
       </div>
-      <div class="table-wrap"><table><thead><tr>
-        <th><button data-sort="overall_place">Plats</button></th><th><button data-sort="name">Namn / lag</button></th>
-        <th><button data-sort="class_name">Klass</button></th><th><button data-sort="finish_seconds">Tid</button></th>
-        <th>Status</th><th><span class="sr-only">Jämför</span></th>
-      </tr></thead><tbody id="results-body"></tbody></table></div>
-      <div class="table-footer"><span id="result-count"></span><button class="ghost" id="show-more">Visa fler</button></div>
+      <div class="picker">
+        <label for="runner-search">Hitta <span data-entity-singular>löpare</span></label>
+        <input id="runner-search" type="search" autocomplete="off" placeholder="Namn eller startnummer">
+        <div class="suggestions" id="runner-suggestions" hidden></div>
+      </div>
     </section>
 
-    <section class="panel comparison-panel">
-      <div class="section-heading"><div><p class="eyebrow dark">JÄMFÖR</p><h2>Upp till fem på samma bana</h2><p>Välj med + i resultatlistan. Kurvorna visar officiell ackumulerad tid.</p></div><button class="ghost" id="clear-comparison">Rensa</button></div>
-      <div id="comparison-empty" class="empty">Välj deltagare eller lag för att jämföra passeringar.</div>
-      <div id="comparison-chart" class="chart wide"></div>
+    <section class="scope panel" id="overview">
+      <div><p class="eyebrow ink">LOPP- OCH FÄLTSTATISTIK</p><h2 id="race-title">Individuellt 75</h2><p id="race-subtitle">Premiäråret 2026 · officiella resultat och publicerade passeringar.</p></div>
+      <a class="source-link" id="source-link" href="https://live.eqtiming.com/77906" target="_blank" rel="noopener">Officiella resultat ↗</a>
     </section>
 
-    <section class="panel elevation-panel">
-      <div class="section-heading"><div><p class="eyebrow dark">BANPROFIL</p><h2>Höjd längs officiell rutt</h2><p id="elevation-source">Laddar höjdkälla…</p></div><span class="data-chip">50 m profil</span></div>
-      <div id="elevation-chart" class="chart wide" aria-label="Höjdprofil längs officiell GPX"></div>
+    <section class="toolbar panel" aria-label="Filter">
+      <label>Kön<select id="sex-filter"><option value="">Alla</option><option value="M">Män</option><option value="F">Kvinnor</option></select></label>
+      <label>Klass<select id="class-filter"><option value="">Alla klasser</option></select></label>
+      <label>Klubb eller ort<input id="club-filter" type="search" placeholder="Alla klubbar"></label>
+      <label>Status<select id="status-filter"><option value="">Alla</option></select></label>
+      <label>Fartenhet<select id="unit-filter"><option value="pace">min/km</option><option value="speed">km/h</option></select></label>
+      <button class="button secondary" id="reset-filters" type="button">Återställ</button>
     </section>
 
-    <section class="panel replay-panel">
-      <div class="section-heading"><div><p class="eyebrow dark">BANREPLAY</p><h2>Följ loppet på GPX-rutten</h2><p>Position mellan officiella passeringar är en tydligt markerad linjär uppskattning.</p></div><span class="data-chip">GPX + officiella tider</span></div>
-      <div class="replay-canvas-wrap"><canvas id="replay-canvas" width="1100" height="360"></canvas></div>
-      <div class="replay-controls"><button id="replay-toggle">▶ Spela</button><input id="replay-time" type="range" min="0" max="1000" value="0"><output id="replay-clock">0:00:00</output></div>
+    <section class="kpis" id="overview-kpis" aria-label="Nyckeltal"></section>
+
+    <section class="feature-grid">
+      <article class="panel wide-card">
+        <div class="panel-head"><div><p class="eyebrow ink">FÖRDELNING</p><h2>Måltider</h2></div><span class="pill" id="distribution-label">2026</span></div>
+        <div class="chart" id="finish-histogram"></div>
+      </article>
+      <article class="panel">
+        <div class="panel-head"><div><p class="eyebrow ink">LOPPETS DYNAMIK</p><h2>Medianfart</h2></div><span class="pill" data-unit-label>min/km</span></div>
+        <p class="panel-copy">Fältets median på varje publicerad delsträcka.</p>
+        <div class="chart" id="median-pace"></div>
+      </article>
     </section>
+
+    <section class="panel elevation-card">
+      <div class="panel-head"><div><p class="eyebrow ink">BANPROFIL</p><h2>Från stad till vårskog</h2><p class="panel-copy">Officiell rutt med referensmätt höjddata. Checkpoints använder samma GPX-distans som replay.</p></div><span class="pill" id="elevation-source">Referenshöjd</span></div>
+      <div class="chart elevation-chart" id="elevation-profile"></div>
+    </section>
+
+    <section class="section-intro" id="statistics">
+      <p class="eyebrow ink">STATISTIKVERKSTAD</p><h2>Vad hände i loppet?</h2><p>Fördjupa dig i samband, bortfall, delsträckor och placeringar för det valda fältet.</p>
+    </section>
+    <section class="analysis-grid">
+      <article class="panel span-2"><div class="panel-head"><div><p class="eyebrow ink">PLACERINGSMOTOR</p><h3>Tid mot placering</h3></div><span class="pill">klicka för profil</span></div><div class="chart" id="placement-scatter"></div></article>
+      <article class="panel simulator"><div class="panel-head"><div><p class="eyebrow ink">MÅLTIDSSIMULATOR</p><h3>Vad krävs?</h3></div></div><label>Välj måltid<input id="target-time" type="range" min="0" max="1" value="0"></label><strong id="target-time-label">–</strong><div id="target-time-result"></div></article>
+      <article class="panel"><div class="panel-head"><div><p class="eyebrow ink">REPET DRAS</p><h3>Avhopp genom loppet</h3></div></div><div id="dnf-funnel"></div></article>
+      <article class="panel"><div class="panel-head"><div><p class="eyebrow ink">FARTSIGNATUR</p><h3>Delsträckornas karaktär</h3></div></div><div class="segment-character" id="segment-character"></div></article>
+      <article class="panel"><div class="panel-head"><div><p class="eyebrow ink">PLACERINGSEXPRESS</p><h3>Största avancemang</h3></div></div><div class="ranking" id="overtake-ranking"></div></article>
+      <article class="panel span-2"><div class="panel-head"><div><p class="eyebrow ink">PACING</p><h3>Fart relativt det egna loppet</h3></div><span class="pill">100 = snittfart</span></div><div class="chart" id="pacing-chart"></div></article>
+    </section>
+
+    <section class="audience-world" id="gender">
+      <div class="section-intro"><p class="eyebrow ink">GENUSPERSPEKTIV</p><h2>Fältet ur två perspektiv</h2><p>Deltagande, fullföljande och pacing för kvinnor och män i det valda loppet.</p></div>
+      <div class="gender-kpis" id="gender-kpis"></div>
+      <div class="feature-grid">
+        <article class="panel wide-card"><div class="panel-head"><div><p class="eyebrow ink">FART GENOM LOPPET</p><h3>Median per delsträcka</h3></div><span class="pill" data-unit-label>min/km</span></div><div class="chart" id="gender-pace"></div></article>
+        <article class="panel"><div class="panel-head"><div><p class="eyebrow ink">PACING</p><h3>Fartretention</h3></div></div><div class="chart" id="gender-retention"></div></article>
+      </div>
+    </section>
+
+    <section class="audience-world" id="segments">
+      <div class="section-intro"><p class="eyebrow ink">DELSTRÄCKELABBET</p><h2>Var avgjordes loppet?</h2><p>Jämför segment, relativa prestationer och placeringar utan att fabricera saknade passager.</p></div>
+      <article class="panel segment-lab">
+        <div class="segment-controls"><label>Från<select id="segment-from"></select></label><label>Till<select id="segment-to"></select></label><label>Sortera<select id="segment-metric"><option value="time">Snabbast tid</option><option value="relative">Bäst mot median</option><option value="gain">Flest vunna platser</option></select></label></div>
+        <div class="podium" id="segment-podium"></div><div class="ranking" id="segment-ranking"></div>
+      </article>
+      <div class="feature-grid">
+        <article class="panel wide-card"><div class="panel-head"><div><p class="eyebrow ink">VAD KRÄVS?</p><h3>Percentiltrappan</h3></div></div><div class="percentile-ladder" id="percentile-ladder"></div></article>
+        <article class="panel"><div class="panel-head"><div><p class="eyebrow ink">FÄLTETS FLÖDE</p><h3>Så sprids startfältet</h3></div></div><div class="chart" id="field-flow"></div></article>
+      </div>
+    </section>
+
+    <section class="audience-world" id="clubs">
+      <div class="section-intro"><p class="eyebrow ink">KLUBB- OCH ORTSARENAN</p><h2>Gemenskap i siffror</h2><p>Sök en klubb eller välj upp till fyra för att jämföra deltagare, målgång och fart.</p></div>
+      <article class="panel club-arena">
+        <div class="club-picker"><label>Sök klubb<input id="club-search" type="search" autocomplete="off" placeholder="Skriv klubbnamn"></label><div class="suggestions" id="club-suggestions" hidden></div></div>
+        <div class="selected-chips" id="selected-clubs"></div>
+        <div class="club-comparison" id="club-comparison"></div>
+        <div class="chart" id="club-pace"></div>
+      </article>
+    </section>
+
+    <section class="audience-world" id="map-duel">
+      <div class="section-intro"><p class="eyebrow ink">KARTDUELL</p><h2 id="duel-title">Löpare mot löpare</h2><p>Välj 1–5 deltagare. Rörelsen mellan officiella passeringar är linjärt uppskattad.</p></div>
+      <article class="panel duel-picker-panel">
+        <div class="picker"><label>Sök och lägg till <span data-entity-singular>löpare</span><input id="duel-search" type="search" autocomplete="off" placeholder="Namn eller startnummer"></label><div class="suggestions" id="duel-suggestions" hidden></div></div>
+        <div class="selected-chips" id="duel-selected"></div>
+      </article>
+      <article class="panel map-stage" id="map-duel-stage"><div class="empty">Välj minst en deltagare för att starta Kartduell.</div></article>
+    </section>
+
+    <section class="panel results-panel" id="results">
+      <div class="panel-head results-head"><div><p class="eyebrow ink">RESULTATDATABAS</p><h2>Sök, sortera och utforska</h2><p class="panel-copy">Öppna en rad för komplett loppanalys.</p></div><label class="result-search">Sök<input id="result-search" type="search" placeholder="Namn, nummer eller klubb"></label></div>
+      <div class="table-wrap"><table><thead><tr><th data-sort="overall_place">Plats</th><th data-sort="name">Namn / lag</th><th data-sort="sex">Kön</th><th data-sort="class_name">Klass</th><th data-sort="club">Klubb</th><th data-sort="finish_seconds">Tid</th><th data-sort="status">Status</th></tr></thead><tbody id="results-body"></tbody></table></div>
+      <div class="pagination"><span id="result-count"></span><div><button class="button secondary" id="prev-page">Föregående</button><span id="page-label"></span><button class="button secondary" id="next-page">Nästa</button></div></div>
+    </section>
+
+    <section class="data-note panel"><p><strong>Dataprincip:</strong> endast publicerade EQ Timing-passager visas. Saknade mellantider uppskattas aldrig i tabeller eller analyser. Kartanimationen interpolerar enbart mellan kända passager och märks därför som uppskattad.</p></section>
   </main>
 
-  <dialog id="detail-dialog"><button class="dialog-close" aria-label="Stäng">×</button><div id="detail-content"></div></dialog>
-  <footer>Gotaleden Splits · Fristående analys · Officiell data från EQ Timing · Banans geometri från officiell GPX</footer>
-  <script src="assets/data-index.js"></script>
-  <script src="assets/charts.js"></script>
-  <script src="assets/replay.js"></script>
-  <script src="assets/app.js"></script>
+  <dialog id="detail-dialog"><button class="dialog-close" type="button" aria-label="Stäng">×</button><div id="detail-content"></div></dialog>
+  <div class="loading" id="loading"><div></div><p>Bygger Gotaleden-analysen…</p></div>
+  <footer>Gotaleden Splits · Premiäråret 2026 · Officiell rutt från Göteborg till Alingsås</footer>
+
+  <script src="assets/data-index.js?v=20260720-uiport1"></script>
+  <script src="assets/data-adapter.js?v=20260720-uiport1"></script>
+  <script src="assets/charts.js?v=20260720-uiport1"></script>
+  <script src="assets/map-engine.js?v=20260720-uiport1"></script>
+  <script src="assets/runner-replay.js?v=20260720-uiport1"></script>
+  <script src="assets/map-duel.js?v=20260720-uiport1"></script>
+  <script src="assets/app.js?v=20260720-uiport1"></script>
 </body>
 </html>
