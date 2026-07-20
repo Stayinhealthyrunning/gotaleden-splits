@@ -1,0 +1,323 @@
+{
+  "route_master": {
+    "file": "Gotaleden_Ultra_75km-30april.gpx",
+    "role": "official geometry, distance, checkpoint projection and replay"
+  },
+  "personal_reference": {
+    "file": "Suunto 9 baro Gotaleden 75.gpx",
+    "device": "Suunto 9 Baro",
+    "official": false,
+    "role": "start/finish verification, elevation reference and quality control",
+    "known_geometry_issue": "The runner is known to have left the official route at least once; reference geometry never replaces the master route."
+  },
+  "official": {
+    "file": "Gotaleden_Ultra_75km-30april.gpx",
+    "point_type": "trkpt",
+    "point_count": 13842,
+    "first_coordinate": [
+      57.70231411,
+      11.99044286
+    ],
+    "last_coordinate": [
+      57.93335346,
+      12.51765749
+    ],
+    "track_distance_km": 77.1194,
+    "elevation_point_count": 13842,
+    "elevation_coverage_pct": 100.0,
+    "min_elevation_m": 3.4,
+    "max_elevation_m": 185.6,
+    "ascent_m": 1795.5,
+    "descent_m": 1734.4,
+    "elevation_gain_loss_method": "5-point median followed by 1 m vertical deadband",
+    "smallest_nonzero_elevation_step_m": 0.0,
+    "timestamp_count": 13842,
+    "timestamps_on_all_points": true,
+    "gps_jumps_over_100m": [
+      {
+        "from_index": 171,
+        "to_index": 172,
+        "distance_m": 103.8
+      },
+      {
+        "from_index": 7528,
+        "to_index": 7529,
+        "distance_m": 124.6
+      },
+      {
+        "from_index": 7708,
+        "to_index": 7709,
+        "distance_m": 183.4
+      },
+      {
+        "from_index": 7712,
+        "to_index": 7713,
+        "distance_m": 220.3
+      },
+      {
+        "from_index": 7716,
+        "to_index": 7717,
+        "distance_m": 250.2
+      },
+      {
+        "from_index": 7720,
+        "to_index": 7721,
+        "distance_m": 141.4
+      },
+      {
+        "from_index": 7768,
+        "to_index": 7769,
+        "distance_m": 117.3
+      },
+      {
+        "from_index": 9206,
+        "to_index": 9207,
+        "distance_m": 161.7
+      },
+      {
+        "from_index": 9424,
+        "to_index": 9425,
+        "distance_m": 100.4
+      },
+      {
+        "from_index": 9886,
+        "to_index": 9887,
+        "distance_m": 157.7
+      },
+      {
+        "from_index": 12361,
+        "to_index": 12362,
+        "distance_m": 105.4
+      },
+      {
+        "from_index": 12581,
+        "to_index": 12582,
+        "distance_m": 106.7
+      },
+      {
+        "from_index": 12791,
+        "to_index": 12792,
+        "distance_m": 124.6
+      },
+      {
+        "from_index": 12946,
+        "to_index": 12947,
+        "distance_m": 166.3
+      },
+      {
+        "from_index": 13565,
+        "to_index": 13566,
+        "distance_m": 111.9
+      }
+    ]
+  },
+  "suunto_reference": {
+    "file": "Suunto 9 baro Gotaleden 75.gpx",
+    "point_type": "rtept",
+    "point_count": 26231,
+    "first_coordinate": [
+      57.702123,
+      11.989958
+    ],
+    "last_coordinate": [
+      57.933298,
+      12.517645
+    ],
+    "track_distance_km": 77.9944,
+    "elevation_point_count": 26231,
+    "elevation_coverage_pct": 100.0,
+    "min_elevation_m": -20.4,
+    "max_elevation_m": 184.8,
+    "ascent_m": 1631.0,
+    "descent_m": 1542.2,
+    "elevation_gain_loss_method": "5-point median followed by 1 m vertical deadband",
+    "smallest_nonzero_elevation_step_m": 0.2,
+    "timestamp_count": 0,
+    "timestamps_on_all_points": false,
+    "gps_jumps_over_100m": []
+  },
+  "generated_route_data_verification": {
+    "point_count": 13842,
+    "first_coordinate": [
+      57.702314,
+      11.990443
+    ],
+    "last_coordinate": [
+      57.933353,
+      12.517657
+    ],
+    "full_distance_km": 77.1194,
+    "start_distance_from_official_m": 0.01,
+    "finish_distance_from_official_m": 0.06
+  },
+  "start_distance_between_files_m": 35.8,
+  "finish_distance_between_files_m": 6.2,
+  "off_route_sections_over_50m": [
+    {
+      "start_reference_index": 9378,
+      "end_reference_index": 9386,
+      "point_count": 9,
+      "start_reference_distance_km": 28.362,
+      "end_reference_distance_km": 28.389,
+      "max_distance_from_official_m": 62.2,
+      "nearest_route_distance_km_at_start": 28.111,
+      "nearest_route_distance_km_at_end": 28.236
+    },
+    {
+      "start_reference_index": 10060,
+      "end_reference_index": 10089,
+      "point_count": 30,
+      "start_reference_distance_km": 30.381,
+      "end_reference_distance_km": 30.467,
+      "max_distance_from_official_m": 91.5,
+      "nearest_route_distance_km_at_start": 30.118,
+      "nearest_route_distance_km_at_end": 30.301
+    },
+    {
+      "start_reference_index": 10123,
+      "end_reference_index": 10166,
+      "point_count": 44,
+      "start_reference_distance_km": 30.564,
+      "end_reference_distance_km": 30.687,
+      "max_distance_from_official_m": 113.4,
+      "nearest_route_distance_km_at_start": 30.301,
+      "nearest_route_distance_km_at_end": 30.522
+    },
+    {
+      "start_reference_index": 10200,
+      "end_reference_index": 10251,
+      "point_count": 52,
+      "start_reference_distance_km": 30.789,
+      "end_reference_distance_km": 30.941,
+      "max_distance_from_official_m": 124.1,
+      "nearest_route_distance_km_at_start": 30.522,
+      "nearest_route_distance_km_at_end": 30.772
+    },
+    {
+      "start_reference_index": 10286,
+      "end_reference_index": 10300,
+      "point_count": 15,
+      "start_reference_distance_km": 31.042,
+      "end_reference_distance_km": 31.083,
+      "max_distance_from_official_m": 69.7,
+      "nearest_route_distance_km_at_start": 30.772,
+      "nearest_route_distance_km_at_end": 30.913
+    },
+    {
+      "start_reference_index": 10462,
+      "end_reference_index": 10469,
+      "point_count": 8,
+      "start_reference_distance_km": 31.591,
+      "end_reference_distance_km": 31.609,
+      "max_distance_from_official_m": 58.8,
+      "nearest_route_distance_km_at_start": 31.308,
+      "nearest_route_distance_km_at_end": 31.425
+    },
+    {
+      "start_reference_index": 13219,
+      "end_reference_index": 13240,
+      "point_count": 22,
+      "start_reference_distance_km": 40.035,
+      "end_reference_distance_km": 40.096,
+      "max_distance_from_official_m": 88.2,
+      "nearest_route_distance_km_at_start": 39.522,
+      "nearest_route_distance_km_at_end": 39.683
+    },
+    {
+      "start_reference_index": 15577,
+      "end_reference_index": 15598,
+      "point_count": 22,
+      "start_reference_distance_km": 47.036,
+      "end_reference_distance_km": 47.094,
+      "max_distance_from_official_m": 78.9,
+      "nearest_route_distance_km_at_start": 46.45,
+      "nearest_route_distance_km_at_end": 46.607
+    },
+    {
+      "start_reference_index": 21936,
+      "end_reference_index": 21945,
+      "point_count": 10,
+      "start_reference_distance_km": 65.72,
+      "end_reference_distance_km": 65.743,
+      "max_distance_from_official_m": 62.1,
+      "nearest_route_distance_km_at_start": 64.923,
+      "nearest_route_distance_km_at_end": 65.047
+    },
+    {
+      "start_reference_index": 22918,
+      "end_reference_index": 22939,
+      "point_count": 22,
+      "start_reference_distance_km": 68.521,
+      "end_reference_distance_km": 68.589,
+      "max_distance_from_official_m": 82.4,
+      "nearest_route_distance_km_at_start": 67.688,
+      "nearest_route_distance_km_at_end": 67.854
+    },
+    {
+      "start_reference_index": 25325,
+      "end_reference_index": 25338,
+      "point_count": 14,
+      "start_reference_distance_km": 75.434,
+      "end_reference_distance_km": 75.472,
+      "max_distance_from_official_m": 61.1,
+      "nearest_route_distance_km_at_start": 74.624,
+      "nearest_route_distance_km_at_end": 74.648
+    },
+    {
+      "start_reference_index": 25458,
+      "end_reference_index": 25462,
+      "point_count": 5,
+      "start_reference_distance_km": 75.806,
+      "end_reference_distance_km": 75.818,
+      "max_distance_from_official_m": 56.5,
+      "nearest_route_distance_km_at_start": 74.878,
+      "nearest_route_distance_km_at_end": 74.99
+    }
+  ],
+  "off_route_sections_over_100m": [
+    {
+      "start_reference_index": 10141,
+      "end_reference_index": 10147,
+      "point_count": 7,
+      "start_reference_distance_km": 30.616,
+      "end_reference_distance_km": 30.635,
+      "max_distance_from_official_m": 113.4,
+      "nearest_route_distance_km_at_start": 30.301,
+      "nearest_route_distance_km_at_end": 30.522
+    },
+    {
+      "start_reference_index": 10217,
+      "end_reference_index": 10233,
+      "point_count": 17,
+      "start_reference_distance_km": 30.843,
+      "end_reference_distance_km": 30.889,
+      "max_distance_from_official_m": 124.1,
+      "nearest_route_distance_km_at_start": 30.522,
+      "nearest_route_distance_km_at_end": 30.772
+    }
+  ],
+  "matching": {
+    "method": "global spatial nearest candidates with sequence-aware monotonic route window",
+    "accepted_threshold_m": 50,
+    "matched_points": 25973,
+    "reference_points": 26231,
+    "median_nearest_distance_m": 9.4,
+    "max_nearest_distance_m": 124.1
+  },
+  "elevation_profile": {
+    "route_master": "Gotaleden_Ultra_75km-30april.gpx",
+    "reference_file": "Suunto 9 baro Gotaleden 75.gpx",
+    "source": "official route with projected Suunto 9 Baro reference elevation",
+    "reference_used": true,
+    "reference_is_official": false,
+    "vertical_datum_adjustment_m": -0.2,
+    "matching_threshold_m": 50,
+    "reference_coverage_km": 76.6,
+    "profile_spacing_km": 0.05,
+    "smoothing": "three-sample median after 50 m aggregation",
+    "ascent_m": 1130.4,
+    "descent_m": 1043.0,
+    "min_elevation_m": -19.8,
+    "max_elevation_m": 183.4
+  }
+}

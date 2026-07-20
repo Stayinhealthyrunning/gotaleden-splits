@@ -36,12 +36,12 @@ class AnalysisFoundationTests(unittest.TestCase):
         })
         self.assertEqual(next(s for s in splits if s["checkpoint"] == "nolhaga")["elapsed_seconds"], 19393.64)
 
-    def test_known_relay_has_team_passages_and_verified_runners(self):
+    def test_known_relay_has_team_passages_without_public_leg_mapping(self):
         splits = [s for s in self.data["splits"] if s["race_key"] == "relay-75-2026" and s["bib"] == "41"]
-        assignments = [a for a in self.data["relay_leg_assignments"] if a["race_key"] == "relay-75-2026" and a["team_bib"] == "41"]
+        team = next(item for item in self.data["teams"] if item["race_key"] == "relay-75-2026" and item["bib"] == "41")
         self.assertEqual(len(splits), 10)
-        self.assertEqual(len(assignments), 9)
-        self.assertTrue(all(a["assignment_status"].startswith("verified_") for a in assignments))
+        self.assertEqual(len(team["team_members"]), 9)
+        self.assertNotIn("relay_leg_assignments", self.data)
 
     def test_web_payload_is_compact_and_raw_sources_stay_in_sqlite(self):
         records = [record for race in self.data["races"].values() for record in race["records"]]
@@ -60,6 +60,7 @@ class AnalysisFoundationTests(unittest.TestCase):
             self.assertTrue((ROOT / "docs/assets" / asset).is_file())
         self.assertIn("individual-75-2026", html)
         self.assertIn("relay-35-2026", html)
+        self.assertTrue((ROOT / "docs/data/route-elevation-2026.json").is_file())
 
 
 if __name__ == "__main__":

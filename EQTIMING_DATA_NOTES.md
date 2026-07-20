@@ -38,9 +38,17 @@ EQ Timing returnerar även nollvärda kontrollplatshållare för DNS och ännu e
 lagras i råsnapshoten men importeras inte som passeringar. Nolhaga (77,8 km / 36,3 km) importeras som
 tidtagningspunkt, inte stafettväxling. Saknade tider och osäkra etapp–löpare-relationer lämnas tomma.
 
+Normaliserade passager skiljer mellan ackumulerad placering (`place_*`) och splitplacering
+(`split_place_*`), samt mellan splitfart/-tempo och ackumulerad fart/-tempo. Källans station-UID och
+checkpointdistans bevaras. Deltagar-UID, ålder, födelseår, klassrankning och klubb med dokumenterad
+fallback exporteras när källfält finns. Hela payloaden finns fortsatt i `raw_json`.
+
+Runner-to-leg-evidensen bevaras i SQLite och interna rapporter men exporteras inte som publik analys.
+
 Detaljer finns i:
 
 - `reports/eqtiming-files-analysis.json`
 - `reports/relay-member-import-report.json`
 - `reports/eqtiming-missing-data.json`
 - `reports/eqtiming-api-discovery.md`
+- `reports/eqtiming-split-coverage.json`

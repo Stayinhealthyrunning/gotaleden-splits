@@ -53,7 +53,7 @@
     </section>
 
     <section class="panel relay-only" id="relay-insights" hidden>
-      <div class="section-heading"><div><p class="eyebrow dark">STAFETT</p><h2>Lag och etappbelastning</h2></div></div>
+      <div class="section-heading"><div><p class="eyebrow dark">STAFETT</p><h2>Lag och checkpointtäckning</h2></div></div>
       <div id="relay-stats" class="relay-stats"></div>
     </section>
 
@@ -78,6 +78,11 @@
       <div class="section-heading"><div><p class="eyebrow dark">JÄMFÖR</p><h2>Upp till fem på samma bana</h2><p>Välj med + i resultatlistan. Kurvorna visar officiell ackumulerad tid.</p></div><button class="ghost" id="clear-comparison">Rensa</button></div>
       <div id="comparison-empty" class="empty">Välj deltagare eller lag för att jämföra passeringar.</div>
       <div id="comparison-chart" class="chart wide"></div>
+    </section>
+
+    <section class="panel elevation-panel">
+      <div class="section-heading"><div><p class="eyebrow dark">BANPROFIL</p><h2>Höjd längs officiell rutt</h2><p id="elevation-source">Laddar höjdkälla…</p></div><span class="data-chip">50 m profil</span></div>
+      <div id="elevation-chart" class="chart wide" aria-label="Höjdprofil längs officiell GPX"></div>
     </section>
 
     <section class="panel replay-panel">
