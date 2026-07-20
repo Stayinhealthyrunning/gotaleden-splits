@@ -1,47 +1,54 @@
-# EQ Timing — nuläge och nästa datasteg
+# EQ Timing — officiella filer för event 77906
 
-## Importerat vid projektstart
+## Källprioritet
 
-Fyra officiellt nedladdade CSV-filer från EQ Timing:
+1. `Resultlist-77906-20260719155435.csv` är primär resultatkälla. Den har 607 poster, alla fyra lopp
+   och 22 fält, inklusive lagnamn och ordnade medlemspositioner för stafett.
+2. `Startlist-77906-20260719155427.xml` är primär källa för stafettens etapp–löpare-relation.
+3. Övriga `Resultlist`-filer används för korsvalidering.
+4. `Startlist-77906-20260719155430.csv` används för kompletterande kontroll av startdata.
+5. De fyra äldre 81-kolumnsfilerna används som fallback, för exakta start-/nettotider och för att
+   bevara alla tidigare originalfält.
 
-- Ultra 75 km
-- Sprint 35 km
-- Stafett 75 km
-- Stafett 35 km
+Alla källrader som används för ett resultat bevaras i SQLite `raw_json`. Originalfilerna ändras aldrig.
 
-Samtliga 81 kolumner bevaras i råfilerna och i `raw_json`/`raw` i processad data.
+## Verifierad stafettkodning
 
-## Bekräftad begränsning
+För Stafett 75 avgränsas XML-poster med starttid `08:00:00`. För lagnummer `B` och etapp `L` gäller
+`startno = L * 1000 + B`, med etapp 1–9.
 
-De fyra startfilerna innehåller endast `PointName = Mål`. De ger därför:
+För Stafett 35 avgränsas XML-poster med starttid `12:00:00`. För lagnummer `B` och etapp `L` gäller
+`startno = B + L * 1000`, vilket innebär prefix 2–5 för etapp 1–4.
 
-- deltagare/lag
-- startnummer
-- lopp och klass
-- status
-- sluttid
-- placeringar
-- starttid/måltid
-- övriga 81 exportfält
+Starttiden är en obligatorisk del av identiteten eftersom samma numeriska XML-koder förekommer i
+olika lopp. Mönstren verifieras över samtliga lag, inte från enstaka exempel. Resultatfilens tomma
+medlemspositioner bevaras; listan komprimeras aldrig. Samma person kan därför kopplas till flera etapper.
 
-men inte separata rader för Skatås, Kåsjön, Jonsered, Lerum, Floda, Tollered, Norsesund eller Västra Bodarna.
+Assignments får status `verified_xml_and_result_list` när XML och medlemspositionen överensstämmer,
+`verified_xml` när bara XML ger ett namn, `missing` när XML saknar namn/post och `conflict` vid
+motsägelse. `missing` och `conflict` får aldrig ett `athlete_id`.
 
-## Stafett
+## Publika passeringar och kvarvarande luckor
 
-Stafettfilernas `NameFormatted` är lagnamnet.
-`Firstname` och `Surname` lagras försiktigt som `listed_contact_name`.
-De får inte tolkas som säker etapptilldelning.
+CSV-filerna saknar separata passager, men den publika endpointen
+`/api/Contestants/77906?passes=true` ger ackumulerad tid, delsträckstid, fart, tempo och placering.
+En validerad snapshot för exakt de 607 startnumren finns under `data/source/eqtiming/api/`.
 
-## Nästa tekniska undersökning
+EQ Timing returnerar även nollvärda kontrollplatshållare för DNS och ännu ej nådda kontroller. Dessa
+lagras i råsnapshoten men importeras inte som passeringar. Nolhaga (77,8 km / 36,3 km) importeras som
+tidtagningspunkt, inte stafettväxling. Saknade tider och osäkra etapp–löpare-relationer lämnas tomma.
 
-1. Identifiera EQ Timings publika JSON/XHR-anrop bakom `https://live.eqtiming.com/77906`.
-2. Hämta minst en komplett individprofil med alla passager.
-3. Hämta minst ett komplett stafettlag med alla lagpassager.
-4. Kontrollera om publika data exponerar:
-   - lagmedlemmar,
-   - vem som sprang vilken etapp,
-   - etapptid kontra ackumulerad tid,
-   - placering per etapp.
-5. Spara råpayload oförändrad innan normalisering.
+Normaliserade passager skiljer mellan ackumulerad placering (`place_*`) och splitplacering
+(`split_place_*`), samt mellan splitfart/-tempo och ackumulerad fart/-tempo. Källans station-UID och
+checkpointdistans bevaras. Deltagar-UID, ålder, födelseår, klassrankning och klubb med dokumenterad
+fallback exporteras när källfält finns. Hela payloaden finns fortsatt i `raw_json`.
 
-Ingen mellanpassage ska uppskattas eller fabriceras i databasen.
+Runner-to-leg-evidensen bevaras i SQLite och interna rapporter men exporteras inte som publik analys.
+
+Detaljer finns i:
+
+- `reports/eqtiming-files-analysis.json`
+- `reports/relay-member-import-report.json`
+- `reports/eqtiming-missing-data.json`
+- `reports/eqtiming-api-discovery.md`
+- `reports/eqtiming-split-coverage.json`
