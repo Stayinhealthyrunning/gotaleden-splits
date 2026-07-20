@@ -22,5 +22,12 @@
     series.forEach((s,si)=>{const points=s.values.map((v,i)=>v==null?null:[x(i),y(v)]);let d="",open=false;points.forEach(pt=>{if(!pt){open=false;return}d+=`${open?'L':'M'}${pt[0]},${pt[1]} `;open=true});body+=`<path class="plot-line" stroke="${palette[si%palette.length]}" d="${d}"/>`;points.filter(Boolean).forEach(pt=>body+=`<circle class="point" fill="${palette[si%palette.length]}" cx="${pt[0]}" cy="${pt[1]}" r="4"/>`)});
     const legend=`<div class="legend">${series.map((s,i)=>`<span><i style="background:${palette[i%palette.length]}"></i>${esc(s.name)}</span>`).join("")}</div>`;return legend+svg(`0 0 ${w} ${h}`,body);
   }
-  window.GCharts={histogram,bars,lines,palette};
+  function elevation(points,checkpoints){
+    if(!points.length)return '<div class="empty">Höjdprofil saknas.</div>';const w=900,h=300,p={l:48,r:18,t:16,b:42};const minX=points[0].route_distance_km,maxX=points[points.length-1].route_distance_km,values=points.map(x=>x.elevation_m).filter(Number.isFinite),minY=Math.floor(Math.min(...values)/20)*20,maxY=Math.ceil(Math.max(...values)/20)*20;const x=v=>p.l+(v-minX)/(maxX-minX||1)*(w-p.l-p.r),y=v=>h-p.b-(v-minY)/(maxY-minY||1)*(h-p.t-p.b);let body="";
+    for(let i=0;i<=4;i++){const value=minY+(maxY-minY)*i/4,yy=y(value);body+=`<line class="gridline" x1="${p.l}" y1="${yy}" x2="${w-p.r}" y2="${yy}"/><text x="${p.l-7}" y="${yy+4}" text-anchor="end">${Math.round(value)} m</text>`}
+    const line=points.map((point,i)=>`${i?'L':'M'}${x(point.route_distance_km)},${y(point.elevation_m)}`).join(" ");const area=`${line} L${x(maxX)},${h-p.b} L${x(minX)},${h-p.b} Z`;body+=`<path d="${area}" fill="rgba(124,172,105,.24)"/><path class="plot-line" stroke="#5d9560" d="${line}"/>`;
+    checkpoints.forEach(cp=>{if(cp.route_distance_km<minX||cp.route_distance_km>maxX)return;const xx=x(cp.route_distance_km);body+=`<line x1="${xx}" y1="${p.t}" x2="${xx}" y2="${h-p.b}" stroke="rgba(13,89,100,.18)"/><text x="${xx}" y="${h-15}" text-anchor="middle">${esc(cp.name)}</text>`});
+    return svg(`0 0 ${w} ${h}`,body);
+  }
+  window.GCharts={histogram,bars,lines,elevation,palette};
 })();

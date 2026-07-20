@@ -9,6 +9,7 @@
   },
   "route": {
     "source_gpx": "data/source/gpx/Gotaleden_Ultra_75km-30april.gpx",
+    "reference_elevation_gpx": "data/source/gpx/Suunto 9 baro Gotaleden 75.gpx",
     "floda_start": {
       "lat": 57.80629,
       "lon": 12.35532
