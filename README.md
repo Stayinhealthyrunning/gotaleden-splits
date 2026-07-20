@@ -63,6 +63,11 @@ Den statiska GitHub Pages-sidan i `docs/` innehåller:
 - Kartduell för upp till fem löpare eller lag på den officiella GPX-rutten;
 - höjdprofil längs samma officiella `route_distance_km` som replay.
 
+Runner Replay och Kartduell använder en gemensam, lokalt vendrad Leaflet 1.9.4-motor med
+OpenStreetMap-rutor. Ett förenklat SVG-läge finns enbart som reserv om Leaflet inte kan starta.
+Kartduellens ljudstöd är en avstängd integrationspunkt tills en godkänd ljudkälla anges; ingen
+musikfil ingår i webbbygget.
+
 Stafettvyerna analyserar lagets checkpointserie. Lagmedlemmar visas endast som medlemslista och
 kopplas inte till en viss etapp i publikt UI.
 

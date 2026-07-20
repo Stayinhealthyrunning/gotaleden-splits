@@ -49,6 +49,49 @@ class FrontendPortTests(unittest.TestCase):
         self.assertIn("data-replay-play", self.replay)
         self.assertIn("Visa hela banan", self.map_engine)
 
+    def test_leaflet_and_openstreetmap_are_the_primary_map_stack(self):
+        self.assertIn("vendor/leaflet/leaflet.css?v=1.9.4", self.index)
+        self.assertIn("vendor/leaflet/leaflet.js?v=1.9.4", self.index)
+        leaflet_js = (DOCS / "vendor" / "leaflet" / "leaflet.js").read_text(encoding="utf-8")
+        self.assertIn("Leaflet 1.9.4", leaflet_js)
+        self.assertIn('version="1.9.4"', leaflet_js)
+        self.assertIn("L.map(", self.map_engine)
+        self.assertIn("L.tileLayer(TILE_URL", self.map_engine)
+        self.assertIn("tile.openstreetmap.org", self.map_engine)
+        self.assertIn('data-map-engine="leaflet"', self.map_engine)
+        self.assertIn("OpenStreetMap-bidragsgivare", self.map_engine)
+
+    def test_leaflet_controls_markers_and_reset_contracts_are_present(self):
+        self.assertIn("zoomControl:true", self.map_engine)
+        self.assertIn("fitBounds", self.map_engine)
+        self.assertIn("L.divIcon", self.map_engine)
+        self.assertIn("L.marker", self.map_engine)
+        self.assertIn("data-map-action=\"fit\"", self.map_engine)
+        self.assertIn("data-replay-reset", self.replay)
+        self.assertIn("data-replay-follow", self.replay)
+        self.assertIn("data-duel-reset", self.duel)
+        self.assertIn("data-duel-fit", self.duel)
+
+    def test_dnf_stops_at_last_real_passage(self):
+        split_keys = {(split["race_key"], split["bib"]) for split in self.results["splits"]}
+        dnf_with_splits = [
+            record
+            for race in self.results["races"].values()
+            for record in race["records"]
+            if record["status"] == "DNF" and (race["race_key"], record["bib"]) in split_keys
+        ]
+        self.assertTrue(dnf_with_splits)
+        self.assertIn("anchors.at(-1).distance", self.adapter)
+        self.assertIn("time>=profileValue.maxTime&&!profileValue.finish", self.adapter)
+        self.assertIn("stopped:state.stopped", self.replay)
+        self.assertIn("stopped:item.state.stopped", self.duel)
+
+    def test_audio_hook_is_optional_and_disabled_without_source(self):
+        self.assertIn("audioEnabled:false", self.duel)
+        self.assertIn("audioSource:null", self.duel)
+        self.assertIn("Musik ej aktiverad", self.duel)
+        self.assertNotIn(".mp3", self.duel.casefold())
+
     def test_35_km_route_slice_starts_at_floda(self):
         checkpoints = self.results["checkpoints"]["individual-35-2026"]
         self.assertEqual(checkpoints[0]["key"], "floda")
