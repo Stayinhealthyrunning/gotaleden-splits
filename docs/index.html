@@ -6,7 +6,7 @@
   <meta name="description" content="Gotaleden Splits – fördjupad analys av Gotaleden Stafett & Ultra 2026.">
   <title>Gotaleden Splits</title>
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=1.9.4">
-  <link rel="stylesheet" href="assets/style.css?v=20260720-leaflet2">
+  <link rel="stylesheet" href="assets/style.css?v=20260720-parity3">
 </head>
 <body>
   <header class="hero">
@@ -32,10 +32,10 @@
     <nav class="analysis-nav" aria-label="Analysnavigation">
       <div class="analysis-nav__scroll">
         <button class="active" data-target="overview">Översikt</button>
-        <button data-target="statistics">Statistik</button>
         <button data-target="gender">Genusperspektiv</button>
-        <button data-target="segments">Delsträckelabbet</button>
+        <button data-target="age-analysis">Klass & ålder</button>
         <button data-target="clubs">Klubb & ort</button>
+        <button data-target="runner-lookup">Löpare</button>
         <button data-target="map-duel">Kartduell</button>
         <button data-target="results">Resultat</button>
       </div>
@@ -53,6 +53,11 @@
         <input id="runner-search" type="search" autocomplete="off" placeholder="Namn eller startnummer">
         <div class="suggestions" id="runner-suggestions" hidden></div>
       </div>
+    </section>
+
+    <section class="panel duel-picker-panel duel-quick-builder" id="duel-builder">
+      <div><p class="eyebrow ink">NÄSTA STEG · KARTDUELL</p><h2>Jämför flera på karta och höjdprofil</h2><p>1. Sök en deltagare. 2. Lägg till upp till fem. 3. Följ dem live genom loppet.</p></div>
+      <div><div class="picker"><label>Sök och lägg till <span data-entity-singular>löpare</span><input id="duel-search" type="search" autocomplete="off" placeholder="Namn eller startnummer"></label><div class="suggestions" id="duel-suggestions" hidden></div></div><div class="selected-chips" id="duel-selected"></div><button class="button secondary" type="button" data-scroll-duel>Öppna full Kartduell ↓</button></div>
     </section>
 
     <section class="scope panel" id="overview">
@@ -73,11 +78,11 @@
 
     <section class="feature-grid">
       <article class="panel wide-card">
-        <div class="panel-head"><div><p class="eyebrow ink">FÖRDELNING</p><h2>Måltider</h2></div><span class="pill" id="distribution-label">2026</span></div>
+        <div class="panel-head"><div><p class="eyebrow ink">FÖRDELNING</p><h2>Måltider</h2></div><div><span class="pill" id="distribution-label">2026</span><div class="chart-toggles" data-sex-toggles="finish"></div></div></div>
         <div class="chart" id="finish-histogram"></div>
       </article>
       <article class="panel">
-        <div class="panel-head"><div><p class="eyebrow ink">LOPPETS DYNAMIK</p><h2>Medianfart</h2></div><span class="pill" data-unit-label>min/km</span></div>
+        <div class="panel-head"><div><p class="eyebrow ink">LOPPETS DYNAMIK</p><h2>Medianfart</h2></div><div><span class="pill" data-unit-label>min/km</span><div class="chart-toggles" data-sex-toggles="pace"></div></div></div>
         <p class="panel-copy">Fältets median på varje publicerad delsträcka.</p>
         <div class="chart" id="median-pace"></div>
       </article>
@@ -92,7 +97,7 @@
       <p class="eyebrow ink">STATISTIKVERKSTAD</p><h2>Vad hände i loppet?</h2><p>Fördjupa dig i samband, bortfall, delsträckor och placeringar för det valda fältet.</p>
     </section>
     <section class="analysis-grid">
-      <article class="panel span-2"><div class="panel-head"><div><p class="eyebrow ink">PLACERINGSMOTOR</p><h3>Tid mot placering</h3></div><span class="pill">klicka för profil</span></div><div class="chart" id="placement-scatter"></div></article>
+      <article class="panel span-2"><div class="panel-head"><div><p class="eyebrow ink">PLACERINGSMOTOR</p><h3>Tid mot placering</h3></div><div><span class="pill">dra för zoom · klicka för profil</span><div class="chart-toggles" data-sex-toggles="placement"></div><button class="chart-reset" type="button" data-scatter-reset hidden>Återställ zoom</button></div></div><div class="chart zoomable-scatter" id="placement-scatter"></div></article>
       <article class="panel simulator"><div class="panel-head"><div><p class="eyebrow ink">MÅLTIDSSIMULATOR</p><h3>Vad krävs?</h3></div></div><label>Välj måltid<input id="target-time" type="range" min="0" max="1" value="0"></label><strong id="target-time-label">–</strong><div id="target-time-result"></div></article>
       <article class="panel"><div class="panel-head"><div><p class="eyebrow ink">REPET DRAS</p><h3>Avhopp genom loppet</h3></div></div><div id="dnf-funnel"></div></article>
       <article class="panel"><div class="panel-head"><div><p class="eyebrow ink">FARTSIGNATUR</p><h3>Delsträckornas karaktär</h3></div></div><div class="segment-character" id="segment-character"></div></article>
@@ -107,6 +112,14 @@
         <article class="panel wide-card"><div class="panel-head"><div><p class="eyebrow ink">FART GENOM LOPPET</p><h3>Median per delsträcka</h3></div><span class="pill" data-unit-label>min/km</span></div><div class="chart" id="gender-pace"></div></article>
         <article class="panel"><div class="panel-head"><div><p class="eyebrow ink">PACING</p><h3>Fartretention</h3></div></div><div class="chart" id="gender-retention"></div></article>
       </div>
+      <article class="panel automatic-insights"><div class="panel-head"><div><p class="eyebrow ink">AUTOMATISKA INSIKTER</p><h3>Vad skiljer grupperna?</h3></div><span class="pill">faktisk 2026-data</span></div><div class="story-strip" id="gender-insights"></div></article>
+    </section>
+
+    <section class="audience-world" id="age-analysis">
+      <div class="section-intro"><p class="eyebrow ink" id="age-analysis-eyebrow">KLASS & ÅLDER</p><h2 id="age-analysis-title">Ålderslabbet</h2><p id="age-analysis-copy"><strong>Analytiska åldersgrupper – inte officiella tävlingsklasser.</strong> Grupper med för litet underlag döljs.</p></div>
+      <div class="age-group-controls" id="age-group-controls"></div>
+      <div class="feature-grid"><article class="panel wide-card"><div class="panel-head"><div><p class="eyebrow ink">ÅLDERSGRUPPER</p><h3>Medianfart genom loppet</h3></div></div><div class="chart" id="age-pace"></div></article><article class="panel"><div class="panel-head"><div><p class="eyebrow ink">UNDERLAG</p><h3>Deltagande och målgång</h3></div></div><div class="age-summary" id="age-summary"></div></article></div>
+      <article class="panel"><div class="panel-head"><div><p class="eyebrow ink">FARTKARTA</p><h3>Analysgrupp × delsträcka</h3></div></div><div class="age-heatmap" id="age-heatmap"></div></article>
     </section>
 
     <section class="audience-world" id="segments">
@@ -119,6 +132,8 @@
         <article class="panel wide-card"><div class="panel-head"><div><p class="eyebrow ink">VAD KRÄVS?</p><h3>Percentiltrappan</h3></div></div><div class="percentile-ladder" id="percentile-ladder"></div></article>
         <article class="panel"><div class="panel-head"><div><p class="eyebrow ink">FÄLTETS FLÖDE</p><h3>Så sprids startfältet</h3></div></div><div class="chart" id="field-flow"></div></article>
       </div>
+      <section class="panel race-intelligence" id="race-intelligence"><div class="panel-head"><div><p class="eyebrow ink">RACE INTELLIGENCE LAB · ETT ÅR</p><h3>Loppets automatiska berättelse</h3></div><span class="pill">klickbara datapunkter</span></div><div class="story-strip" id="race-story"></div></section>
+      <section class="panel standout-world" id="standouts"><div class="panel-head"><div><p class="eyebrow ink">PRESTATIONER SOM STICKER UT · 2026</p><h3>Fem sätt att hitta ovanliga lopp</h3></div></div><div class="standout-tabs" id="standout-tabs"></div><div class="ranking" id="standout-ranking"></div></section>
     </section>
 
     <section class="audience-world" id="clubs">
@@ -128,15 +143,12 @@
         <div class="selected-chips" id="selected-clubs"></div>
         <div class="club-comparison" id="club-comparison"></div>
         <div class="chart" id="club-pace"></div>
+        <div class="club-extra-grid"><div><h3>Pacing</h3><div class="chart" id="club-pacing-extra"></div></div><div><h3>Starkaste prestationer</h3><div class="ranking" id="club-standouts"></div></div></div>
       </article>
     </section>
 
     <section class="audience-world" id="map-duel">
       <div class="section-intro"><p class="eyebrow ink">KARTDUELL</p><h2 id="duel-title">Löpare mot löpare</h2><p>Välj 1–5 deltagare. Rörelsen mellan officiella passeringar är linjärt uppskattad.</p></div>
-      <article class="panel duel-picker-panel">
-        <div class="picker"><label>Sök och lägg till <span data-entity-singular>löpare</span><input id="duel-search" type="search" autocomplete="off" placeholder="Namn eller startnummer"></label><div class="suggestions" id="duel-suggestions" hidden></div></div>
-        <div class="selected-chips" id="duel-selected"></div>
-      </article>
       <article class="panel map-stage" id="map-duel-stage"><div class="empty">Välj minst en deltagare för att starta Kartduell.</div></article>
     </section>
 
@@ -154,12 +166,13 @@
   <footer>Gotaleden Splits · Premiäråret 2026 · Officiell rutt från Göteborg till Alingsås</footer>
 
   <script src="vendor/leaflet/leaflet.js?v=1.9.4"></script>
-  <script src="assets/data-index.js?v=20260720-leaflet2"></script>
-  <script src="assets/data-adapter.js?v=20260720-leaflet2"></script>
-  <script src="assets/charts.js?v=20260720-leaflet2"></script>
-  <script src="assets/map-engine.js?v=20260720-leaflet2"></script>
-  <script src="assets/runner-replay.js?v=20260720-leaflet2"></script>
-  <script src="assets/map-duel.js?v=20260720-leaflet2"></script>
-  <script src="assets/app.js?v=20260720-leaflet2"></script>
+  <script src="assets/data-index.js?v=20260720-parity3"></script>
+  <script src="assets/data-adapter.js?v=20260720-parity3"></script>
+  <script src="assets/charts.js?v=20260720-parity3"></script>
+  <script src="assets/map-engine.js?v=20260720-parity3"></script>
+  <script src="assets/runner-replay.js?v=20260720-parity3"></script>
+  <script src="assets/map-duel.js?v=20260720-parity3"></script>
+  <script src="assets/interactive-analysis.js?v=20260720-parity6"></script>
+  <script src="assets/app.js?v=20260720-parity5"></script>
 </body>
 </html>
