@@ -56,7 +56,7 @@ class FrontendPortTests(unittest.TestCase):
         self.assertIn("Leaflet 1.9.4", leaflet_js)
         self.assertIn('version="1.9.4"', leaflet_js)
         self.assertIn("L.map(", self.map_engine)
-        self.assertIn("L.tileLayer(TILE_URL", self.map_engine)
+        self.assertIn("L.tileLayer(layerConfig.url", self.map_engine)
         self.assertIn("tile.openstreetmap.org", self.map_engine)
         self.assertIn('data-map-engine="leaflet"', self.map_engine)
         self.assertIn("OpenStreetMap-bidragsgivare", self.map_engine)
