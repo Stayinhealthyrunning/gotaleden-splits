@@ -54,17 +54,27 @@ Bygget skapar SQLite-databasen, kompakt webbdata under `docs/data/` och diagnost
 
 Den statiska GitHub Pages-sidan i `docs/` innehåller:
 
-- måltids- och klassfördelning;
-- medianfart per delsträcka;
-- sökbara och sorterbara resultat;
-- individ- och lagdetaljer med officiella passeringar;
-- stafettbelastning och verifierade etappkopplingar;
-- jämförelse av upp till fem deltagare eller lag;
-- GPX-replay med tydligt märkt uppskattning mellan officiella passeringar.
+- loppöversikt, måltidsfördelning, medianfart och global filtrering;
+- placeringsmotor, måltidssimulator, DNF-flöde, pacing och avancemang;
+- genus-, delsträcke-, percentil-, fältflödes- och klubbanalys;
+- sökbar och sorterbar resultatdatabas;
+- individ- och lagprofiler med officiella passeringar, relativa prestationer och pacingprofil;
+- animerad Runner Replay med zoom, startläge och tydligt märkt interpolation;
+- Kartduell för upp till fem löpare eller lag på den officiella GPX-rutten;
 - höjdprofil längs samma officiella `route_distance_km` som replay.
 
-Frontendens uppdelning i dataindex, diagram, replay och vylogik följer mogna arkitekturidéer från
-Ultravasan Analys, men implementation, datamodell och visuell identitet är Gotaledens egna.
+Runner Replay och Kartduell använder en gemensam, lokalt vendrad Leaflet 1.9.4-motor med
+OpenStreetMap-rutor. Ett förenklat SVG-läge finns enbart som reserv om Leaflet inte kan starta.
+Kartduellens ljudstöd är en avstängd integrationspunkt tills en godkänd ljudkälla anges; ingen
+musikfil ingår i webbbygget.
+
+Stafettvyerna analyserar lagets checkpointserie. Lagmedlemmar visas endast som medlemslista och
+kopplas inte till en viss etapp i publikt UI.
+
+Frontendens dataadapter matar en gemensam analys- och kartmotor för alla fyra loppen. Navigering,
+analysdjup, profilflöde och kartkomponenter följer systerproduktens etablerade struktur, medan texter,
+data, rutt och den ljusa västkustidentiteten är Gotaledens egna. Flerårssektioner är avsiktligt
+inaktiva under premiäråret 2026.
 
 ## Tester
 
