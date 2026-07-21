@@ -6,7 +6,7 @@
   <meta name="description" content="Gotaleden Splits – fördjupad analys av Gotaleden Stafett & Ultra 2026.">
   <title>Gotaleden Splits</title>
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=1.9.4">
-  <link rel="stylesheet" href="assets/style.css?v=20260721-nolhaga">
+  <link rel="stylesheet" href="assets/style.css?v=20260721-final-ui">
 </head>
 <body>
   <header class="hero">
@@ -68,7 +68,7 @@
     <section class="toolbar panel" aria-label="Filter">
       <label>Kön<select id="sex-filter"><option value="">Alla</option><option value="M">Män</option><option value="F">Kvinnor</option></select></label>
       <label>Klass<select id="class-filter"><option value="">Alla klasser</option></select></label>
-      <label>Klubb eller ort<input id="club-filter" type="search" placeholder="Alla klubbar"></label>
+      <div class="toolbar-field club-filter-field" id="club-filter-field"><label for="club-filter">Klubb eller ort</label><input id="club-filter" type="search" autocomplete="off" placeholder="Alla klubbar"><div class="suggestions" id="club-filter-suggestions" hidden></div></div>
       <label>Status<select id="status-filter"><option value="">Alla</option></select></label>
       <label>Fartenhet<select id="unit-filter"><option value="pace">min/km</option><option value="speed">km/h</option></select></label>
       <button class="button secondary" id="reset-filters" type="button">Återställ</button>
@@ -99,7 +99,7 @@
     <section class="analysis-grid">
       <article class="panel span-2"><div class="panel-head"><div><p class="eyebrow ink">PLACERINGSMOTOR</p><h3>Tid mot placering</h3></div><div><span class="pill">dra för zoom · klicka för profil</span><div class="chart-toggles" data-sex-toggles="placement"></div><button class="chart-reset" type="button" data-scatter-reset hidden>Återställ zoom</button></div></div><div class="chart zoomable-scatter" id="placement-scatter"></div></article>
       <article class="panel simulator"><div class="panel-head"><div><p class="eyebrow ink">MÅLTIDSSIMULATOR</p><h3>Vad krävs?</h3></div></div><label>Välj måltid<input id="target-time" type="range" min="0" max="1" value="0"></label><strong id="target-time-label">–</strong><div id="target-time-result"></div></article>
-      <article class="panel"><div class="panel-head"><div><p class="eyebrow ink">REPET DRAS</p><h3>Avhopp genom loppet</h3></div></div><div id="dnf-funnel"></div></article>
+      <article class="panel"><div class="panel-head"><div><p class="eyebrow ink">REPET DRAS</p><h3>Avhopp genom loppet</h3></div></div><div id="dnf-funnel"></div><p class="dnf-note">DNF grupperas efter senast registrerade analyskontroll.</p></article>
       <article class="panel"><div class="panel-head"><div><p class="eyebrow ink">FARTSIGNATUR</p><h3>Delsträckornas karaktär</h3></div></div><div class="segment-character" id="segment-character"></div></article>
       <article class="panel"><div class="panel-head"><div><p class="eyebrow ink">PLACERINGSEXPRESS</p><h3>Största avancemang</h3></div></div><div class="ranking" id="overtake-ranking"></div></article>
       <article class="panel span-2"><div class="panel-head"><div><p class="eyebrow ink">PACING</p><h3>Fart relativt det egna loppet</h3></div><span class="pill">100 = snittfart</span></div><div class="chart" id="pacing-chart"></div></article>
@@ -167,12 +167,12 @@
 
   <script src="vendor/leaflet/leaflet.js?v=1.9.4"></script>
   <script src="assets/data-index.js?v=20260720-parity3"></script>
-  <script src="assets/data-adapter.js?v=20260721-nolhaga"></script>
-  <script src="assets/charts.js?v=20260721-nolhaga"></script>
+  <script src="assets/data-adapter.js?v=20260721-final-ui"></script>
+  <script src="assets/charts.js?v=20260721-final-ui"></script>
   <script src="assets/map-engine.js?v=20260721-nolhaga"></script>
   <script src="assets/runner-replay.js?v=20260721-nolhaga"></script>
   <script src="assets/map-duel.js?v=20260721-nolhaga"></script>
-  <script src="assets/interactive-analysis.js?v=20260721-nolhaga"></script>
-  <script src="assets/app.js?v=20260721-nolhaga"></script>
+  <script src="assets/interactive-analysis.js?v=20260721-final-ui"></script>
+  <script src="assets/app.js?v=20260721-final-ui"></script>
 </body>
 </html>
