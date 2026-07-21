@@ -155,7 +155,12 @@
     function fieldFlow(recordList){
       const raceValue=race(recordList[0]?.raceKey);if(!raceValue)return[];return raceValue.analysisCheckpoints.slice(1).map(checkpoint=>{const times=[];for(const item of recordList){const anchor=profile(item).anchors.find(value=>value.checkpoint===checkpoint.key);if(anchor)times.push(anchor.elapsedSeconds)}return{checkpoint,name:checkpoint.name,count:times.length,median:median(times),q10:quantile(times,.1),q90:quantile(times,.9),spread:finite(quantile(times,.9))?quantile(times,.9)-quantile(times,.1):null}})
     }
-    return{data,route,elevation,races,records,race,record,resultSplits,team,profile,distanceAtTime,timeAtDistance,stateAtTime,analysisIntervalAtDistance,elevationAtDistance,completeProfiles,referenceProfiles,referenceGap,routePoint,routeSlice,elevationSlice,filtered,segmentStats,percentile,relativeProfile,advancements,segmentRanking,normalizeClubName,clubKey,clubDisplayName,clubRecords,clubNames,clubStats,fieldFlow,median,quantile,average,statusFinished,statusStarter,MIN_REFERENCE_SIZE};
+    function dnfByLastAnalysisCheckpoint(recordList){
+      const raceValue=race(recordList[0]?.raceKey);if(!raceValue)return[];const groups=[{key:'before-first',checkpoint:null,name:'Före första kontroll',records:[]},...raceValue.analysisCheckpoints.slice(1).map(checkpoint=>({key:checkpoint.key,checkpoint,name:checkpoint.name,records:[]}))],groupMap=new Map(groups.map(group=>[group.key,group]));
+      for(const item of recordList.filter(record=>record.status==='DNF')){let last=null;for(const split of resultSplits(item)){const checkpoint=raceValue.checkpointMap.get(split.checkpoint);if(checkpoint?.analysis_boundary!==false&&groupMap.has(checkpoint.key)&&(!last||checkpoint.index>last.index))last=checkpoint}groupMap.get(last?.key||'before-first').records.push(item)}
+      return groups.filter(group=>group.records.length).map(group=>({...group,count:group.records.length}))
+    }
+    return{data,route,elevation,races,records,race,record,resultSplits,team,profile,distanceAtTime,timeAtDistance,stateAtTime,analysisIntervalAtDistance,elevationAtDistance,completeProfiles,referenceProfiles,referenceGap,routePoint,routeSlice,elevationSlice,filtered,segmentStats,percentile,relativeProfile,advancements,segmentRanking,normalizeClubName,clubKey,clubDisplayName,clubRecords,clubNames,clubStats,fieldFlow,dnfByLastAnalysisCheckpoint,median,quantile,average,statusFinished,statusStarter,MIN_REFERENCE_SIZE};
   }
   window.GDataAdapter={create,median,quantile,average,statusFinished,statusStarter,normalizeClubName,clubKey,MIN_REFERENCE_SIZE};
 })();
