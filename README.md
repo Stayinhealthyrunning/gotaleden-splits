@@ -13,8 +13,11 @@ lägen: Individuellt 75, Individuellt 35, Stafett 75 och Stafett 35.
 
 Alla råfält bevaras i SQLite `raw_json`. Webbfilen är avsiktligt kompakt. Saknade passeringar och
 löparkopplingar förblir saknade; inga tider eller relationer fabriceras. Publikt är stafettanalysen
-helt lagbaserad; intern runner-to-leg-källdata exponeras inte. Nolhaga är en officiell tidtagningspunkt
-men inte en stafettväxling.
+helt lagbaserad; intern runner-to-leg-källdata exponeras inte. Nolhaga är en officiell tidtagnings-
+och speakerpunkt samt ett replay-ankare, men aldrig en stafettväxling eller analytisk delsträckegräns.
+De publika analyserna har därför exakt nio segment för 75 km och fyra för 35 km. Sista segmentet är
+alltid Västra Bodarna–Mål och räknas direkt mellan dessa två officiella analysgränser. Råtid vid
+Nolhaga och Mål bevaras oförändrad för en eventuell framtida, separat funktion ”Snabbaste spurten”.
 
 Normaliseringen skiljer mellan splitfart/-placering och ackumulerad fart/-placering. Den kompletterar
 även deltagar-UID, ålder, födelseår, klubbers källprioritet och EQ Timings klassrankningsflagga.

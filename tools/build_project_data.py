@@ -181,8 +181,13 @@ def import_all():
                 nominal = cp["nominal_cumulative_km_75"]
             with conn:
                 conn.execute(
-                    "INSERT INTO checkpoints(race_id,checkpoint_key,name,sequence_no,nominal_distance_km) VALUES(?,?,?,?,?)",
-                    (race_id, key, cp["name"], seq, nominal)
+                    """INSERT INTO checkpoints(race_id,checkpoint_key,name,sequence_no,nominal_distance_km,
+                       is_timing_point,is_relay_exchange,timing_only,analysis_boundary,replay_anchor,
+                       speaker_checkpoint) VALUES(?,?,?,?,?,?,?,?,?,?,?)""",
+                    (race_id, key, cp["name"], seq, nominal, int(cp.get("is_timing_point", True)),
+                     int(cp.get("is_relay_exchange", False)), int(cp.get("timing_only", False)),
+                     int(cp.get("analysis_boundary", True)), int(cp.get("replay_anchor", True)),
+                     int(cp.get("speaker_checkpoint", False)))
                 )
 
         finish_key = race["checkpoints"][-1]
