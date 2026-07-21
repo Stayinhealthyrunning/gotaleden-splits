@@ -152,9 +152,12 @@ def _insert_catalog(conn: sqlite3.Connection, config: dict[str, Any], route: dic
             with conn:
                 conn.execute(
                     """INSERT INTO checkpoints(race_id,checkpoint_key,name,sequence_no,nominal_distance_km,
-                       route_distance_km,is_timing_point,is_relay_exchange) VALUES(?,?,?,?,?,?,?,?)""",
+                       route_distance_km,is_timing_point,is_relay_exchange,timing_only,analysis_boundary,
+                       replay_anchor,speaker_checkpoint) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)""",
                     (race_id, key, checkpoint["name"], sequence, nominal, route_distance,
-                     int(checkpoint.get("is_timing_point", True)), int(checkpoint.get("is_relay_exchange", False))),
+                     int(checkpoint.get("is_timing_point", True)), int(checkpoint.get("is_relay_exchange", False)),
+                     int(checkpoint.get("timing_only", False)), int(checkpoint.get("analysis_boundary", True)),
+                     int(checkpoint.get("replay_anchor", True)), int(checkpoint.get("speaker_checkpoint", False))),
                 )
         finish_id = conn.execute(
             "SELECT id FROM checkpoints WHERE race_id=? AND checkpoint_key=?", (race_id, race["checkpoints"][-1])
@@ -733,6 +736,10 @@ def import_all_official() -> None:
                     "route_distance_mapping": "piecewise_proportional_anchored_at_floda",
                     "is_timing_point": next(item.get("is_timing_point", True) for item in config["checkpoints"] if item["key"] == key),
                     "is_relay_exchange": next(item.get("is_relay_exchange", False) for item in config["checkpoints"] if item["key"] == key),
+                    "timing_only": next(item.get("timing_only", False) for item in config["checkpoints"] if item["key"] == key),
+                    "analysis_boundary": next(item.get("analysis_boundary", True) for item in config["checkpoints"] if item["key"] == key),
+                    "replay_anchor": next(item.get("replay_anchor", True) for item in config["checkpoints"] if item["key"] == key),
+                    "speaker_checkpoint": next(item.get("speaker_checkpoint", False) for item in config["checkpoints"] if item["key"] == key),
                 }
                 for key in race["checkpoints"]
             ]
