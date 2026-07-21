@@ -113,7 +113,7 @@ class UiParityPolishTests(unittest.TestCase):
         self.assertRegex(self.style, r"standout-bar\{[^}]*height:7px")
 
     def test_readability_rules_raise_chart_table_and_control_sizes(self):
-        self.assertIn(".chart text{font-size:12.5px}", self.style)
+        self.assertIn(".chart text{font-size:14px}", self.style)
         self.assertIn("th,td{font-size:.88rem}", self.style)
         self.assertIn(".analysis-nav button{font-size:.8rem}", self.style)
 
