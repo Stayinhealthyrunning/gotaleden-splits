@@ -1,5 +1,6 @@
 (function(){
   'use strict';
+  const SEX_COLORS=Object.freeze({M:'#2563eb',F:'#db2777'});
   const palette=['#0b6671','#db7b3b','#6f9f5e','#8d65a7','#d0a634'];
   const esc=value=>String(value??'').replace(/[&<>"']/g,character=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));
   const finite=value=>value!==null&&value!==undefined&&value!==''&&Number.isFinite(Number(value));
@@ -33,5 +34,5 @@
   }
   function percentileLadder(finishers,quantile){if(!finishers.length)return empty();const steps=[.1,.25,.5,.75,.9],labels=['Topp 10 %','Topp 25 %','Median','75:e percentilen','90:e percentilen'];return`<div class="ladder-steps">${steps.map((value,index)=>`<article style="--step:${index}"><span>${labels[index]}</span><strong>${fmtClock(quantile(finishers,value))}</strong><i></i></article>`).join('')}</div>`}
   function flow(items){if(!items.length)return empty();const labels=items.map(item=>item.name),series=[{name:'Snabbaste 10 %',values:items.map(item=>item.q10),color:'#0b6671'},{name:'Median',values:items.map(item=>item.median),color:'#4aa2b8'},{name:'90:e percentilen',values:items.map(item=>item.q90),color:'#7eae69'}];return lines(series,labels,{format:fmtClock})}
-  window.GCharts={palette,histogram,histogramSeries,lines,scatter,horizontalBars,elevation,percentileLadder,flow,fmtClock,empty};
+  window.GCharts={SEX_COLORS,palette,histogram,histogramSeries,lines,scatter,horizontalBars,elevation,percentileLadder,flow,fmtClock,empty};
 })();

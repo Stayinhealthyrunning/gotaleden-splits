@@ -7,6 +7,8 @@
   const average=values=>{const valid=values.filter(finite).map(Number);return valid.length?valid.reduce((sum,value)=>sum+value,0)/valid.length:null};
   const statusFinished=record=>record?.status==='FINISHED'&&finite(record.finish_seconds)&&Number(record.finish_seconds)>0;
   const statusStarter=record=>!['DNS'].includes(String(record?.status||'').toUpperCase());
+  const normalizeClubName=value=>String(value||'').trim().replace(/\s+/g,' ');
+  const clubKey=value=>normalizeClubName(value).toLocaleLowerCase('sv');
   const MIN_REFERENCE_SIZE=5;
 
   function create(data,route,elevation){
@@ -104,9 +106,21 @@
       const item=typeof value==='string'?record(value):value,raceValue=race(item.raceKey),cacheKey=`${raceValue.key}|${item.class_name||'-'}|${item.sex||'-'}`;if(referenceCache.has(cacheKey))return referenceCache.get(cacheKey);const complete=completeProfiles(raceValue),field=cohortReference('field','Hela fältet','#66756f',complete,raceValue),classProfiles=complete.filter(candidate=>candidate.record.class_name===item.class_name),classReference=cohortReference('class','Min klass','#138a78',classProfiles,raceValue),sexProfiles=raceValue.isRelay?[]:complete.filter(candidate=>candidate.record.sex===item.sex),sexReference=raceValue.isRelay?{id:'sex',label:'Mitt kön',color:item.sex==='F'?'#db2777':'#2563eb',count:0,available:false,message:'Könsreferens används inte för stafettlag'}:cohortReference('sex','Mitt kön',item.sex==='F'?'#db2777':'#2563eb',sexProfiles,raceValue);const same=classReference.available&&sexReference.available&&classReference.cohortIds.join('|')===sexReference.cohortIds.join('|');if(same){classReference.coincidesWith='sex';sexReference.coincidesWith='class'}const result={field,class:classReference,sex:sexReference,completeCount:complete.length,minimumSize:MIN_REFERENCE_SIZE};referenceCache.set(cacheKey,result);return result;
     }
     function referenceGap(reference,runnerTime,runnerDistance){return reference?.available?timeAtDistance(reference,runnerDistance)-Number(runnerTime||0):null}
+    function clubGroups(recordList){
+      const groups=new Map();
+      for(const item of recordList){
+        const variant=normalizeClubName(item.club),key=clubKey(variant);if(!key)continue;
+        if(!groups.has(key))groups.set(key,{key,count:0,records:[],variants:new Map()});
+        const group=groups.get(key);group.count++;group.records.push(item);group.variants.set(variant,(group.variants.get(variant)||0)+1);
+      }
+      return[...groups.values()].map(group=>{group.name=[...group.variants].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'sv'))[0][0];return group});
+    }
+    function clubDisplayName(value,recordList){const normalized=normalizeClubName(value);if(!recordList?.length)return normalized;return clubGroups(recordList).find(group=>group.key===clubKey(value))?.name||normalized}
+    function clubRecords(recordList,value){const key=clubKey(value);return recordList.filter(item=>clubKey(item.club)===key)}
     function filtered(raceKey,filters={}){
       const query=String(filters.query||'').trim().toLocaleLowerCase('sv'),club=String(filters.club||'').trim().toLocaleLowerCase('sv');
-      return race(raceKey).records.filter(item=>(!filters.sex||item.sex===filters.sex)&&(!filters.className||item.class_name===filters.className)&&(!filters.status||item.status===filters.status)&&(!club||String(item.club||'').toLocaleLowerCase('sv').includes(club))&&(!query||`${item.name} ${item.bib} ${item.club||''}`.toLocaleLowerCase('sv').includes(query)));
+      const raceRecords=race(raceKey).records;
+      return raceRecords.filter(item=>{const displayClub=clubDisplayName(item.club,raceRecords).toLocaleLowerCase('sv');return(!filters.sex||item.sex===filters.sex)&&(!filters.className||item.class_name===filters.className)&&(!filters.status||item.status===filters.status)&&(!club||displayClub.includes(club))&&(!query||`${item.name} ${item.bib} ${displayClub}`.toLocaleLowerCase('sv').includes(query))});
     }
     function segmentStats(recordList){
       const raceValue=race(recordList[0]?.raceKey);if(!raceValue)return[];
@@ -133,12 +147,12 @@
       const medianPace=median(entries.map(entry=>entry.pace));entries.forEach(entry=>entry.relative=entry.pace/medianPace);
       return entries.sort(metric==='gain'?(a,b)=>(b.gain??-Infinity)-(a.gain??-Infinity):metric==='relative'?(a,b)=>a.relative-b.relative:(a,b)=>a.time-b.time);
     }
-    function clubNames(recordList){const counts=new Map();for(const item of recordList){const club=String(item.club||'').trim();if(club)counts.set(club,(counts.get(club)||0)+1)}return[...counts].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'sv'))}
-    function clubStats(recordList,name){const clubRecords=recordList.filter(item=>item.club===name),finishers=clubRecords.filter(statusFinished),starters=clubRecords.filter(statusStarter);return{name,count:clubRecords.length,finishers:finishers.length,finishRate:starters.length?finishers.length/starters.length:null,medianFinish:median(finishers.map(item=>item.finish_seconds)),segments:segmentStats(clubRecords)}}
+    function clubNames(recordList){return clubGroups(recordList).map(group=>[group.name,group.count,group.key]).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'sv'))}
+    function clubStats(recordList,name){const members=clubRecords(recordList,name),finishers=members.filter(statusFinished),starters=members.filter(statusStarter);return{name:clubDisplayName(name,recordList),key:clubKey(name),count:members.length,finishers:finishers.length,finishRate:starters.length?finishers.length/starters.length:null,medianFinish:median(finishers.map(item=>item.finish_seconds)),segments:segmentStats(members)}}
     function fieldFlow(recordList){
       const raceValue=race(recordList[0]?.raceKey);if(!raceValue)return[];return raceValue.checkpoints.slice(1).map(checkpoint=>{const times=[];for(const item of recordList){const anchor=profile(item).anchors.find(value=>value.checkpoint===checkpoint.key);if(anchor)times.push(anchor.elapsedSeconds)}return{checkpoint,name:checkpoint.name,count:times.length,median:median(times),q10:quantile(times,.1),q90:quantile(times,.9),spread:finite(quantile(times,.9))?quantile(times,.9)-quantile(times,.1):null}})
     }
-    return{data,route,elevation,races,records,race,record,resultSplits,team,profile,distanceAtTime,timeAtDistance,stateAtTime,elevationAtDistance,completeProfiles,referenceProfiles,referenceGap,routePoint,routeSlice,elevationSlice,filtered,segmentStats,percentile,relativeProfile,advancements,segmentRanking,clubNames,clubStats,fieldFlow,median,quantile,average,statusFinished,statusStarter,MIN_REFERENCE_SIZE};
+    return{data,route,elevation,races,records,race,record,resultSplits,team,profile,distanceAtTime,timeAtDistance,stateAtTime,elevationAtDistance,completeProfiles,referenceProfiles,referenceGap,routePoint,routeSlice,elevationSlice,filtered,segmentStats,percentile,relativeProfile,advancements,segmentRanking,normalizeClubName,clubKey,clubDisplayName,clubRecords,clubNames,clubStats,fieldFlow,median,quantile,average,statusFinished,statusStarter,MIN_REFERENCE_SIZE};
   }
-  window.GDataAdapter={create,median,quantile,average,statusFinished,statusStarter,MIN_REFERENCE_SIZE};
+  window.GDataAdapter={create,median,quantile,average,statusFinished,statusStarter,normalizeClubName,clubKey,MIN_REFERENCE_SIZE};
 })();
