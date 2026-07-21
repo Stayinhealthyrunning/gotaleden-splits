@@ -107,35 +107,55 @@
       "name": "Göteborg",
       "nominal_cumulative_km_75": 0.0,
       "is_timing_point": false,
-      "is_relay_exchange": false
+      "is_relay_exchange": false,
+      "timing_only": false,
+      "analysis_boundary": true,
+      "replay_anchor": true,
+      "speaker_checkpoint": false
     },
     {
       "key": "skatas",
       "name": "Skatås",
       "nominal_cumulative_km_75": 4.5,
       "is_timing_point": true,
-      "is_relay_exchange": true
+      "is_relay_exchange": true,
+      "timing_only": false,
+      "analysis_boundary": true,
+      "replay_anchor": true,
+      "speaker_checkpoint": false
     },
     {
       "key": "kasjon",
       "name": "Kåsjön",
       "nominal_cumulative_km_75": 15.0,
       "is_timing_point": true,
-      "is_relay_exchange": true
+      "is_relay_exchange": true,
+      "timing_only": false,
+      "analysis_boundary": true,
+      "replay_anchor": true,
+      "speaker_checkpoint": false
     },
     {
       "key": "jonsered",
       "name": "Jonsered",
       "nominal_cumulative_km_75": 22.5,
       "is_timing_point": true,
-      "is_relay_exchange": true
+      "is_relay_exchange": true,
+      "timing_only": false,
+      "analysis_boundary": true,
+      "replay_anchor": true,
+      "speaker_checkpoint": false
     },
     {
       "key": "lerum",
       "name": "Lerum",
       "nominal_cumulative_km_75": 32.5,
       "is_timing_point": true,
-      "is_relay_exchange": true
+      "is_relay_exchange": true,
+      "timing_only": false,
+      "analysis_boundary": true,
+      "replay_anchor": true,
+      "speaker_checkpoint": false
     },
     {
       "key": "floda",
@@ -143,6 +163,10 @@
       "nominal_cumulative_km_75": 41.5,
       "is_timing_point": true,
       "is_relay_exchange": true,
+      "timing_only": false,
+      "analysis_boundary": true,
+      "replay_anchor": true,
+      "speaker_checkpoint": false,
       "lat": 57.80629,
       "lon": 12.35532
     },
@@ -151,35 +175,55 @@
       "name": "Tollered",
       "nominal_cumulative_km_75": 49.5,
       "is_timing_point": true,
-      "is_relay_exchange": true
+      "is_relay_exchange": true,
+      "timing_only": false,
+      "analysis_boundary": true,
+      "replay_anchor": true,
+      "speaker_checkpoint": false
     },
     {
       "key": "norsesund",
       "name": "Norsesund",
       "nominal_cumulative_km_75": 61.5,
       "is_timing_point": true,
-      "is_relay_exchange": true
+      "is_relay_exchange": true,
+      "timing_only": false,
+      "analysis_boundary": true,
+      "replay_anchor": true,
+      "speaker_checkpoint": false
     },
     {
       "key": "vastra_bodarna",
       "name": "Västra Bodarna",
       "nominal_cumulative_km_75": 68.0,
       "is_timing_point": true,
-      "is_relay_exchange": true
+      "is_relay_exchange": true,
+      "timing_only": false,
+      "analysis_boundary": true,
+      "replay_anchor": true,
+      "speaker_checkpoint": false
     },
     {
       "key": "nolhaga",
       "name": "Nolhaga",
       "nominal_cumulative_km_75": 77.8,
       "is_timing_point": true,
-      "is_relay_exchange": false
+      "is_relay_exchange": false,
+      "timing_only": true,
+      "analysis_boundary": false,
+      "replay_anchor": true,
+      "speaker_checkpoint": true
     },
     {
       "key": "alingsas",
       "name": "Mål",
       "nominal_cumulative_km_75": 78.0,
       "is_timing_point": true,
-      "is_relay_exchange": true
+      "is_relay_exchange": true,
+      "timing_only": false,
+      "analysis_boundary": true,
+      "replay_anchor": true,
+      "speaker_checkpoint": false
     }
   ]
 }
