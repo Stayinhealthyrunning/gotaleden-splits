@@ -34,6 +34,10 @@ CREATE TABLE IF NOT EXISTS checkpoints (
   route_distance_km REAL,
   is_timing_point INTEGER NOT NULL DEFAULT 1,
   is_relay_exchange INTEGER NOT NULL DEFAULT 0,
+  timing_only INTEGER NOT NULL DEFAULT 0,
+  analysis_boundary INTEGER NOT NULL DEFAULT 1,
+  replay_anchor INTEGER NOT NULL DEFAULT 1,
+  speaker_checkpoint INTEGER NOT NULL DEFAULT 0,
   source_station_uid TEXT,
   UNIQUE(race_id, checkpoint_key),
   UNIQUE(race_id, sequence_no)
