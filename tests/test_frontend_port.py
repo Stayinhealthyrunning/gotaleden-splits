@@ -86,11 +86,11 @@ class FrontendPortTests(unittest.TestCase):
         self.assertIn("stopped:state.stopped", self.replay)
         self.assertIn("stopped:item.state.stopped", self.duel)
 
-    def test_audio_hook_is_optional_and_disabled_without_source(self):
-        self.assertIn("audioEnabled:false", self.duel)
-        self.assertIn("audioSource:null", self.duel)
-        self.assertIn("Musik ej aktiverad", self.duel)
-        self.assertNotIn(".mp3", self.duel.casefold())
+    def test_audio_uses_central_source_and_requires_a_user_gesture(self):
+        self.assertIn("assets/race-media.js", self.index)
+        self.assertIn("media.audioSource?new Audio(media.audioSource):null", self.duel)
+        self.assertIn("playAudio();lastFrame", self.duel)
+        self.assertNotIn("autoplay", (self.index + self.duel).casefold())
 
     def test_35_km_route_slice_starts_at_floda(self):
         checkpoints = self.results["checkpoints"]["individual-35-2026"]
