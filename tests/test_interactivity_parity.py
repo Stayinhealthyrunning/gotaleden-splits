@@ -95,7 +95,7 @@ class InteractivityParityTests(unittest.TestCase):
             "finished",
         ):
             self.assertIn(token, self.duel)
-        self.assertIn("audioEnabled:false", self.duel)
+        self.assertIn("initialAudioEnabled=Boolean(media.audioEnabled&&audio)", self.duel)
 
     def test_single_year_exploration_is_public_and_non_historical(self):
         self.assertIn("assets/interactive-analysis.js", self.index)
