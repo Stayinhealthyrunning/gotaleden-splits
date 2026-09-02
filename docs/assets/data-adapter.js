@@ -134,6 +134,13 @@
         return{index,checkpoint,name:samples[0]?.name||`${raceValue.analysisCheckpoints[index].name}–${checkpoint.name}`,count:samples.length,medianPace:median(paces),q25Pace:quantile(paces,.25),q75Pace:quantile(paces,.75),medianTime:median(times),fastest:Math.min(...times.filter(finite),Infinity),samples};
       });
     }
+    function wholeRacePaceProfile(recordList,raceValue){
+      const item=typeof raceValue==='string'?race(raceValue):raceValue||race(recordList[0]?.raceKey),checkpoints=item?.analysisCheckpoints.slice(1)||[],distance=Number(item?.distanceKm);
+      if(!item||!finite(distance)||distance<=0)return{race:item||null,cohort:[],count:0,baselinePace:null,overallPaces:[],segmentStats:[],segmentMedianPaces:[],indexValues:[]};
+      const complete=(recordList||[]).filter(statusFinished).map(record=>({record,profile:profile(record)})).filter(candidate=>candidate.profile.race.key===item.key&&candidate.profile.segments.length===checkpoints.length&&checkpoints.every((checkpoint,index)=>{const segment=candidate.profile.segments[index];return segment?.to.checkpoint===checkpoint.key&&finite(segment.paceSecondsKm)&&Number(segment.paceSecondsKm)>0}));
+      const overallPaces=complete.map(candidate=>Number(candidate.record.finish_seconds)/distance),baselinePace=median(overallPaces),segmentStats=checkpoints.map((checkpoint,index)=>{const samples=complete.map(candidate=>candidate.profile.segments[index]),medianPace=median(samples.map(segment=>segment.paceSecondsKm));return{index,checkpoint,name:samples[0]?.name||`${item.analysisCheckpoints[index].name}–${checkpoint.name}`,count:samples.length,medianPace,samples,indexValue:finite(medianPace)&&baselinePace?baselinePace/medianPace*100:null}});
+      return{race:item,cohort:complete.map(candidate=>candidate.record),count:complete.length,baselinePace,overallPaces,segmentStats,segmentMedianPaces:segmentStats.map(stat=>stat.medianPace),indexValues:segmentStats.map(stat=>stat.indexValue)};
+    }
     function percentile(value,recordList){
       const item=typeof value==='string'?record(value):value,finishers=recordList.filter(statusFinished).slice().sort((a,b)=>a.finish_seconds-b.finish_seconds),index=finishers.findIndex(candidate=>candidate.id===item.id);return index<0?null:Math.round((finishers.length-index)/finishers.length*100);
     }
@@ -151,7 +158,7 @@
       return entries.sort(metric==='gain'?(a,b)=>(b.gain??-Infinity)-(a.gain??-Infinity):metric==='relative'?(a,b)=>a.relative-b.relative:(a,b)=>a.time-b.time);
     }
     function clubNames(recordList){return clubGroups(recordList).map(group=>[group.name,group.count,group.key]).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'sv'))}
-    function clubStats(recordList,name){const members=clubRecords(recordList,name),finishers=members.filter(statusFinished),starters=members.filter(statusStarter);return{name:clubDisplayName(name,recordList),key:clubKey(name),count:members.length,finishers:finishers.length,finishRate:starters.length?finishers.length/starters.length:null,medianFinish:median(finishers.map(item=>item.finish_seconds)),segments:segmentStats(members)}}
+    function clubStats(recordList,name){const members=clubRecords(recordList,name),finishers=members.filter(statusFinished),starters=members.filter(statusStarter);return{name:clubDisplayName(name,recordList),key:clubKey(name),count:members.length,finishers:finishers.length,finishRate:starters.length?finishers.length/starters.length:null,medianFinish:median(finishers.map(item=>item.finish_seconds)),segments:segmentStats(members),wholeRacePace:wholeRacePaceProfile(members)}}
     function fieldFlow(recordList){
       const raceValue=race(recordList[0]?.raceKey);if(!raceValue)return[];return raceValue.analysisCheckpoints.slice(1).map(checkpoint=>{const times=[];for(const item of recordList){const anchor=profile(item).anchors.find(value=>value.checkpoint===checkpoint.key);if(anchor)times.push(anchor.elapsedSeconds)}return{checkpoint,name:checkpoint.name,count:times.length,median:median(times),q10:quantile(times,.1),q90:quantile(times,.9),spread:finite(quantile(times,.9))?quantile(times,.9)-quantile(times,.1):null}})
     }
@@ -160,7 +167,7 @@
       for(const item of recordList.filter(record=>record.status==='DNF')){let last=null;for(const split of resultSplits(item)){const checkpoint=raceValue.checkpointMap.get(split.checkpoint);if(checkpoint?.analysis_boundary!==false&&groupMap.has(checkpoint.key)&&(!last||checkpoint.index>last.index))last=checkpoint}groupMap.get(last?.key||'before-first').records.push(item)}
       return groups.filter(group=>group.records.length).map(group=>({...group,count:group.records.length}))
     }
-    return{data,route,elevation,races,records,race,record,resultSplits,team,profile,distanceAtTime,timeAtDistance,stateAtTime,analysisIntervalAtDistance,elevationAtDistance,completeProfiles,referenceProfiles,referenceGap,routePoint,routeSlice,elevationSlice,filtered,segmentStats,percentile,relativeProfile,advancements,segmentRanking,normalizeClubName,clubKey,clubDisplayName,clubRecords,clubNames,clubStats,fieldFlow,dnfByLastAnalysisCheckpoint,median,quantile,average,statusFinished,statusStarter,MIN_REFERENCE_SIZE};
+    return{data,route,elevation,races,records,race,record,resultSplits,team,profile,distanceAtTime,timeAtDistance,stateAtTime,analysisIntervalAtDistance,elevationAtDistance,completeProfiles,referenceProfiles,referenceGap,routePoint,routeSlice,elevationSlice,filtered,segmentStats,wholeRacePaceProfile,percentile,relativeProfile,advancements,segmentRanking,normalizeClubName,clubKey,clubDisplayName,clubRecords,clubNames,clubStats,fieldFlow,dnfByLastAnalysisCheckpoint,median,quantile,average,statusFinished,statusStarter,MIN_REFERENCE_SIZE};
   }
   window.GDataAdapter={create,median,quantile,average,statusFinished,statusStarter,normalizeClubName,clubKey,MIN_REFERENCE_SIZE};
 })();
