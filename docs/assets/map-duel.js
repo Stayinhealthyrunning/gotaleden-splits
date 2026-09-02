@@ -1,5 +1,6 @@
 (function(){
   'use strict';
+  const BASE_PLAYBACK_SECONDS=180;
   const palette=['#0b6671','#db7b3b','#6f9f5e','#785b9c','#c34f78'];
   const clamp=(value,min,max)=>Math.max(min,Math.min(max,Number(value)||0));
   const finite=value=>value!==null&&value!==undefined&&value!==''&&Number.isFinite(Number(value));
@@ -22,7 +23,7 @@
     if(audio){audio.dataset.duelAudioElement='';audio.hidden=true;container.querySelector('.duel-shell').append(audio)}
     const geometry=elevationChart(points,race,records);container.querySelector('[data-duel-elevation]').innerHTML=geometry.html;
     const map=window.GMapEngine.create(container.querySelector('[data-duel-map]'),{adapter,race,mode:'duel'}),slider=container.querySelector('[data-duel-slider]'),playButton=container.querySelector('[data-duel-play]'),speed=container.querySelector('[data-duel-speed]'),camera=container.querySelector('[data-duel-camera]'),audioButton=container.querySelector('[data-duel-audio]'),volume=container.querySelector('[data-duel-volume]'),board=container.querySelector('[data-duel-board]'),strip=container.querySelector('[data-duel-strip]');
-    let time=0,playing=false,audioEnabled=initialAudioEnabled,frame=null,lastFrame=0,lastCamera=0,destroyed=false;if(audio){audio.loop=true;audio.volume=initialVolume;audio.playbackRate=1;audio.addEventListener('error',()=>showAudioNote('Musiken kunde inte laddas. Kartduellen fungerar utan ljud.'))}
+    let time=0,playing=false,audioEnabled=initialAudioEnabled,frame=null,lastFrame=0,lastCamera=0,destroyed=false;if(audio){audio.loop=false;audio.volume=initialVolume;audio.playbackRate=1;audio.addEventListener('error',()=>showAudioNote('Musiken kunde inte laddas. Kartduellen fungerar utan ljud.'))}
     function currentStates(){return profiles.map((profile,index)=>{const state=adapter.stateAtTime(profile,time),progress=(state.distance-race.startDistanceKm)/(race.endDistanceKm-race.startDistanceKm||1);return{profile,state,index,color:palette[index],progress:clamp(progress,0,1)}}).sort((a,b)=>b.progress-a.progress||a.profile.maxTime-b.profile.maxTime)}
     function updateCamera(states,force=false){const now=performance.now();if(!force&&now-lastCamera<850)return;lastCamera=now;if(camera.value==='leader'&&states[0])map.panToDistance(states[0].state.distance,14);else if(camera.value==='field'){const active=states.filter(item=>!item.state.finished&&!item.state.stopped),visible=active.length?active:states;map.fitDistances(visible.map(item=>item.state.distance))}}
     function updateElevation(item,rank){const marker=container.querySelector(`[data-duel-elevation-marker="${CSS.escape(item.profile.record.id)}"]`);if(!marker)return;const elevation=adapter.elevationAtDistance(item.state.distance),relative=item.state.distance-race.startDistanceKm,analysisSegment=item.state.analysisInterval?.name||item.state.segment?.name||'Start',segment=item.state.finished?'Mål':item.state.stopped?`${analysisSegment} · ej fullföljd`:analysisSegment,place=item.state.place?`plats ${item.state.place}`:`liveplats ${rank+1}`;marker.setAttribute('cx',geometry.x(item.state.distance));marker.setAttribute('cy',geometry.y(elevation));marker.classList.toggle('finished',item.state.finished);marker.classList.toggle('stopped',item.state.stopped);marker.querySelector('title').textContent=`${item.profile.record.name} · #${item.profile.record.bib} · ${relative.toFixed(1)} km · ${Math.round(elevation||0)} m · ${segment} · ${place}`}
@@ -35,9 +36,10 @@
     function syncAudioButton(){audioButton.setAttribute('aria-pressed',String(audioEnabled));audioButton.textContent=audioEnabled?'♫ Musik':audio?'♪ Musik av':'♪ Musik saknas';audioButton.title=audioEnabled?'Stäng av musik':'Slå på musik'}
     function playAudio(){if(!audio||!audioEnabled)return;audio.playbackRate=1;audio.play().catch(()=>showAudioNote('Webbläsaren kunde inte starta musiken. Kartduellen fungerar ändå.'))}
     function setVolume(value){const next=media.setVolume?media.setVolume(value):clamp(value,0,1);if(audio)audio.volume=next;volume.value=String(next)}
-    function stop(){playing=false;if(frame)cancelAnimationFrame(frame);frame=null;playButton.textContent=time>=maxTime?'▶ Spela igen':time>0?'▶ Fortsätt':'▶ Starta';playButton.classList.remove('playing');audio?.pause()}
+    function stop({pauseAudio=true}={}){playing=false;if(frame)cancelAnimationFrame(frame);frame=null;playButton.textContent=time>=maxTime?'▶ Spela igen':time>0?'▶ Fortsätt':'▶ Starta';playButton.classList.remove('playing');if(pauseAudio)audio?.pause()}
+    function finishAnimation(){stop()}
     function setTime(value,forceCamera=false){time=clamp(value,0,maxTime);render(forceCamera)}
-    function tick(now){if(!playing||destroyed)return;const delta=Math.min(reducedMotion?250:100,now-lastFrame);lastFrame=now;setTime(Math.min(maxTime,time+delta/1000*(maxTime/45)*Number(speed.value)));if(time>=maxTime)stop();else frame=requestAnimationFrame(tick)}
+    function tick(now){if(!playing||destroyed)return;const delta=Math.min(reducedMotion?250:100,now-lastFrame);lastFrame=now;setTime(Math.min(maxTime,time+delta/1000*(maxTime/BASE_PLAYBACK_SECONDS)*Number(speed.value)));if(time>=maxTime)finishAnimation();else frame=requestAnimationFrame(tick)}
     function toggle(){if(playing){stop();return}if(time>=maxTime){time=0;if(audio)audio.currentTime=0}playing=true;playButton.textContent='Ⅱ Pausa';playButton.classList.add('playing');playAudio();lastFrame=performance.now();frame=requestAnimationFrame(tick)}
     function reset(){stop();time=0;camera.value='overview';render();map.fit();if(audio)audio.currentTime=0;playButton.textContent='▶ Starta'}
     function toggleAudio(){if(!audio)return;audioEnabled=media.setEnabled?media.setEnabled(!audioEnabled):!audioEnabled;syncAudioButton();if(!audioEnabled)audio.pause();else if(playing)playAudio()}
@@ -45,5 +47,5 @@
     const elevationHit=container.querySelector('[data-duel-elevation-hit]');function seekElevation(event){const rect=elevationHit.ownerSVGElement.getBoundingClientRect(),logicalX=(event.clientX-rect.left)*geometry.width/(rect.width||1),distance=geometry.start+(logicalX-geometry.pad.l)/(geometry.width-geometry.pad.l-geometry.pad.r)*(geometry.end-geometry.start);stop();setTime(adapter.timeAtDistance(profiles[0],clamp(distance,geometry.start,geometry.end)),true)}if(elevationHit){elevationHit.onpointerdown=event=>{elevationHit.setPointerCapture?.(event.pointerId);seekElevation(event)};elevationHit.onpointermove=event=>{if(elevationHit.hasPointerCapture?.(event.pointerId))seekElevation(event)}}
     render();return{stop,mapKind:map.kind,destroy(){stop();destroyed=true;if(audio){audio.currentTime=0;audio.removeAttribute('src');audio.load()}map.destroy()},seek(value){stop();setTime(value,true)}}
   }
-  window.GMapDuel={create,palette,elevationChart};
+  window.GMapDuel={create,palette,elevationChart,BASE_PLAYBACK_SECONDS};
 })();
