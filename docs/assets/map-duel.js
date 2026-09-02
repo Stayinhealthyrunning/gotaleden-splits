@@ -37,7 +37,7 @@
     function playAudio(){if(!audio||!audioEnabled)return;audio.playbackRate=1;audio.play().catch(()=>showAudioNote('Webbläsaren kunde inte starta musiken. Kartduellen fungerar ändå.'))}
     function setVolume(value){const next=media.setVolume?media.setVolume(value):clamp(value,0,1);if(audio)audio.volume=next;volume.value=String(next)}
     function stop({pauseAudio=true}={}){playing=false;if(frame)cancelAnimationFrame(frame);frame=null;playButton.textContent=time>=maxTime?'▶ Spela igen':time>0?'▶ Fortsätt':'▶ Starta';playButton.classList.remove('playing');if(pauseAudio)audio?.pause()}
-    function finishAnimation(){stop({pauseAudio:false})}
+    function finishAnimation(){stop()}
     function setTime(value,forceCamera=false){time=clamp(value,0,maxTime);render(forceCamera)}
     function tick(now){if(!playing||destroyed)return;const delta=Math.min(reducedMotion?250:100,now-lastFrame);lastFrame=now;setTime(Math.min(maxTime,time+delta/1000*(maxTime/BASE_PLAYBACK_SECONDS)*Number(speed.value)));if(time>=maxTime)finishAnimation();else frame=requestAnimationFrame(tick)}
     function toggle(){if(playing){stop();return}if(time>=maxTime){time=0;if(audio)audio.currentTime=0}playing=true;playButton.textContent='Ⅱ Pausa';playButton.classList.add('playing');playAudio();lastFrame=performance.now();frame=requestAnimationFrame(tick)}
