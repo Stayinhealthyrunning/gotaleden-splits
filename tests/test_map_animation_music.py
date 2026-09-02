@@ -84,7 +84,7 @@ if(store['gotaleden-music-volume']!=='0.6')throw new Error('volume key');
             "data-duel-volume",
             "if(audio)audio.currentTime=0",
             "audio.removeAttribute('src');audio.load()",
-            "audio.loop=true",
+            "audio.loop=false",
         ):
             self.assertIn(token, self.duel)
         self.assertIn("audio.play().catch(()=>showAudioNote", self.duel)

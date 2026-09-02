@@ -67,7 +67,7 @@ class FinalUiDataCorrectionsTests(unittest.TestCase):
         self.assertIn("color:window.GCharts.SEX_COLORS.F", self.interactive)
         self.assertIn("color:window.GCharts.SEX_COLORS.M", self.interactive)
         self.assertIn("color:sexMeta[record.sex]?.color", self.interactive)
-        self.assertIn('style="--dnf-color:${dnfColor}"', self.interactive)
+        self.assertIn('style="--sex-color:${sexMeta[sex].color}', self.interactive)
 
     def test_chart_text_stays_readable_when_cards_narrow(self):
         self.assertIn(".chart{overflow-x:auto;overflow-y:hidden}", self.style)
@@ -86,7 +86,10 @@ class FinalUiDataCorrectionsTests(unittest.TestCase):
         ):
             self.assertIn(token, self.adapter)
         self.assertNotIn("starterProfiles", self.interactive)
-        self.assertIn("adapter.dnfByLastAnalysisCheckpoint(dnfRecords)", self.interactive)
+        self.assertIn(
+            "adapter.dnfByLastAnalysisCheckpoint(records.filter(record=>record.sex===sex))",
+            self.interactive,
+        )
         self.assertIn("senast registrerade analyskontroll", self.html)
 
     def test_dnf_categories_sum_to_filtered_dnf_for_every_race(self):
@@ -111,6 +114,12 @@ for(const race of adapter.races.values()){
   if(grouped.some(record=>record.status!=='DNF'))throw new Error(race.key+': non-DNF');
   if(groups.some(group=>group.key==='nolhaga'))throw new Error(race.key+': Nolhaga');
   if(new Set(grouped.map(record=>record.id)).size!==expected.length)throw new Error(race.key+': duplicate');
+  if(!race.isRelay)for(const sex of ['F','M']){
+    const sexRecords=race.records.filter(record=>record.sex===sex);
+    const sexGrouped=adapter.dnfByLastAnalysisCheckpoint(sexRecords).flatMap(group=>group.records);
+    const sexExpected=sexRecords.filter(record=>record.status==='DNF');
+    if(sexGrouped.length!==sexExpected.length)throw new Error(race.key+': '+sex+' DNF sum');
+  }
   summary[race.key]=groups.map(group=>[group.key,group.count]);
 }
 const race=adapter.race('individual-35-2026');
@@ -134,9 +143,9 @@ console.log(JSON.stringify(summary));
         self.assertEqual(summary["relay-75-2026"], [["floda", 1]])
         self.assertEqual(summary["relay-35-2026"], [["alingsas", 1]])
 
-    def test_dnf_sex_toggles_filter_records_and_set_single_sex_color(self):
-        self.assertIn("const dnfRecords=recordsFor('dnf',records)", self.interactive)
-        self.assertIn("activeDnfSexes.length===1?sexMeta", self.interactive)
+    def test_dnf_sex_toggles_filter_separate_gender_rows(self):
+        self.assertIn("activeDnfSexes=['F','M'].filter(sex=>sexViews.dnf[sex])", self.interactive)
+        self.assertIn("data-dnf-sex", self.interactive)
         self.assertIn("#db2777", self.charts)
         self.assertIn("#2563eb", self.charts)
 
