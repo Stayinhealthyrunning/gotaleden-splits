@@ -19,7 +19,7 @@ class RelaySexMetadataTests(unittest.TestCase):
         self.assertIn("$('#sex-filter').onchange=filtersChanged", self.app)
 
     def test_placement_scatter_uses_neutral_relay_and_sex_colors_for_individual(self):
-        self.assertIn("race.isRelay?{color:'#0b6671'}", self.app)
+        self.assertIn("race.isRelay?{color:meta.color}", self.app)
         self.assertIn("{sex:record.sex,color:window.GCharts.SEX_COLORS[record.sex]", self.app)
 
     def test_replay_omits_sex_reference_only_for_relay(self):
