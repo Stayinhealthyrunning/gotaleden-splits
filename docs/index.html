@@ -39,8 +39,9 @@
     <nav class="analysis-nav" aria-label="Analysnavigation">
       <div class="analysis-nav__scroll">
         <button class="active" data-target="overview">Översikt</button>
-        <button data-target="gender">Genusperspektiv</button>
-        <button data-target="age-analysis">Klass & ålder</button>
+      <button data-target="gender">Genusperspektiv</button>
+      <button data-target="age-analysis">Klass & ålder</button>
+      <button data-target="segments">Delsträckor</button>
         <button data-target="clubs">Klubb & ort</button>
         <button data-target="runner-lookup">Löpare</button>
         <button data-target="map-duel">Kartduell</button>
@@ -74,7 +75,7 @@
 
     <section class="toolbar panel" aria-label="Filter">
       <label id="sex-filter-field">Kön<select id="sex-filter"><option value="">Alla</option><option value="M">Män</option><option value="F">Kvinnor</option></select></label>
-      <label>Klass<select id="class-filter"><option value="">Alla klasser</option></select></label>
+      <label><span id="class-filter-label">Klass</span><select id="class-filter"><option value="">Alla klasser</option></select></label>
       <div class="toolbar-field club-filter-field" id="club-filter-field"><label for="club-filter">Klubb eller ort</label><input id="club-filter" type="search" autocomplete="off" placeholder="Alla klubbar"><div class="suggestions" id="club-filter-suggestions" hidden></div></div>
       <label>Status<select id="status-filter"><option value="">Alla</option></select></label>
       <label>Fartenhet<select id="unit-filter"><option value="pace">min/km</option><option value="speed">km/h</option></select></label>
@@ -174,7 +175,7 @@
 
   <script src="vendor/leaflet/leaflet.js?v=1.9.4"></script>
   <script src="assets/data-index.js?v=20260720-parity3"></script>
-  <script src="assets/data-adapter.js?v=20260902-whole-race-pace1"></script>
+  <script src="assets/data-adapter.js?v=20260903-relay-analysis1"></script>
   <script src="assets/charts.js?v=20260902-axis-labels1"></script>
   <script src="assets/map-engine.js?v=20260721-nolhaga"></script>
   <script src="assets/race-media.js?v=20260901-music1"></script>
