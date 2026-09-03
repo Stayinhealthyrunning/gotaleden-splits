@@ -72,6 +72,35 @@ const race=adapter.race('relay-75-2026'),field=adapter.segmentRanking(race.recor
         self.assertIn("[hidden]{display:none!important}", self.css)
         self.assertIn(".analysis-grid>*{min-width:0}", self.css)
 
+    def test_relay_simulator_uses_whole_field_despite_class_filter(self):
+        self.assertIn("targetFinishers=race.isRelay?race.records.filter(adapter.statusFinished):finishers", self.app)
+        self.assertIn("finishers=(race.isRelay?race.records:state.filtered).filter(adapter.statusFinished)", self.app)
+        self.assertIn("classRecords=selected?finishers.filter(record=>record.class_name===selected):[]", self.app)
+        self.run_node(r"""
+const fs=require('fs'),vm=require('vm');global.window={};vm.runInThisContext(fs.readFileSync('docs/assets/data-adapter.js','utf8'));
+const adapter=window.GDataAdapter.create(JSON.parse(fs.readFileSync('docs/data/results-2026.json')),JSON.parse(fs.readFileSync('docs/data/route.json')),JSON.parse(fs.readFileSync('docs/data/route-elevation-2026.json'))),race=adapter.race('relay-75-2026'),whole=race.records.filter(adapter.statusFinished),men=whole.filter(record=>record.class_name==='Män');
+if(!men.length||whole.length<=men.length)throw new Error(`whole=${whole.length}, men=${men.length}`);
+""")
+
+    def test_segment_lab_does_not_overwrite_interactive_analysis(self):
+        segment_lab = self.app.split("function renderSegmentLab(){", 1)[1].split("function rankingRow", 1)[0]
+        self.assertNotIn("#percentile-ladder", segment_lab)
+        self.assertNotIn("#field-flow", segment_lab)
+        self.assertIn("$('#percentile-ladder').innerHTML", self.interactive)
+        self.assertIn("$('#field-flow').innerHTML", self.interactive)
+
+    def test_missing_class_place_is_not_non_competitive(self):
+        self.assertIn("!meta.ranked?'Ej tävling':record.class_place?'#'+record.class_place:'–'", self.app)
+        self.assertIn("!meta.ranked?' · Ej tävling':item.state.classPlace?` · klass #${item.state.classPlace}`:''", self.duel)
+        self.assertNotIn("meta.ranked&&record.class_place?'#'+record.class_place:'Ej tävling'", self.app)
+        self.assertNotIn("meta.ranked&&item.state.classPlace?` · klass #${item.state.classPlace}`:' · Ej tävling'", self.duel)
+        self.assertIn("BASE_PLAYBACK_SECONDS=180", self.duel)
+        self.assertIn("audio.loop=false", self.duel)
+        self.assertIn("if(pauseAudio)audio?.pause()", self.duel)
+
+    def test_race_switch_resets_result_sorting(self):
+        self.assertIn("if(changing){state.duelIds=[];state.clubNames=[];state.selectedRecordId=null;state.sortKey='overall_place';state.sortDir=1}", self.app)
+
     def test_individual_contract_and_data_integrity_remain(self):
         for text in ("Kön", "Genusperspektiv", "Klass & ålder", "Klubb & ort"):
             self.assertIn(text, self.html + self.app)
