@@ -91,11 +91,11 @@ if(!men.length||whole.length<=men.length)throw new Error(`whole=${whole.length},
 
     def test_missing_class_place_is_not_non_competitive(self):
         self.assertIn("!meta.ranked?'Ej tävling':record.class_place?'#'+record.class_place:'–'", self.app)
-        self.assertIn("!meta.ranked?' · Ej tävling':item.state.classPlace?` · klass #${item.state.classPlace}`:''", self.duel)
+        self.assertIn("!meta.ranked?' · Ej tävling':item.state.classPlace?` · klass #${item.state.classPlace}`:' · klass –'", self.duel)
         self.assertNotIn("meta.ranked&&record.class_place?'#'+record.class_place:'Ej tävling'", self.app)
         self.assertNotIn("meta.ranked&&item.state.classPlace?` · klass #${item.state.classPlace}`:' · Ej tävling'", self.duel)
         self.assertIn("BASE_PLAYBACK_SECONDS=180", self.duel)
-        self.assertIn("audio.loop=false", self.duel)
+        self.assertIn("audio.loop=true", self.duel)
         self.assertIn("if(pauseAudio)audio?.pause()", self.duel)
 
     def test_race_switch_resets_result_sorting(self):
