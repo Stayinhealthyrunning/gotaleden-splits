@@ -128,13 +128,14 @@
       <div class="section-intro"><p class="eyebrow ink" id="age-analysis-eyebrow">KLASS & ÅLDER</p><h2 id="age-analysis-title">Ålderslabbet</h2><p id="age-analysis-copy"><strong>Analytiska åldersgrupper – inte officiella tävlingsklasser.</strong> Grupper med för litet underlag döljs.</p></div>
       <div class="age-group-controls" id="age-group-controls"></div>
       <div class="feature-grid"><article class="panel wide-card"><div class="panel-head"><div><p class="eyebrow ink">ÅLDERSGRUPPER</p><h3>Medianfart genom loppet</h3></div></div><div class="chart" id="age-pace"></div></article><article class="panel"><div class="panel-head"><div><p class="eyebrow ink">UNDERLAG</p><h3>Deltagande och målgång</h3></div></div><div class="age-summary" id="age-summary"></div></article></div>
+      <article class="panel" id="relay-class-retention-panel" hidden><div class="panel-head"><div><p class="eyebrow ink">KLASSVIS PACING</p><h3>Fartretention per klass</h3></div><span class="pill">100 = respektive klass egen hel-loppsmedianfart</span></div><div class="chart" id="relay-class-retention"></div></article>
       <article class="panel"><div class="panel-head"><div><p class="eyebrow ink">FARTKARTA</p><h3>Analysgrupp × delsträcka</h3></div><div class="age-heatmap-tools"><div class="age-heatmap-stat" role="group" aria-label="Välj statistik i fartkartan"><button type="button" data-age-heat-stat="median" aria-pressed="true">Median</button><button type="button" data-age-heat-stat="fastest10" aria-pressed="false">Snabbaste 10 %</button></div><span class="pill" data-age-heat-label>Median · min/km</span></div></div><div class="age-heatmap" id="age-heatmap"></div></article>
     </section>
 
     <section class="audience-world" id="segments">
       <div class="section-intro"><p class="eyebrow ink">DELSTRÄCKELABBET</p><h2>Var avgjordes loppet?</h2><p>Jämför segment, relativa prestationer och placeringar utan att fabricera saknade passager.</p></div>
       <article class="panel segment-lab">
-        <div class="segment-controls"><label>Från<select id="segment-from"></select></label><label>Till<select id="segment-to"></select></label><label>Sortera<select id="segment-metric"><option value="time">Snabbast tid</option><option value="relative">Bäst mot median</option><option value="gain">Flest vunna platser</option></select></label></div>
+        <div class="segment-controls"><label>Från<select id="segment-from"></select></label><label>Till<select id="segment-to"></select></label><label>Sortera<select id="segment-metric"><option value="time">Snabbast tid</option><option value="relative">Bäst mot median</option><option value="gain">Flest vunna platser</option></select></label><label id="segment-comparison-field" hidden>Jämför mot<select id="segment-comparison"><option value="class" selected>Egen klass</option><option value="field">Hela stafettfältet</option></select></label></div>
         <div class="podium" id="segment-podium"></div><div class="ranking" id="segment-ranking"></div>
       </article>
       <div class="feature-grid">
