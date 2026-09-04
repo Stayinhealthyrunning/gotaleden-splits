@@ -62,6 +62,7 @@ Den statiska GitHub Pages-sidan i `docs/` innehåller:
 - genus-, delsträcke-, percentil-, fältflödes- och klubbanalys;
 - sökbar och sorterbar resultatdatabas;
 - individ- och lagprofiler med officiella passeringar, relativa prestationer och pacingprofil;
+- Loppets utveckling med checkpointbaserad gapgraf, officiell placeringsresa och pacing-fingeravtryck mot en stabil komplett referenskohort;
 - animerad Runner Replay med musik, zoom, startläge och tydligt märkt interpolation;
 - Kartduell med musik för 2–5 löpare eller lag, öppnad som en stor modal i analysen;
 - `karta.html` som bakåtkompatibel standalone-vy för direkta och delade kartlänkar;
@@ -75,6 +76,11 @@ popup stängs.
 
 Stafettvyerna analyserar lagets checkpointserie. Lagmedlemmar visas endast som medlemslista och
 kopplas inte till en viss etapp i publikt UI.
+
+Journey-analyserna använder endast verkliga analytiska passager. Gap och pacing jämförs mot samma
+kompletta FINISHED-kohort vid samtliga checkpoints; saknade observationer fylls aldrig ut och DNF
+stannar vid sista verkliga passage. Diagram- och segmentklick söker Runner Replay utan att starta
+animation eller musik.
 
 Frontendens dataadapter matar en gemensam analys- och kartmotor för alla fyra loppen. Navigering,
 analysdjup, profilflöde och kartkomponenter följer systerproduktens etablerade struktur, medan texter,

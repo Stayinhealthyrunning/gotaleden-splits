@@ -56,6 +56,8 @@ eller härledas i publikt UI.
   probe-/adapterkedjan.
 - Ingen mellantid får fabriceras. Saknas splitdata ska det märkas tydligt, och officiell GPX förblir
   master för kartgeometri och distanser.
+- Profilernas Journey-analyser använder verkliga analytiska passager och en fast komplett
+  FINISHED-kohort genom hela gap- och pacingjämförelsen. DNF slutar vid sista verkliga observation.
 
 ## Stafett
 
