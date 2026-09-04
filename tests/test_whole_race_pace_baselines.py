@@ -129,7 +129,7 @@ for(const [key,count] of Object.entries(expected)){
         self.assertIn("100 = respektive köns medianfart över hela loppet", self.html)
         for asset in ("data-adapter.js", "interactive-analysis.js"):
             self.assertIn(f"{asset}?v=20260903-relay-analysis1", self.html)
-        self.assertIn("app.js?v=20260903-relay-fixes1", self.html)
+        self.assertIn("app.js?v=20260903-standalone-map2", self.html)
 
     def test_source_data_and_nolhaga_are_unchanged(self):
         self.assertEqual(

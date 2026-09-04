@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="description" content="Fristående karta och Kartduell för Gotaleden Stafett & Ultra 2026.">
+  <title>Karta · Gotaleden Splits</title>
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=1.9.4">
+  <link rel="stylesheet" href="assets/style.css?v=20260903-relay-analysis1">
+  <link rel="stylesheet" href="assets/map-page.css?v=20260903-standalone-map2">
+</head>
+<body class="map-page">
+  <header class="map-page-topbar">
+    <a class="map-page-back" id="map-back" href="index.html" aria-label="Tillbaka till analysen">← <span>Tillbaka</span></a>
+    <div class="map-page-heading">
+      <span id="map-mode">KARTA</span>
+      <strong id="map-race">Gotaleden Splits</strong>
+      <small id="map-course">Läser bana och deltagare…</small>
+    </div>
+    <div class="map-page-clock" aria-label="Tävlingsklocka">
+      <span>TÄVLINGSKLOCKA</span>
+      <strong id="map-clock">0:00:00</strong>
+      <small>av <span id="map-clock-max">0:00:00</span></small>
+    </div>
+    <div class="map-page-actions">
+      <button type="button" id="map-music" aria-pressed="true" title="Slå av eller på musik" disabled>♫ <span>Musik</span></button>
+      <button type="button" id="map-share" title="Kopiera länk till denna tidpunkt" disabled>↗ <span>Dela</span></button>
+      <button type="button" id="map-fullscreen" title="Visa i helskärm">⛶ <span>Helskärm</span></button>
+    </div>
+  </header>
+  <main id="map-page-root" aria-busy="true"></main>
+  <div class="map-page-loading" id="map-page-loading"><div></div><p>Bygger kartupplevelsen…</p></div>
+  <section class="map-page-error" id="map-page-error" hidden role="alert">
+    <h1>Kartan kunde inte öppnas</h1>
+    <p id="map-page-error-copy">Inga giltiga deltagare valdes.</p>
+    <a href="index.html">Tillbaka till analysen</a>
+  </section>
+  <p class="map-page-warning" id="map-page-warning" hidden role="status"></p>
+
+  <script src="vendor/leaflet/leaflet.js?v=1.9.4"></script>
+  <script src="assets/data-adapter.js?v=20260903-relay-analysis1"></script>
+  <script src="assets/map-engine.js?v=20260721-nolhaga"></script>
+  <script src="assets/race-media.js?v=20260901-music1"></script>
+  <script src="assets/map-duel.js?v=20260903-standalone-map2"></script>
+  <script src="assets/map-page.js?v=20260903-standalone-map2"></script>
+</body>
+</html>
