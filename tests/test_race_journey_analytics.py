@@ -30,8 +30,10 @@ class RaceJourneyAnalyticsTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 0, completed.stderr or completed.stdout)
 
     def test_journey_assets_are_ordered_and_lifecycle_is_scoped_to_detail(self):
-        for asset in ("data-adapter.js", "charts.js", "runner-replay.js", "profile-journey.js", "app.js", "style.css"):
+        for asset in ("data-adapter.js", "runner-replay.js", "app.js"):
             self.assertIn(f"{asset}?v=20260904-journey1", self.html)
+        for asset in ("charts.js", "profile-journey.js", "style.css"):
+            self.assertIn(f"{asset}?v=20260904-journey2", self.html)
         self.assertLess(self.html.index("runner-replay.js"), self.html.index("profile-journey.js"))
         self.assertLess(self.html.index("profile-journey.js"), self.html.index("app.js"))
         self.assertIn("journey:null", self.app)
@@ -65,6 +67,16 @@ if(a.journeyPacingCategory(9).id!=='very-strong'||a.journeyPacingCategory(-9).id
         self.assertIn("före", self.journey)
         self.assertIn("efter", self.journey)
 
+    def test_gap_words_use_unsigned_duration_after_reference(self):
+        self.run_node(r"""
+const fs=require('fs'),vm=require('vm');global.window={};vm.runInThisContext(fs.readFileSync('docs/assets/profile-journey.js','utf8'));
+const gap=window.GProfileJourney.gapWords,label='Hela fältet';
+if(gap(60,label)!=='+1:00 före Hela fältet')throw new Error('positive '+gap(60,label));
+if(gap(-60,label)!=='1:00 efter Hela fältet')throw new Error('negative '+gap(-60,label));
+if(gap(0,label)!=='0:00, i nivå med Hela fältet')throw new Error('zero '+gap(0,label));
+if(gap(-3661,label)!=='1:01:01 efter Hela fältet')throw new Error('hours '+gap(-3661,label));
+""")
+
     def test_real_observations_dnf_and_mixed_free_are_never_fabricated(self):
         self.run_node(r"""
 const fs=require('fs'),vm=require('vm');global.window={};vm.runInThisContext(fs.readFileSync('docs/assets/data-adapter.js','utf8'));
@@ -96,6 +108,7 @@ const normal=a.journeyReferences(a.race('individual-75-2026').records[0]).field;
 const fs=require('fs'),vm=require('vm');global.window={};vm.runInThisContext(fs.readFileSync('docs/assets/charts.js','utf8'));
 const signed=window.GCharts.signedJourney([{label:'A',value:60,distance:1,title:'a'},{label:'B',value:null,distance:2,title:'b'},{label:'C',value:-60,distance:3,title:'c'}]);
 if(!signed.includes('journey-zero')||(signed.match(/M/g)||[]).length<2||!signed.includes('data-journey-distance="1"'))throw new Error('signed missing break');
+if(!signed.includes('>0:00</text>')||signed.includes('0:00 = jämförelsegruppen'))throw new Error('zero reference label');
 const rank=window.GCharts.rankJourney([{id:'overall',name:'Total',color:'#000',values:[20,null,1],distances:[1,2,3]}],['A','B','C']);
 const circles=[...rank.matchAll(/cy="([0-9.]+)" r="5"/g)].map(match=>Number(match[1]));if(circles.length!==2||!(circles[1]<circles[0]))throw new Error('rank direction');
 if((rank.match(/data-journey-distance=/g)||[]).length!==2)throw new Error('missing rank point');
@@ -104,9 +117,27 @@ if((rank.match(/data-journey-distance=/g)||[]).length!==2)throw new Error('missi
     def test_journey_seek_is_keyboard_accessible_and_never_autoplays(self):
         self.assertIn("replay.seekDistance(distance)", self.journey)
         self.assertIn("event.key==='Enter'||event.key===' '", self.journey)
+        self.assertIn("if(element.tagName!=='BUTTON')element.onkeydown", self.journey)
         self.assertIn("midpointDistance", self.adapter)
         for forbidden in ("replay.toggle(", "audio.play(", "replay.play("):
             self.assertNotIn(forbidden, self.journey)
+
+    def test_journey_precedes_insights_in_flex_and_desktop_grid(self):
+        flex = (
+            "#detail-replay{order:4}#profile-journey{order:5;min-width:0}.insight-cards{order:6}"
+            ".detail-grid{order:7}.split-section{order:8}"
+        )
+        desktop = (
+            "#detail-replay{grid-column:1/-1;grid-row:3}#profile-journey{grid-column:1/-1;grid-row:4}"
+            ".insight-cards{grid-column:1/-1;grid-row:5}.detail-grid{grid-column:1/-1;grid-row:6}"
+            ".split-section{grid-column:1/-1;grid-row:7}"
+        )
+        self.assertIn(flex, self.css)
+        self.assertIn(desktop, self.css)
+
+    def test_gap_chart_explains_the_dynamic_zero_reference_in_copy(self):
+        self.assertIn("0:00 motsvarar ${esc(reference.label)}", self.journey)
+        self.assertNotIn("0:00 = jämförelsegruppen", self.charts)
 
     def test_individual_scatter_is_half_transparent_without_changing_relay(self):
         self.assertIn("fill-opacity=\"${individualSex?'.5':'1'}\"", self.charts)
