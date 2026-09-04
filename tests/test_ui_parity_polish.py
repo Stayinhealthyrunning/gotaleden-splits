@@ -102,9 +102,10 @@ class UiParityPolishTests(unittest.TestCase):
     def test_profile_replay_is_visually_prioritized_before_secondary_analysis(self):
         self.assertIn("detailContent.insertBefore(container,secondaryInsights)", self.replay)
         self.assertIn("#detail-replay{order:4}", self.style)
-        self.assertIn(".insight-cards{order:5}", self.style)
-        self.assertIn(".detail-grid{order:6}", self.style)
-        self.assertIn(".split-section{order:7}", self.style)
+        self.assertIn("#profile-journey{order:5;min-width:0}", self.style)
+        self.assertIn(".insight-cards{order:6}", self.style)
+        self.assertIn(".detail-grid{order:7}", self.style)
+        self.assertIn(".split-section{order:8}", self.style)
 
     def test_standout_rankings_include_graphical_progress_bars(self):
         self.assertIn('class="standout-bar"', self.interactive)
