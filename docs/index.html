@@ -13,7 +13,7 @@
   <meta name="twitter:description" content="Analysera resultat, verkliga passager, fart och loppförlopp för Gotaleden Stafett & Ultra 2026.">
   <title>Gotaleden Splits</title>
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=1.9.4">
-  <link rel="stylesheet" href="assets/style.css?v=20260903-relay-analysis1">
+  <link rel="stylesheet" href="assets/style.css?v=20260904-modal-duel1">
 </head>
 <body>
   <header class="hero">
@@ -64,8 +64,8 @@
     </section>
 
     <section class="panel duel-picker-panel duel-quick-builder" id="map-duel">
-      <div><p class="eyebrow ink">KARTA &amp; KARTDUELL</p><h2>Följ loppet på en egen karta</h2><p>Välj en löpare eller ett lag för en individuell karta, eller välj flera för att jämföra dem i Kartduell. Kartupplevelsen öppnas separat.</p></div>
-      <div><div class="picker"><label>Sök och lägg till <span data-entity-singular>löpare</span><input id="duel-search" type="search" autocomplete="off" placeholder="Namn eller startnummer"></label><div class="suggestions" id="duel-suggestions" hidden></div></div><div class="selected-chips" id="duel-selected"></div><button class="button" id="open-map-duel" type="button" disabled>Öppna individuell karta</button></div>
+      <div><p class="eyebrow ink">KARTA &amp; KARTDUELL</p><h2>Jämför loppet på kartan</h2><p>Kartduell jämför två till fem löpare eller lag på banan. För analys av en enda deltagare använder du Löpare/Lag-analysen och Runner Replay.</p></div>
+      <div><div class="picker"><label>Välj 2–5 <span data-entity-plural>deltagare</span><input id="duel-search" type="search" autocomplete="off" placeholder="Namn eller startnummer"></label><div class="suggestions" id="duel-suggestions" hidden></div></div><div class="selected-chips" id="duel-selected"></div><button class="button" id="open-map-duel" type="button" disabled>Välj minst två deltagare</button></div>
     </section>
 
     <section class="scope panel" id="overview">
@@ -167,6 +167,14 @@
   </main>
 
   <dialog id="detail-dialog"><button class="dialog-close" type="button" aria-label="Stäng">×</button><div id="detail-content"></div></dialog>
+  <dialog id="duel-dialog" class="duel-dialog">
+    <header class="duel-dialog-header">
+      <div class="duel-dialog-heading"><span>KARTDUELL</span><strong id="duel-dialog-race">Gotaleden Splits</strong><small id="duel-dialog-count">2 deltagare</small></div>
+      <div class="duel-dialog-clock" aria-label="Tävlingsklocka"><span>TÄVLINGSKLOCKA</span><strong id="duel-dialog-clock">0:00:00</strong><small>av <span id="duel-dialog-clock-max">0:00:00</span></small></div>
+      <div class="duel-dialog-actions"><button class="button secondary" id="duel-dialog-share" type="button">↗ <span>Dela</span></button><button class="duel-dialog-close" type="button" aria-label="Stäng Kartduell">×</button></div>
+    </header>
+    <div id="duel-dialog-content" class="duel-modal-stage"></div>
+  </dialog>
   <div class="loading" id="loading"><div></div><p>Bygger Gotaleden-analysen…</p></div>
   <footer class="site-footer social-footer"><p>Gotaleden Splits · Premiäråret 2026 · Officiell rutt från Göteborg till Alingsås</p><nav aria-label="Stayinhealthyrunning i sociala medier"><a href="https://www.instagram.com/stayinhealthyrunning/" target="_blank" rel="noopener noreferrer">Instagram ↗</a><a href="https://youtube.com/playlist?list=PLuI3oCc13p7emHXZeI3Dum0tSQpSmesyL&amp;si=HbBmOAVBI3o_olDB" target="_blank" rel="noopener noreferrer">YouTube ↗</a></nav></footer>
 
@@ -176,9 +184,9 @@
   <script src="assets/charts.js?v=20260903-axis-padding1"></script>
   <script src="assets/map-engine.js?v=20260721-nolhaga"></script>
   <script src="assets/race-media.js?v=20260901-music1"></script>
-  <script src="assets/runner-replay.js?v=20260903-relay-analysis1"></script>
+  <script src="assets/runner-replay.js?v=20260904-modal-duel1"></script>
   <script src="assets/map-duel.js?v=20260903-standalone-map2"></script>
   <script src="assets/interactive-analysis.js?v=20260903-relay-analysis1"></script>
-  <script src="assets/app.js?v=20260903-standalone-map2"></script>
+  <script src="assets/app.js?v=20260904-modal-duel1"></script>
 </body>
 </html>
