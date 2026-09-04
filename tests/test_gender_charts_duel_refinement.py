@@ -91,8 +91,8 @@ for(const token of ['data-sex="F" data-visual-offset-x="-2.5"','data-sex="M" dat
     def test_duel_duration_and_finish_audio_contract(self):
         self.assertIn("const BASE_PLAYBACK_SECONDS=180", self.duel)
         self.assertIn("maxTime/BASE_PLAYBACK_SECONDS", self.duel)
-        self.assertIn("audio.loop=false", self.duel)
-        self.assertIn("function finishAnimation(){stop()}", self.duel)
+        self.assertIn("audio.loop=true", self.duel)
+        self.assertIn("function finishAnimation(){stop({pauseAudio:false})}", self.duel)
         self.assertIn("if(time>=maxTime)finishAnimation()", self.duel)
         self.assertIn("function stop({pauseAudio=true}={})", self.duel)
         self.assertIn("if(pauseAudio)audio?.pause()", self.duel)
