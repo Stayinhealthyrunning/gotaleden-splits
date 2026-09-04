@@ -25,8 +25,8 @@ class RelaySexMetadataTests(unittest.TestCase):
     def test_replay_omits_sex_reference_only_for_relay(self):
         self.assertIn("sex:{label:'Mitt kön'", self.replay)
         self.assertIn("!(record.isRelay&&key==='sex')", self.replay)
-        self.assertIn("runner-replay.js?v=20260903-relay-analysis1", self.html)
-        self.assertIn("app.js?v=20260903-standalone-map2", self.html)
+        self.assertIn("runner-replay.js?v=20260904-modal-duel1", self.html)
+        self.assertIn("app.js?v=20260904-modal-duel1", self.html)
 
 
 if __name__ == "__main__":

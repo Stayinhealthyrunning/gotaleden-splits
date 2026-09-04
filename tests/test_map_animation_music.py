@@ -74,6 +74,10 @@ if(store['gotaleden-music-volume']!=='0.6')throw new Error('volume key');
         ):
             self.assertIn(token, self.replay)
         self.assertIn("audio.play().catch(()=>showAudioNote", self.replay)
+        self.assertIn("function stop({pauseAudio=true}={})", self.replay)
+        self.assertIn("function finishAnimation(){stop({pauseAudio:false})}", self.replay)
+        self.assertIn("if(time>=maxTime)finishAnimation()", self.replay)
+        self.assertIn("else if(playing||time>=maxTime)playAudio()", self.replay)
 
     def test_map_duel_reuses_shared_state_and_syncs_its_button(self):
         for token in (
