@@ -88,6 +88,7 @@ if(store['gotaleden-music-volume']!=='0.6')throw new Error('volume key');
         ):
             self.assertIn(token, self.duel)
         self.assertIn("audio.play().catch(()=>showAudioNote", self.duel)
+        self.assertIn("else if(playing||time>=maxTime)playAudio()", self.duel)
 
     def test_audio_never_follows_map_playback_speed(self):
         self.assertIn("audio.playbackRate=1", self.replay)
