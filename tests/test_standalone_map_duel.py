@@ -30,16 +30,17 @@ class StandaloneMapDuelTests(unittest.TestCase):
         completed = subprocess.run([node, "-e", script], cwd=ROOT, text=True, capture_output=True, check=False)
         self.assertEqual(completed.returncode, 0, completed.stderr or completed.stdout)
 
-    def test_main_page_is_a_launcher_without_inline_map(self):
+    def test_main_page_opens_duel_in_a_separate_modal_host(self):
         self.assertIn('id="open-map-duel" type="button" disabled', self.index)
-        self.assertIn("Öppna individuell karta", self.app)
-        self.assertIn("Öppna lagkarta", self.app)
+        self.assertIn('id="duel-dialog"', self.index)
+        self.assertIn('id="duel-dialog-content"', self.index)
+        self.assertIn("Välj minst två deltagare", self.app)
+        self.assertIn("Välj ett lag till", self.app)
         self.assertIn("Öppna Kartduell ·", self.app)
         self.assertIn("state.duelIds.length>=5", self.app)
-        self.assertIn("window.open(url,'_blank')", self.app)
-        self.assertIn("win.opener=null", self.app)
-        self.assertIn("else location.href=url", self.app)
-        self.assertNotIn("GMapDuel.create", self.app)
+        self.assertNotIn("window.open", self.app)
+        self.assertNotIn("location.href=", self.app)
+        self.assertIn("dialog.showModal();state.duel=window.GMapDuel.create", self.app)
         self.assertNotIn('id="map-duel-stage"', self.index)
 
     def test_standalone_assets_and_direct_url_helpers_execute(self):
@@ -143,6 +144,8 @@ if(!state.stopped||state.finished||state.distance!==profile.maxDistance||state.d
 
     def test_runner_replay_contract_remains_separate(self):
         self.assertIn("audio.loop=true", self.replay)
+        self.assertIn("function finishAnimation(){stop({pauseAudio:false})}", self.replay)
+        self.assertIn("else if(playing||time>=maxTime)playAudio()", self.replay)
         self.assertIn("window.GRunnerReplay", self.replay)
         self.assertNotIn("map-page", self.replay)
 
