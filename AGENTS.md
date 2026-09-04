@@ -16,8 +16,8 @@ Webbplatsen har fyra huvudsektioner:
 4. **Stafett 35** — källdata: EQ Timing `Stafett 35 km`.
 
 Individuella lopp analyseras primärt som `löpare → kontroll → delsträcka`.
-Stafetter analyseras primärt som `lag → etapp → löpare`, men all laganalys måste fungera även om
-kopplingen mellan en viss löpare och en viss etapp saknas i källdatan.
+Stafetter analyseras publikt som `lag → kontroll → delsträcka`; löpar-etapp-koppling får inte krävas
+eller härledas i publikt UI.
 
 ## Bana och GPX
 
@@ -52,9 +52,10 @@ kopplingen mellan en viss löpare och en viss etapp saknas i källdatan.
 - 2026 är premiäråret.
 - De fyra CSV-exporterna vid projektstart innehåller en rad per deltagare/lag vid `Mål`.
 - Mellanpassager finns inte som separata rader i dessa exporter.
-- Projektet ska senare kompletteras med en probe/adapter mot EQ Timings publika resultattjänst/API eller
-  de publika JSON-anrop som webbsidan använder.
-- Ingen mellantid får fabriceras. Saknas splitdata ska det märkas tydligt.
+- EQ Timings publika resultattjänst används för officiella passager via den reproducerbara
+  probe-/adapterkedjan.
+- Ingen mellantid får fabriceras. Saknas splitdata ska det märkas tydligt, och officiell GPX förblir
+  master för kartgeometri och distanser.
 
 ## Stafett
 

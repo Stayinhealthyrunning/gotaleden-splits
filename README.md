@@ -62,14 +62,16 @@ Den statiska GitHub Pages-sidan i `docs/` innehåller:
 - genus-, delsträcke-, percentil-, fältflödes- och klubbanalys;
 - sökbar och sorterbar resultatdatabas;
 - individ- och lagprofiler med officiella passeringar, relativa prestationer och pacingprofil;
-- animerad Runner Replay med zoom, startläge och tydligt märkt interpolation;
-- Kartduell för upp till fem löpare eller lag på den officiella GPX-rutten;
+- animerad Runner Replay med musik, zoom, startläge och tydligt märkt interpolation;
+- Kartduell med musik för 2–5 löpare eller lag, öppnad som en stor modal i analysen;
+- `karta.html` som bakåtkompatibel standalone-vy för direkta och delade kartlänkar;
 - höjdprofil längs samma officiella `route_distance_km` som replay.
 
 Runner Replay och Kartduell använder en gemensam, lokalt vendrad Leaflet 1.9.4-motor med
 OpenStreetMap-rutor. Ett förenklat SVG-läge finns enbart som reserv om Leaflet inte kan starta.
-Kartduellens ljudstöd är en avstängd integrationspunkt tills en godkänd ljudkälla anges; ingen
-musikfil ingår i webbbygget.
+Den inkluderade musikfilen används av båda uppspelningarna. Vid automatisk målgång stannar
+animationen medan musiken fortsätter att loopa tills den stängs av, återställs eller respektive
+popup stängs.
 
 Stafettvyerna analyserar lagets checkpointserie. Lagmedlemmar visas endast som medlemslista och
 kopplas inte till en viss etapp i publikt UI.
