@@ -23,7 +23,7 @@
     if(coordinates.length<2)throw new Error('Banan saknar giltiga GPS-koordinater.');
     const map=L.map(elements.mapElement,{zoomControl:true,preferCanvas:true,attributionControl:true,keyboard:true}),bounds=L.latLngBounds(coordinates);
     if(bounds.isValid())map.fitBounds(bounds,{padding:[42,42],animate:false});else map.setView(coordinates[0],9);
-    let tileErrors=0,follow=false,destroyed=false;
+    let tileErrors=0,follow=false,destroyed=false,highlightLayer=null;
     const layerConfig=MAP_LAYERS[layer]||MAP_LAYERS.standard,tileLayer=L.tileLayer(layerConfig.url,{maxZoom:layerConfig.maxZoom,attribution:layerConfig.attribution}).on('tileerror',()=>{tileErrors++;if(tileErrors===4){elements.status.hidden=false;elements.status.textContent='Kartbakgrunden kunde inte läsas, men banlager och deltagare fungerar.'}}).addTo(map);
     const routeGroup=L.layerGroup().addTo(map),routeColor='#0b6671';
     L.polyline(coordinates,{color:'#fff',weight:11,opacity:.8,lineCap:'round'}).addTo(routeGroup);
@@ -51,20 +51,24 @@
     function setFollow(value){follow=Boolean(value);return follow}
     function panToDistance(distance,zoomLevel=14){const point=adapter.routePoint(distance);if(validLatLng(point))map.setView([point[0],point[1]],zoomLevel,{animate:false})}
     function fitDistances(distances){const points=distances.map(distance=>adapter.routePoint(distance)).filter(validLatLng).map(point=>[point[0],point[1]]);if(!points.length)return;if(points.length===1){map.setView(points[0],14,{animate:false});return}map.fitBounds(L.latLngBounds(points),{padding:[90,90],maxZoom:14,animate:false})}
+    function clearHighlight(){if(highlightLayer){highlightLayer.remove();highlightLayer=null}}
+    function highlightRange(fromDistance,toDistance,options={}){clearHighlight();const points=routeSegment(adapter,fromDistance,toDistance);if(points.length<2)return null;highlightLayer=L.polyline(points,{color:options.color||'#db7b3b',weight:options.weight||9,opacity:options.opacity??.92,lineCap:'round',interactive:false}).addTo(map);highlightLayer.bringToFront?.();return highlightLayer}
     if(onSeek)map.on('click',event=>{let nearest=null,best=Infinity;for(const point of routePoints){const delta=(Number(point[0])-event.latlng.lat)**2+(Number(point[1])-event.latlng.lng)**2;if(delta<best){best=delta;nearest=point}}if(nearest)onSeek(Number(nearest[2]),{source:'map'})});
     elements.root.querySelector('[data-map-action="fit"]').onclick=fit;
     setTimeout(()=>{if(destroyed)return;map.invalidateSize(false);if(!follow)fit()},80);
-    return{kind:'leaflet',map,tileLayer,setRunners,fit,zoom,setFollow,panToDistance,fitDistances,destroy(){destroyed=true;markerMap.clear();map.remove();container.innerHTML=''},get destroyed(){return destroyed}};
+    return{kind:'leaflet',map,tileLayer,setRunners,fit,zoom,setFollow,panToDistance,fitDistances,highlightRange,clearHighlight,destroy(){destroyed=true;clearHighlight();markerMap.clear();map.remove();container.innerHTML=''},get destroyed(){return destroyed}};
   }
   function createFallback(container,{adapter,race,mode}){
     const id=`fallback-${++engineSequence}`,width=1000,height=520,padding=46,routePoints=adapter.routeSlice(race),meanLat=routePoints.reduce((sum,point)=>sum+point[0],0)/routePoints.length*Math.PI/180,xs=routePoints.map(point=>point[1]*Math.cos(meanLat)),ys=routePoints.map(point=>point[0]),minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys),scale=Math.min((width-padding*2)/(maxX-minX||1),(height-padding*2)/(maxY-minY||1)),project=point=>[padding+(point[1]*Math.cos(meanLat)-minX)*scale,height-padding-(point[0]-minY)*scale],path=routePoints.map((point,index)=>{const projected=project(point);return`${index?'L':'M'}${projected[0].toFixed(1)} ${projected[1].toFixed(1)}`}).join(' ');
-    container.innerHTML=`<div class="route-map fallback-map" data-map-engine="fallback"><svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Förenklad reservkarta"><path class="route-shadow" d="${path}"/><path class="route-line-map" d="${path}"/><g data-fallback-runners></g></svg><div class="map-engine-status">Interaktiv kartbakgrund saknas. Förenklad banvy används.</div></div>`;const runners=container.querySelector('[data-fallback-runners]');
+    container.innerHTML=`<div class="route-map fallback-map" data-map-engine="fallback"><svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Förenklad reservkarta"><path class="route-shadow" d="${path}"/><path class="route-line-map" d="${path}"/><g data-fallback-highlight></g><g data-fallback-runners></g></svg><div class="map-engine-status">Interaktiv kartbakgrund saknas. Förenklad banvy används.</div></div>`;const runners=container.querySelector('[data-fallback-runners]'),highlight=container.querySelector('[data-fallback-highlight]');let destroyed=false;
     function setRunners(values){runners.innerHTML=values.map((runner,index)=>{const point=project(adapter.routePoint(runner.distance));return`<g class="map-runner" transform="translate(${point[0]} ${point[1]})"><circle class="runner-pulse" r="14"/><circle class="runner-dot" r="9" fill="${runner.color}"/><text class="runner-number" y="4" text-anchor="middle">${index+1}</text><text class="runner-label" x="14" y="-12">${esc(runner.name)}</text></g>`}).join('')}
-    return{kind:'fallback',setRunners,fit(){},zoom(){},setFollow(){return false},panToDistance(){},fitDistances(){},destroy(){container.innerHTML=''},get destroyed(){return false}};
+    function clearHighlight(){if(highlight)highlight.innerHTML=''}
+    function highlightRange(fromDistance,toDistance,options={}){const points=routeSegment(adapter,fromDistance,toDistance),highlightPath=points.map((point,index)=>{const value=project(point);return`${index?'L':'M'}${value[0].toFixed(1)} ${value[1].toFixed(1)}`}).join(' ');if(highlight)highlight.innerHTML=`<path class="route-range-highlight" d="${highlightPath}" style="stroke:${esc(options.color||'#db7b3b')};stroke-width:${Number(options.weight)||9};opacity:${options.opacity??.92}"/>`;return highlightPath}
+    return{kind:'fallback',setRunners,fit(){},zoom(){},setFollow(){return false},panToDistance(){},fitDistances(){},highlightRange,clearHighlight,destroy(){destroyed=true;clearHighlight();container.innerHTML=''},get destroyed(){return destroyed}};
   }
   function create(container,options){
     if(window.L){try{return createLeaflet(container,options)}catch(error){console.error('Leaflet-kartan kunde inte starta',error)}}
     return createFallback(container,options)
   }
-  window.GMapEngine={create,TILE_URL,TILE_ATTRIBUTION,MAP_LAYERS};
+  window.GMapEngine={create,routeSegment,TILE_URL,TILE_ATTRIBUTION,MAP_LAYERS};
 })();
