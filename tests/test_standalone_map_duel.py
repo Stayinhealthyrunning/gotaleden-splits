@@ -19,6 +19,7 @@ class StandaloneMapDuelTests(unittest.TestCase):
         cls.app = (ASSETS / "app.js").read_text(encoding="utf-8")
         cls.duel = (ASSETS / "map-duel.js").read_text(encoding="utf-8")
         cls.map_page = (ASSETS / "map-page.js").read_text(encoding="utf-8")
+        cls.map_css = (ASSETS / "map-page.css").read_text(encoding="utf-8")
         cls.replay = (ASSETS / "runner-replay.js").read_text(encoding="utf-8")
         cls.results = json.loads((DOCS / "data/results-2026.json").read_text(encoding="utf-8"))
 
@@ -62,15 +63,37 @@ for(const key of ['individual-75-2026','individual-35-2026','relay-75-2026','rel
 if(window.GMapPage.modeFor({isRelay:false},1)!=='INDIVIDUELL KARTA')throw new Error('individual mode');
 if(window.GMapPage.modeFor({isRelay:true},1)!=='LAGKARTA')throw new Error('relay mode');
 if(window.GMapPage.modeFor({isRelay:false},2)!=='KARTDUELL')throw new Error('duel mode');
+if(window.GMapPage.fmtTime(0)!=='0:00:00'||window.GMapPage.fmtTime(15272)!=='4:14:32')throw new Error('clock format');
+const timed=window.GMapPage.selectionFrom('?race=individual-75-2026&entries='+encodeURIComponent(adapter.race('individual-75-2026').records[0].bib)+'&t=15272',adapter);
+if(timed.time!==15272)throw new Error('initial clock time');
 if(!window.GMapPage.selectionFrom('?race=individual-75-2026&entries=1,2,3,4,5,6',adapter).error)throw new Error('max five');
 """
         self.run_node(script)
         for asset in ("map-duel.js", "map-page.js"):
-            self.assertIn(f'assets/{asset}?v=20260903-standalone-map1', self.map_html)
+            self.assertIn(f'assets/{asset}?v=20260903-standalone-map2', self.map_html)
+        self.assertIn('assets/map-page.css?v=20260903-standalone-map2', self.map_html)
+
+    def test_standalone_clock_is_wired_to_every_runtime_time_change(self):
+        self.assertIn('id="map-clock"', self.map_html)
+        self.assertIn('id="map-clock-max"', self.map_html)
+        self.assertIn("onTimeChange:time=>syncClock(time)", self.map_page)
+        self.assertIn("syncClock(runtime.getTime(),runtime.getMaxTime())", self.map_page)
+        self.assertIn("initialTime:selection.time", self.map_page)
+        self.assertIn("function reset(){stop();time=0", self.duel)
+        self.assertIn("time=clamp(value,0,maxTime);render(forceCamera)", self.duel)
+
+    def test_standalone_exposes_one_music_and_one_fit_control(self):
+        self.assertIn('id="map-music"', self.map_html)
+        self.assertIn('.map-page [data-duel-audio]', self.map_css)
+        self.assertIn('.map-page [data-map-action="fit"]', self.map_css)
+        self.assertNotIn('.map-page [data-duel-volume]', self.map_css)
+        self.assertNotIn('.map-page [data-duel-fit]', self.map_css)
+        self.assertIn("[data-duel-fit]').onclick=()=>{camera.value='overview';map.fit()}", self.duel)
 
     def test_music_transport_contract_is_explicit(self):
         self.assertIn("audio.loop=true", self.duel)
         self.assertIn("function finishAnimation(){stop({pauseAudio:false})}", self.duel)
+        self.assertIn("else if(playing||time>=maxTime)playAudio()", self.duel)
         self.assertIn("if(pauseAudio)audio?.pause()", self.duel)
         self.assertIn("if(playing){stop();return}", self.duel)
         self.assertIn("if(time>=maxTime){time=0;if(audio)audio.currentTime=0}", self.duel)
