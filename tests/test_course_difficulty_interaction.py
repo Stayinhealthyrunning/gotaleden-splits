@@ -60,6 +60,13 @@ if(window.GCharts.elevation(points,checkpoints).includes('elevation-range-highli
         self.assertNotIn('scrollIntoView',self.course)
         self.assertIn('highlightRange?.(',self.course)
         self.assertIn('map?.destroy()',self.course)
+        self.assertIn('interactiveSegments:true',self.course)
+        self.assertIn("[data-course-distribution] [data-course-segment]",self.course)
+        self.assertNotIn('element.click()',self.course)
+
+    def test_relay_course_copy_uses_teams(self):
+        self.assertIn("race.isRelay?'Alla lag':'Hela fältet'",self.course)
+        self.assertIn("race.isRelay?'Hela loppets kompletta lag i mål':'Hela loppets kompletta målgångare'",self.course)
 
 
 if __name__=='__main__':unittest.main()

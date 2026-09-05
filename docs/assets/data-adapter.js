@@ -135,8 +135,8 @@
       const item=typeof raceValue==='string'?race(raceValue):raceValue,cohort=(profiles||journeyCompleteProfiles(item)).map(candidate=>candidate?.record&&candidate?.segments?candidate:profile(candidate)).filter(candidate=>candidate?.race?.key===item.key),boundaries=item.analysisCheckpoints;
       return boundaries.slice(1).map((to,index)=>{const from=boundaries[index],samples=cohort.map(candidate=>candidate.segments[index]).filter(segment=>segment?.from.checkpoint===from.key&&segment?.to.checkpoint===to.key&&finite(segment.paceSecondsKm)&&Number(segment.paceSecondsKm)>0),pace=distributionSummary(samples.map(segment=>segment.paceSecondsKm));return{id:`${from.key}--${to.key}`,index,from:from.key,to:to.key,name:`${from.name}–${to.name==='Mål'?'Alingsås':to.name}`,fromDistance:Number(from.route_distance_km),toDistance:Number(to.route_distance_km),distanceKm:Number(to.route_distance_km)-Number(from.route_distance_km),pace,n:pace.n,samples}});
     }
-    function segmentGroupDistribution(raceValue,predicate){
-      const item=typeof raceValue==='string'?race(raceValue):raceValue,cohort=journeyCompleteProfiles(item).filter(candidate=>typeof predicate==='function'?predicate(candidate.record):true);
+    function segmentGroupDistribution(raceValue,predicate,baseRecords=null){
+      const item=typeof raceValue==='string'?race(raceValue):raceValue,baseIds=baseRecords===null?null:new Set((baseRecords||[]).map(record=>typeof record==='string'?record:record?.id).filter(Boolean)),cohort=journeyCompleteProfiles(item).filter(candidate=>(baseIds===null||baseIds.has(candidate.record.id))&&(typeof predicate==='function'?predicate(candidate.record):true));
       return{race:item,cohort:cohort.map(candidate=>candidate.record),count:cohort.length,segments:segmentDistributionProfile(item,cohort)};
     }
     function courseDifficultyProfile(raceValue){

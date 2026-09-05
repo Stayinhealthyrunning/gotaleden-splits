@@ -40,6 +40,30 @@ const expected={'relay-75-2026':{men:16,women:3,'mixed-ranked':13,'mixed-free':6
         for source in (self.app,self.interactive):
             self.assertIn('adapter.distributionSummary(segment.samples.map(sample=>3600/sample.paceSecondsKm))',source)
 
+    def test_filtered_base_records_keep_one_complete_cohort(self):
+        self.run_node(r"""
+const fs=require('fs'),vm=require('vm');global.window={};vm.runInThisContext(fs.readFileSync('docs/assets/data-adapter.js','utf8'));const a=window.GDataAdapter.create(JSON.parse(fs.readFileSync('docs/data/results-2026.json')),JSON.parse(fs.readFileSync('docs/data/route.json')),JSON.parse(fs.readFileSync('docs/data/route-elevation-2026.json'))),race=a.race('individual-75-2026'),base=a.journeyCompleteProfiles(race).slice(0,17).map(item=>item.record),ids=new Set(base.map(record=>record.id)),distribution=a.segmentGroupDistribution(race,()=>true,base);
+if(distribution.count!==17||distribution.segments.length!==9||distribution.segments.some(segment=>segment.n!==17)||distribution.cohort.some(record=>!ids.has(record.id)))throw new Error('filtered stable cohort');
+""")
+
+    def test_filtered_sex_does_not_leak_full_race_statistics(self):
+        self.run_node(r"""
+const fs=require('fs'),vm=require('vm');global.window={};vm.runInThisContext(fs.readFileSync('docs/assets/data-adapter.js','utf8'));const a=window.GDataAdapter.create(JSON.parse(fs.readFileSync('docs/data/results-2026.json')),JSON.parse(fs.readFileSync('docs/data/route.json')),JSON.parse(fs.readFileSync('docs/data/route-elevation-2026.json'))),race=a.race('individual-75-2026'),base=race.records.filter(record=>record.sex==='F'),women=a.segmentGroupDistribution(race,record=>record.sex==='F',base),men=a.segmentGroupDistribution(race,record=>record.sex==='M',base);
+if(women.count!==42||women.segments.some(segment=>segment.n!==42)||men.count!==0||men.segments.some(segment=>segment.n!==0||segment.pace.available))throw new Error('filtered sex leak');
+""")
+
+    def test_filtered_relay_class_does_not_leak_other_classes(self):
+        self.run_node(r"""
+const fs=require('fs'),vm=require('vm');global.window={};vm.runInThisContext(fs.readFileSync('docs/assets/data-adapter.js','utf8'));const a=window.GDataAdapter.create(JSON.parse(fs.readFileSync('docs/data/results-2026.json')),JSON.parse(fs.readFileSync('docs/data/route.json')),JSON.parse(fs.readFileSync('docs/data/route-elevation-2026.json'))),race=a.race('relay-75-2026'),base=race.records.filter(record=>a.relayClassMeta(record).id==='mixed-ranked'),mixed=a.segmentGroupDistribution(race,record=>a.relayClassMeta(record).id==='mixed-ranked',base),men=a.segmentGroupDistribution(race,record=>a.relayClassMeta(record).id==='men',base);
+if(mixed.count!==13||mixed.segments.some(segment=>segment.n!==13)||men.count!==0||men.segments.some(segment=>segment.n!==0||segment.pace.available))throw new Error('filtered relay leak');
+""")
+
+    def test_renderers_pass_filtered_records_to_group_distributions(self):
+        for source in (self.app,self.interactive):
+            self.assertIn('segmentGroupDistribution(race,record=>record.sex===sex,records)',source)
+            self.assertIn('segmentGroupDistribution(race,record=>adapter.relayClassMeta(record).id===group.id,records)',source)
+        self.assertNotIn('relayClassGroups(race.records,race)',self.interactive)
+
     def test_toggles_remove_the_whole_series_and_band_elements_share_id(self):
         self.assertIn("filter(sex=>sexViews.pace[sex])",self.interactive)
         self.assertIn("filter(group=>relayViews.pace.has(group.id))",self.interactive)
