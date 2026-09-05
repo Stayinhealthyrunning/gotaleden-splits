@@ -86,3 +86,5 @@ eller härledas i publikt UI.
 - GitHub Pages publiceras från `docs/`.
 - Sidan ska kunna byggas och publiceras utan lokal utvecklingsinstallation hos användaren.
 - Arbeta normalt på branch/PR när integrationen stödjer det.
+- Race-level segmentfördelningar ska använda samma kompletta FINISHED-kohort genom hela loppet.
+- Banans svårighetsprofil får beskriva klättring, farttapp, spridning och officiell placeringsrörelse, men inte påstå teknisk stigsvårighet eller skapa ett syntetiskt totalscore.

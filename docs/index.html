@@ -13,7 +13,7 @@
   <meta name="twitter:description" content="Analysera resultat, verkliga passager, fart och loppförlopp för Gotaleden Stafett & Ultra 2026.">
   <title>Gotaleden Splits</title>
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=1.9.4">
-  <link rel="stylesheet" href="assets/style.css?v=20260904-journey2">
+  <link rel="stylesheet" href="assets/style.css?v=20260904-course-difficulty2">
 </head>
 <body>
   <header class="hero">
@@ -134,6 +134,7 @@
 
     <section class="audience-world" id="segments">
       <div class="section-intro"><p class="eyebrow ink">DELSTRÄCKELABBET</p><h2>Var avgjordes loppet?</h2><p>Jämför segment, relativa prestationer och placeringar utan att fabricera saknade passager.</p></div>
+      <section class="course-difficulty panel" id="course-difficulty" aria-label="Banans svårighetsprofil"></section>
       <article class="panel segment-lab">
         <div class="segment-controls"><label>Från<select id="segment-from"></select></label><label>Till<select id="segment-to"></select></label><label>Sortera<select id="segment-metric"><option value="time">Snabbast tid</option><option value="relative">Bäst mot median</option><option value="gain">Flest vunna platser</option></select></label><label id="segment-comparison-field" hidden>Jämför mot<select id="segment-comparison"><option value="class" selected>Egen klass</option><option value="field">Hela stafettfältet</option></select></label></div>
         <div class="podium" id="segment-podium"></div><div class="ranking" id="segment-ranking"></div>
@@ -180,14 +181,15 @@
 
   <script src="vendor/leaflet/leaflet.js?v=1.9.4"></script>
   <script src="assets/data-index.js?v=20260720-parity3"></script>
-  <script src="assets/data-adapter.js?v=20260904-journey1"></script>
-  <script src="assets/charts.js?v=20260904-journey2"></script>
-  <script src="assets/map-engine.js?v=20260721-nolhaga"></script>
+  <script src="assets/data-adapter.js?v=20260904-course-difficulty2"></script>
+  <script src="assets/charts.js?v=20260904-course-difficulty2"></script>
+  <script src="assets/map-engine.js?v=20260904-course-difficulty1"></script>
+  <script src="assets/course-difficulty.js?v=20260904-course-difficulty2"></script>
   <script src="assets/race-media.js?v=20260901-music1"></script>
   <script src="assets/runner-replay.js?v=20260904-journey1"></script>
   <script src="assets/profile-journey.js?v=20260904-journey2"></script>
   <script src="assets/map-duel.js?v=20260903-standalone-map2"></script>
-  <script src="assets/interactive-analysis.js?v=20260903-relay-analysis1"></script>
-  <script src="assets/app.js?v=20260904-journey1"></script>
+  <script src="assets/interactive-analysis.js?v=20260904-course-difficulty2"></script>
+  <script src="assets/app.js?v=20260904-course-difficulty2"></script>
 </body>
 </html>
