@@ -26,7 +26,7 @@ class RelaySexMetadataTests(unittest.TestCase):
         self.assertIn("sex:{label:'Mitt kön'", self.replay)
         self.assertIn("!(record.isRelay&&key==='sex')", self.replay)
         self.assertIn("runner-replay.js?v=20260904-journey1", self.html)
-        self.assertIn("app.js?v=20260904-journey1", self.html)
+        self.assertIn("app.js?v=20260904-course-difficulty2", self.html)
 
 
 if __name__ == "__main__":
