@@ -67,6 +67,16 @@ if(window.GCharts.elevation(points,checkpoints).includes('elevation-range-highli
     def test_relay_course_copy_uses_teams(self):
         self.assertIn("race.isRelay?'Alla lag':'Hela fältet'",self.course)
         self.assertIn("race.isRelay?'Hela loppets kompletta lag i mål':'Hela loppets kompletta målgångare'",self.course)
+        self.assertIn("race.isRelay?'LAGENS':'FÄLTETS'",self.course)
+
+    def test_statistical_copy_and_runner_gap_words(self):
+        for label in ('Topp 10 %-gräns','Topp 25 %-gräns','75 % i mål inom','90 % i mål inom','90 % inom tiden'):
+            self.assertIn(label,self.charts)
+        self.run_node(r"""
+global.window={};require('vm').runInThisContext(require('fs').readFileSync('docs/assets/runner-replay.js','utf8'));
+const gap=window.GRunnerReplay.gapText;
+if(gap(60)!=='+1:00 före median'||gap(-60)!=='1:00 efter median')throw new Error('gap labels');
+""")
 
 
 if __name__=='__main__':unittest.main()
