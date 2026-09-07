@@ -33,9 +33,9 @@ class RaceJourneyAnalyticsTests(unittest.TestCase):
         self.assertIn("runner-replay.js?v=20260907-semantic-copy1", self.html)
         self.assertIn("profile-journey.js?v=20260904-journey2", self.html)
         self.assertIn("data-adapter.js?v=20260907-head-to-head1", self.html)
-        for asset in ("app.js", "charts.js"):
-            self.assertIn(f"{asset}?v=20260907-head-to-head1", self.html)
-        self.assertIn("style.css?v=20260907-head-to-head1", self.html)
+        self.assertIn("app.js?v=20260907-favorites1", self.html)
+        self.assertIn("charts.js?v=20260907-head-to-head1", self.html)
+        self.assertIn("style.css?v=20260907-favorites1", self.html)
         self.assertLess(self.html.index("runner-replay.js"), self.html.index("profile-journey.js"))
         self.assertLess(self.html.index("profile-journey.js"), self.html.index("app.js"))
         self.assertIn("journey:null", self.app)

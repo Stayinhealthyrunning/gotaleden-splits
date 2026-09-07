@@ -129,7 +129,7 @@ for(const [key,count] of Object.entries(expected)){
         self.assertIn("100 = respektive köns medianfart över hela loppet", self.html)
         self.assertIn("data-adapter.js?v=20260907-head-to-head1", self.html)
         self.assertIn("interactive-analysis.js?v=20260907-semantic-copy1", self.html)
-        self.assertIn("app.js?v=20260907-head-to-head1", self.html)
+        self.assertIn("app.js?v=20260907-favorites1", self.html)
 
     def test_source_data_and_nolhaga_are_unchanged(self):
         self.assertEqual(
