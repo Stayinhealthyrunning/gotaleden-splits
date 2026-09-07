@@ -2,6 +2,12 @@
   'use strict';
   const ICON='<svg class="analysis-help-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="8" r="1.15" fill="currentColor"/><path d="M12 11.2V16.4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>';
   const TARGETS=[
+    ['head-to-head-overview','#head-to-head-dialog [data-head-help="overview"]',null,null],
+    ['head-to-head-gap','#head-to-head-dialog [data-head-help="gap"]',null,null],
+    ['head-to-head-placement','#head-to-head-dialog [data-head-help="placement"]',null,null],
+    ['head-to-head-segments','#head-to-head-dialog [data-head-help="segments"]',null,null],
+    ['head-to-head-field-pacing','#head-to-head-dialog [data-head-help="field-pacing"]',null,null],
+    ['head-to-head-course','#head-to-head-dialog [data-head-help="course"]',null,null],
     ['filters','.toolbar','.toolbar',null],
     ['overview-kpis','#overview-kpis','#overview-kpis',null],
     ['finish-distribution','#finish-histogram','.panel','h2'],
