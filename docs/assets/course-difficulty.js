@@ -10,7 +10,7 @@
     const profile=adapter.courseDifficultyProfile(race),elevationPoints=adapter.elevationSlice(race),sourceLabel=adapter.elevation?.meta?.reference_used?'Normaliserad referenshöjd':'Officiell GPX-höjd',initialFrom=document.querySelector('#segment-from')?.value,initialTo=document.querySelector('#segment-to')?.value,initialIndex=Math.max(0,profile.segments.findIndex(segment=>segment.from===initialFrom&&segment.to===initialTo));let selectedSegmentIndex=initialIndex,map=null,destroyed=false;
     const standoutCards=[
       {key:'mostClimbing',label:'MEST KLÄTTRING',detail:segment=>`+${number(segment.ascentM)} m · ${number(segment.climbIntensity)} m+/km`},
-      {key:'biggestSlowdown',label:'STÖRST FARTTAPP',detail:segment=>`${signed(segment.slowdownPercent)} mot hel-loppsmedian · ${pace(segment.pace.median)}`},
+      {key:'biggestSlowdown',label:'LÅNGSAMMAST MOT HEL-LOPPSMEDIAN',detail:segment=>`${signed(segment.slowdownPercent)} mot hel-loppsmedian · ${pace(segment.pace.median)}`},
       {key:'biggestSpread',label:'STÖRST SPRIDNING',detail:segment=>`Q25–Q75 skiljer ${paceSpan(segment.paceIqrSeconds)} /km · ${number(segment.paceIqrPercent)} %`},
       {key:'mostPlacementMovement',label:'MEST PLACERINGSRÖRELSE',detail:segment=>`median ${number(segment.placementMovementMedian)} placeringssteg · n=${segment.placementN}`}
     ];
