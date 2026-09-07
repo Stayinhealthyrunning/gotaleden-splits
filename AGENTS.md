@@ -92,6 +92,7 @@ eller härledas i publikt UI.
   kräver verkliga endpoints för båda, placeringsresan använder endast officiell totalplacering och
   fältpacing använder samma stabila kompletta race-referens för båda deltagarna eller lagen.
 - Alla analytiska delkomponenter i Head-to-head ska ha entries i den gemensamma metodhjälpen.
+- Favoriter lagrar endast canonical result-ID lokalt i webbläsaren och hålls separata från jämförelsevalet.
 - Varje användarsynlig analytisk komponent ska ha en konsekvent `(i)`-kontroll med metodhjälp. En
   enrads-tooltip räcker inte. Hjälpen ska beskriva syfte, exakt beräkning/metod, datakälla,
   kohort/urval, tolkning och materiella begränsningar samt skilja officiella observationer från
