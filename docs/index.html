@@ -13,7 +13,7 @@
   <meta name="twitter:description" content="Analysera resultat, verkliga passager, fart och loppförlopp för Gotaleden Stafett & Ultra 2026.">
   <title>Gotaleden Splits</title>
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=1.9.4">
-  <link rel="stylesheet" href="assets/style.css?v=20260907-head-to-head1">
+  <link rel="stylesheet" href="assets/style.css?v=20260907-favorites1">
 </head>
 <body>
   <header class="hero">
@@ -61,6 +61,12 @@
         <input id="runner-search" type="search" autocomplete="off" placeholder="Namn eller startnummer">
         <div class="suggestions" id="runner-suggestions" hidden></div>
       </div>
+    </section>
+
+    <section class="panel favorites-panel" id="favorites">
+      <div class="favorites-heading"><p class="eyebrow ink">FAVORITER</p><h2 id="favorites-title">Sparade löpare</h2><p>Favoriter sparas endast i den här webbläsaren.</p></div>
+      <div id="favorites-list"></div>
+      <p class="favorites-feedback" id="favorites-feedback" aria-live="polite"></p>
     </section>
 
     <section class="panel duel-picker-panel duel-quick-builder" id="map-duel">
@@ -193,6 +199,7 @@
   <script src="assets/map-duel.js?v=20260903-standalone-map2"></script>
   <script src="assets/head-to-head.js?v=20260907-head-to-head1"></script>
   <script src="assets/interactive-analysis.js?v=20260907-semantic-copy1"></script>
-  <script src="assets/app.js?v=20260907-head-to-head1"></script>
+  <script src="assets/favorites.js?v=20260907-favorites1"></script>
+  <script src="assets/app.js?v=20260907-favorites1"></script>
 </body>
 </html>
