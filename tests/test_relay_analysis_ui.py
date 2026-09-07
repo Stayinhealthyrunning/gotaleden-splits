@@ -51,8 +51,10 @@ const race=adapter.race('relay-75-2026'),field=adapter.segmentRanking(race.recor
 """)
 
     def test_relay_results_profile_replay_and_duel_contracts(self):
-        for text in ("Lagklass", "Klassplats", "Tävlingsstatus", "Analytisk klasspercentil", "Relativt egen klass"):
+        for text in ("Lagklass", "Klassplats", "Tävlingsstatus", "Snabbare än i klassen", "Snabbare än i fältet", "Relativt egen klass"):
             self.assertIn(text, self.app)
+        self.assertIn("<span>Snabbare än</span><strong>${relative.percentile?relative.percentile+' %'", self.app)
+        self.assertNotIn("<span>Percentil</span>", self.app)
         self.assertIn("race.isRelay?'':record.club", self.app)
         self.assertIn("race.isRelay?'<tr><th data-sort=\"overall_place\">Total", self.app)
         self.assertIn("Alla lag", self.replay)
