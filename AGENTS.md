@@ -88,3 +88,9 @@ eller härledas i publikt UI.
 - Arbeta normalt på branch/PR när integrationen stödjer det.
 - Race-level segmentfördelningar ska använda samma kompletta FINISHED-kohort genom hela loppet.
 - Banans svårighetsprofil får beskriva klättring, farttapp, spridning och officiell placeringsrörelse, men inte påstå teknisk stigsvårighet eller skapa ett syntetiskt totalscore.
+- Varje användarsynlig analytisk komponent ska ha en konsekvent `(i)`-kontroll med metodhjälp. En
+  enrads-tooltip räcker inte. Hjälpen ska beskriva syfte, exakt beräkning/metod, datakälla,
+  kohort/urval, tolkning och materiella begränsningar samt skilja officiella observationer från
+  härledda mått och interpolerade/modellerade värden. En ny analysfunktion är inte färdig förrän dess
+  help-entry finns, UI:t exponerar den och regressionstest verifierar kopplingen. Hjälpen måste bevara
+  stafettsemantik, Nolhagas roll och projektets data-/icke-fabriceringsinvarianter.
