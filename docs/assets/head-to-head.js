@@ -8,7 +8,7 @@
   const pace=v=>finite(v)&&v>0?duration(Math.round(v))+' /km':'Tid saknas';
   const percent=v=>finite(v)?`${v>0?'+':''}${num(v,1)} %`:'–';
   const gapWords=(v,a,b)=>!finite(v)?'Ingen gemensam passage':v===0?'I nivå':`${v>0?a:b} före med ${duration(v)}`;
-  const deltaWords=(v,a,b)=>!finite(v)?'Ingen direkt jämförelse – passage/tid saknas':v===0?'Jämnt':`${v>0?a:b} vann ${duration(v)}`;
+  const deltaWords=(v,a,b)=>!finite(v)?'Ingen direkt jämförelse – tid saknas.':v===0?'Jämnt':`${v>0?a:b} vann ${duration(v)}`;
   const launcherState=(count,isRelay)=>({enabled:count===2,label:count===2?'Jämför två lopp':count===0?`Välj två ${isRelay?'lag':'deltagare'}`:count===1?`Välj ${isRelay?'ett lag':'en deltagare'} till`:'Jämförelse kräver exakt två'});
   function shareUrl(base,raceKey,records){const url=new URL(base);url.search='';url.hash='';url.searchParams.set('race',raceKey);url.searchParams.set('compare',records.map(r=>r.id).join(','));return url.href}
   function resolveUrl(search,adapter){const params=new URLSearchParams(search),key=params.get('race'),ids=(params.get('compare')||'').split(',');if(!params.has('compare'))return null;if(ids.length!==2||!adapter.race(key)||ids[0]===ids[1])return null;const records=ids.map(id=>adapter.record(id));return records.every(r=>r?.raceKey===key)?{raceKey:key,records}:null}
@@ -30,7 +30,7 @@
     const dialog=document.createElement('dialog');dialog.id='head-to-head-dialog';dialog.className='head-to-head-dialog';dialog.setAttribute('aria-labelledby','head-to-head-title');
     const controller={analysis,close,destroy:close,selectSegment,get selectedSegmentIndex(){return selectedSegmentIndex},get destroyed(){return destroyed}};
     const kpi=(label,value,copy='')=>`<article><span>${label}</span><strong>${esc(value)}</strong><small>${esc(copy)}</small></article>`;
-    const finalCopy=insights.finalGapSeconds===null?'Ingen gemensam sluttid':gapWords(insights.finalGapSeconds,nameA,nameB);
+    const finalCopy=insights.finalGapSeconds===null?'Jämförelsen slutar vid sista gemensamma officiella passage.':gapWords(insights.finalGapSeconds,nameA,nameB);
     const gain=p=>p?`${p.name} · ${duration(p.segmentDeltaSeconds)}`:'Ingen observerad tidsvinst';
     dialog.innerHTML=`<header class="head-to-head-header"><div><p class="eyebrow ink">HEAD-TO-HEAD · ${esc(raceItem.section)}</p>${heading('overview','Jämför två lopp','h2','head-to-head-title')}<p>Två lopp. Samma bana. Skillnaderna, passage för passage.</p></div><button type="button" class="head-to-head-close" aria-label="Stäng Head-to-head">×</button></header>
       <div class="head-to-head-body"><div class="head-to-head-people">${participantCard(a,'a',raceItem)}${participantCard(b,'b',raceItem)}</div>

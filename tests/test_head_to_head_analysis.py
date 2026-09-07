@@ -99,6 +99,8 @@ const fs=require('fs'),vm=require('vm');global.window={};vm.runInThisContext(fs.
             self.assertIn(token, self.app)
         for token in ("'head-to-head-dialog'", "map?.destroy()", "GMapEngine.create", "highlightRange", "GCharts.elevation", "aria-pressed", "removeCompare", "history.replaceState"):
             self.assertIn(token, self.runtime)
+        self.assertIn("Jämförelsen slutar vid sista gemensamma officiella passage.", self.runtime)
+        self.assertIn("Ingen direkt jämförelse – tid saknas.", self.runtime)
         self.assertIn(".head-to-head-dialog", self.style)
         self.assertIn("@media(max-width:620px)", self.style)
         self.assertNotIn("GRunnerReplay", self.runtime)
