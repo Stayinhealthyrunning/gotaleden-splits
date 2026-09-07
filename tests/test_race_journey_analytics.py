@@ -32,10 +32,10 @@ class RaceJourneyAnalyticsTests(unittest.TestCase):
     def test_journey_assets_are_ordered_and_lifecycle_is_scoped_to_detail(self):
         self.assertIn("runner-replay.js?v=20260907-semantic-copy1", self.html)
         self.assertIn("profile-journey.js?v=20260904-journey2", self.html)
-        self.assertIn("data-adapter.js?v=20260904-course-difficulty2", self.html)
+        self.assertIn("data-adapter.js?v=20260907-head-to-head1", self.html)
         for asset in ("app.js", "charts.js"):
-            self.assertIn(f"{asset}?v=20260907-semantic-copy1", self.html)
-        self.assertIn("style.css?v=20260907-analysis-help1", self.html)
+            self.assertIn(f"{asset}?v=20260907-head-to-head1", self.html)
+        self.assertIn("style.css?v=20260907-head-to-head1", self.html)
         self.assertLess(self.html.index("runner-replay.js"), self.html.index("profile-journey.js"))
         self.assertLess(self.html.index("profile-journey.js"), self.html.index("app.js"))
         self.assertIn("journey:null", self.app)

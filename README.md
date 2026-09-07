@@ -66,6 +66,8 @@ Den statiska GitHub Pages-sidan i `docs/` innehåller:
 - Banans svårighetsprofil med GPX-baserad klättring, farttapp, spridningsband och officiell placeringsrörelse för alla 9/4 analytiska segment;
 - animerad Runner Replay med musik, zoom, startläge och tydligt märkt interpolation;
 - Kartduell med musik för 2–5 löpare eller lag, öppnad som en stor modal i analysen;
+- Head-to-head för exakt två löpare eller lag med direkta checkpointluckor, segmentduell,
+  officiell placeringsresa, gemensam fältpacing, kart-/höjdkontext och delningsbar länk;
 - `karta.html` som bakåtkompatibel standalone-vy för direkta och delade kartlänkar;
 - höjdprofil längs samma officiella `route_distance_km` som replay.
 - omfattande `(i)`-metodhjälp för alla analytiska komponenter.
