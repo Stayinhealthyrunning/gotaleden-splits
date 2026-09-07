@@ -68,12 +68,14 @@ Den statiska GitHub Pages-sidan i `docs/` innehåller:
 - Kartduell med musik för 2–5 löpare eller lag, öppnad som en stor modal i analysen;
 - Head-to-head för exakt två löpare eller lag med direkta checkpointluckor, segmentduell,
   officiell placeringsresa, gemensam fältpacing, kart-/höjdkontext och delningsbar länk;
+- lokalt sparade favoriter för löpare och stafettlag med snabbval till Head-to-head och Kartduell;
 - `karta.html` som bakåtkompatibel standalone-vy för direkta och delade kartlänkar;
 - höjdprofil längs samma officiella `route_distance_km` som replay.
 - omfattande `(i)`-metodhjälp för alla analytiska komponenter.
 
 Den gemensamma metodhjälpen fungerar i både statiska och dynamiskt renderade analyser. Varje `(i)`
 förklarar komponentens syfte, exakta metod, datakälla, kohort, tolkning och materiella begränsningar.
+Favoriter lagras endast lokalt i den aktuella webbläsaren som publika resultat-ID:n.
 
 Runner Replay och Kartduell använder en gemensam, lokalt vendrad Leaflet 1.9.4-motor med
 OpenStreetMap-rutor. Ett förenklat SVG-läge finns enbart som reserv om Leaflet inte kan starta.
