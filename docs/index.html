@@ -13,7 +13,7 @@
   <meta name="twitter:description" content="Analysera resultat, verkliga passager, fart och loppförlopp för Gotaleden Stafett & Ultra 2026.">
   <title>Gotaleden Splits</title>
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=1.9.4">
-  <link rel="stylesheet" href="assets/style.css?v=20260907-analysis-help1">
+  <link rel="stylesheet" href="assets/style.css?v=20260907-head-to-head1">
 </head>
 <body>
   <header class="hero">
@@ -65,7 +65,7 @@
 
     <section class="panel duel-picker-panel duel-quick-builder" id="map-duel">
       <div><p class="eyebrow ink">KARTA &amp; KARTDUELL</p><h2>Jämför loppet på kartan</h2><p>Kartduell jämför två till fem löpare eller lag på banan. För analys av en enda deltagare använder du Löpare/Lag-analysen och Runner Replay.</p></div>
-      <div><div class="picker"><label>Välj 2–5 <span data-entity-plural>deltagare</span><input id="duel-search" type="search" autocomplete="off" placeholder="Namn eller startnummer"></label><div class="suggestions" id="duel-suggestions" hidden></div></div><div class="selected-chips" id="duel-selected"></div><button class="button" id="open-map-duel" type="button" disabled>Välj minst två deltagare</button></div>
+      <div><div class="picker"><label>Välj 2–5 <span data-entity-plural>deltagare</span><input id="duel-search" type="search" autocomplete="off" placeholder="Namn eller startnummer"></label><div class="suggestions" id="duel-suggestions" hidden></div></div><div class="selected-chips" id="duel-selected"></div><div class="duel-launchers"><button class="button secondary" id="open-head-to-head" type="button" disabled>Välj två deltagare</button><button class="button" id="open-map-duel" type="button" disabled>Välj minst två deltagare</button></div></div>
     </section>
 
     <section class="scope panel" id="overview">
@@ -181,17 +181,18 @@
 
   <script src="vendor/leaflet/leaflet.js?v=1.9.4"></script>
   <script src="assets/data-index.js?v=20260720-parity3"></script>
-  <script src="assets/data-adapter.js?v=20260904-course-difficulty2"></script>
-  <script src="assets/charts.js?v=20260907-semantic-copy1"></script>
+  <script src="assets/data-adapter.js?v=20260907-head-to-head1"></script>
+  <script src="assets/charts.js?v=20260907-head-to-head1"></script>
   <script src="assets/map-engine.js?v=20260904-course-difficulty1"></script>
-  <script src="assets/analysis-help-content.js?v=20260907-analysis-help1"></script>
-  <script src="assets/analysis-help.js?v=20260907-analysis-help1"></script>
+  <script src="assets/analysis-help-content.js?v=20260907-head-to-head1"></script>
+  <script src="assets/analysis-help.js?v=20260907-head-to-head1"></script>
   <script src="assets/course-difficulty.js?v=20260907-semantic-copy1"></script>
   <script src="assets/race-media.js?v=20260901-music1"></script>
   <script src="assets/runner-replay.js?v=20260907-semantic-copy1"></script>
   <script src="assets/profile-journey.js?v=20260904-journey2"></script>
   <script src="assets/map-duel.js?v=20260903-standalone-map2"></script>
+  <script src="assets/head-to-head.js?v=20260907-head-to-head1"></script>
   <script src="assets/interactive-analysis.js?v=20260907-semantic-copy1"></script>
-  <script src="assets/app.js?v=20260907-semantic-copy1"></script>
+  <script src="assets/app.js?v=20260907-head-to-head1"></script>
 </body>
 </html>
