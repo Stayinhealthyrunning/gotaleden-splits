@@ -88,6 +88,10 @@ eller härledas i publikt UI.
 - Arbeta normalt på branch/PR när integrationen stödjer det.
 - Race-level segmentfördelningar ska använda samma kompletta FINISHED-kohort genom hela loppet.
 - Banans svårighetsprofil får beskriva klättring, farttapp, spridning och officiell placeringsrörelse, men inte påstå teknisk stigsvårighet eller skapa ett syntetiskt totalscore.
+- Head-to-head-luckor använder endast gemensamma verkliga officiella analyspassager. Segmentdelta
+  kräver verkliga endpoints för båda, placeringsresan använder endast officiell totalplacering och
+  fältpacing använder samma stabila kompletta race-referens för båda deltagarna eller lagen.
+- Alla analytiska delkomponenter i Head-to-head ska ha entries i den gemensamma metodhjälpen.
 - Varje användarsynlig analytisk komponent ska ha en konsekvent `(i)`-kontroll med metodhjälp. En
   enrads-tooltip räcker inte. Hjälpen ska beskriva syfte, exakt beräkning/metod, datakälla,
   kohort/urval, tolkning och materiella begränsningar samt skilja officiella observationer från
