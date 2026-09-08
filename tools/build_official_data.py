@@ -25,50 +25,29 @@ from build_project_data import (
     to_int,
 )
 from eqtiming_official_import import (
-    PRIMARY_RELAY_LEGS,
-    PRIMARY_RESULTS,
-    RACE_RULES,
-    RESULTLIST_FILES,
-    SOURCE_DIR,
     analyze_source_files,
+    bind_primary_results,
     build_relay_assignments,
     clean as official_clean,
+    eqtiming_source_context,
     load_primary_results,
     load_xml_starts,
     normalize_name,
     parse_hms,
     read_csv_file,
     relay_member_sources,
+    source_dir,
     write_json,
 )
 from gpx_analysis import build_gpx_artifacts
 
-EXPECTED_COUNTS = {
-    "individual-75-2026": 274,
-    "individual-35-2026": 163,
-    "relay-75-2026": 121,
-    "relay-35-2026": 49,
-}
-PUBLIC_API_SNAPSHOT = ROOT / "data" / "source" / "eqtiming" / "api" / "event-77906-contestants.json"
-SOURCE_POINT_KEYS = {
-    "Skatås": "skatas",
-    "Kåsjön": "kasjon",
-    "Jonsered": "jonsered",
-    "Lerum": "lerum",
-    "Floda": "floda",
-    "Tollered": "tollered",
-    "Norsesund": "norsesund",
-    "V:a Bodarna": "vastra_bodarna",
-    "Nolhaga": "nolhaga",
-    "Mål": "alingsas",
-}
-
-
-def _load_public_contestants() -> dict[str, dict[str, Any]]:
-    payload = json.loads(PUBLIC_API_SNAPSHOT.read_text(encoding="utf-8"))
+def _load_public_contestants(source_event: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    snapshot = ROOT / source_event["public_snapshot"]
+    payload = json.loads(snapshot.read_text(encoding="utf-8"))
     contestants = payload.get("contestants", {})
-    if payload.get("event_id") != 77906 or payload.get("response_count") != 607 or not payload.get("passes_included"):
-        raise ValueError(f"Incomplete public EQ Timing snapshot: {PUBLIC_API_SNAPSHOT}")
+    expected = int(source_event["expected_records"])
+    if payload.get("event_id") != source_event["event_id"] or payload.get("response_count") != expected or not payload.get("passes_included"):
+        raise ValueError(f"Incomplete public EQ Timing snapshot: {snapshot}")
     return {str(key): value for key, value in contestants.items()}
 
 
@@ -99,49 +78,55 @@ def _checkpoint_route_distance_km(checkpoint: dict[str, Any], route: dict[str, A
     return round(mapped, 4)
 
 
-def _legacy_rows(race: dict[str, Any]) -> tuple[list[str], list[dict[str, str]]]:
-    with (ROOT / race["source_csv"]).open("r", encoding="utf-8-sig", newline="") as handle:
+def _legacy_rows(binding: dict[str, Any]) -> tuple[list[str], list[dict[str, str]]]:
+    with (ROOT / binding["legacy_csv"]).open("r", encoding="utf-8-sig", newline="") as handle:
         reader = csv.DictReader(handle)
         rows = list(reader)
         return list(reader.fieldnames or []), rows
 
 
-def _cross_validation_indexes() -> tuple[dict[str, dict[tuple[str, str], dict[str, Any]]], dict[tuple[str, str], dict[str, Any]]]:
+def _cross_validation_indexes(source_event: dict[str, Any]) -> tuple[dict[str, dict[tuple[str, str], dict[str, Any]]], dict[tuple[str, str], dict[str, Any]]]:
+    directory = source_dir(source_event)
+    primary_results = source_event["primary_results"]
     result_indexes: dict[str, dict[tuple[str, str], dict[str, Any]]] = {}
-    for file_name in RESULTLIST_FILES:
-        if file_name == PRIMARY_RESULTS:
+    for file_name in source_event["result_list_files"]:
+        if file_name == primary_results:
             continue
-        _, rows = read_csv_file(SOURCE_DIR / file_name, ";")
+        _, rows = read_csv_file(directory / file_name, ";")
         result_indexes[file_name] = {
             (str(row.get("Race") or ""), str(row.get("Startnumber") or "")): row for row in rows
         }
-    _, start_rows = read_csv_file(SOURCE_DIR / "Startlist-77906-20260719155430.csv", "\t")
+    _, start_rows = read_csv_file(directory / source_event["start_cross_validation_file"], "\t")
     start_index = {(str(row.get("Start Time") or ""), str(row.get("BIB") or "")): row for row in start_rows}
     return result_indexes, start_index
 
 
-def _insert_catalog(conn: sqlite3.Connection, config: dict[str, Any], route: dict[str, Any]) -> dict[str, tuple[int, int, float]]:
+def _insert_catalog(
+    conn: sqlite3.Connection, config: dict[str, Any], route: dict[str, Any],
+    source_event: dict[str, Any], bindings: dict[str, dict[str, Any]],
+) -> dict[str, tuple[int, int, float]]:
     with conn:
         conn.executemany(
             "INSERT INTO sources(code,name,base_url,source_type) VALUES(?,?,?,?)",
             [
-                ("eqtiming_official_resultlist", PRIMARY_RESULTS, "https://live.eqtiming.com/77906", "csv"),
-                ("eqtiming_startlist_xml", PRIMARY_RELAY_LEGS, "https://live.eqtiming.com/77906", "xml"),
-                ("eqtiming_legacy_csv", "EQ Timing 81-column finish exports", "https://live.eqtiming.com/77906", "csv"),
-                ("eqtiming_public_api", "EQ Timing public contestant snapshot", "https://live.eqtiming.com/api/Contestants/77906?passes=true", "json"),
+                ("eqtiming_official_resultlist", source_event["primary_results"], source_event["results_url"], "csv"),
+                ("eqtiming_startlist_xml", source_event["primary_relay_legs"], source_event["results_url"], "xml"),
+                ("eqtiming_legacy_csv", "EQ Timing 81-column finish exports", source_event["results_url"], "csv"),
+                ("eqtiming_public_api", "EQ Timing public contestant snapshot", source_event["contestants_endpoint"] + "?passes=true", "json"),
             ],
         )
     checkpoints = {checkpoint["key"]: checkpoint for checkpoint in config["checkpoints"]}
     catalog: dict[str, tuple[int, int, float]] = {}
     for race in config["races"]:
+        binding = bindings[race["race_key"]]["source_race"]
         gpx_distance = route["full_distance_km"] if race["route_start"] == "gothenburg" else route["floda_start"]["remaining_distance_km"]
         with conn:
             conn.execute(
                 """INSERT INTO races(race_key,event_key,race_family,course_version,section_name,source_race_name,race_type,year,race_date,
                    nominal_distance_km,gpx_distance_km,official_url) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)""",
                 (race["race_key"], config["event"]["event_key"], race["race_family"], race["course_version"],
-                 race["section"], race["source_race_name"], race["type"], race["year"], race["race_date"],
-                 race["nominal_distance_km"], gpx_distance, config["event"]["official_results_url"]),
+                 race["section"], binding["source_race_name"], race["type"], race["year"], race["race_date"],
+                 race["nominal_distance_km"], gpx_distance, source_event["results_url"]),
             )
         race_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
         for sequence, key in enumerate(race["checkpoints"]):
@@ -168,23 +153,25 @@ def _insert_catalog(conn: sqlite3.Connection, config: dict[str, Any], route: dic
 
 
 def _raw_sources(
-    race: dict[str, Any], bib: str, primary: dict[str, Any], legacy: dict[str, Any],
+    binding: dict[str, Any], source_event: dict[str, Any], bib: str, primary: dict[str, Any], legacy: dict[str, Any],
     cross_indexes: dict[str, dict[tuple[str, str], dict[str, Any]]], start_index: dict[tuple[str, str], dict[str, Any]],
     public_contestant: dict[str, Any],
 ) -> dict[str, Any]:
+    primary_results = source_event["primary_results"]
+    snapshot = str(source_event["public_snapshot"])
     payload: dict[str, Any] = {
-        "primary_result_file": {"file": PRIMARY_RESULTS, "row": primary},
-        "legacy_finish_export": {"file": race["source_csv"], "row": legacy},
-        "public_contestant_api": {"file": str(PUBLIC_API_SNAPSHOT.relative_to(ROOT)).replace("\\", "/"), "row": public_contestant},
+        "primary_result_file": {"file": primary_results, "row": primary},
+        "legacy_finish_export": {"file": binding["legacy_csv"], "row": legacy},
+        "public_contestant_api": {"file": snapshot.replace("\\", "/"), "row": public_contestant},
         "cross_validation": {},
     }
     for file_name, index in cross_indexes.items():
-        match = index.get((race["source_race_name"], bib))
+        match = index.get((binding["source_race_name"], bib))
         if match is not None:
             payload["cross_validation"][file_name] = match
-    start_match = start_index.get((str(RACE_RULES[race["race_key"]]["start_time"]), bib))
+    start_match = start_index.get((str(binding["start_time"]), bib))
     if start_match is not None:
-        payload["cross_validation"]["Startlist-77906-20260719155430.csv"] = start_match
+        payload["cross_validation"][source_event["start_cross_validation_file"]] = start_match
     return payload
 
 
@@ -192,7 +179,8 @@ def _insert_results(
     conn: sqlite3.Connection, config: dict[str, Any], catalog: dict[str, tuple[int, int, float]],
     primary_by_race: dict[str, list[dict[str, Any]]], cross_indexes: dict[str, dict[tuple[str, str], dict[str, Any]]],
     start_index: dict[tuple[str, str], dict[str, Any]], route: dict[str, Any],
-    public_by_bib: dict[str, dict[str, Any]],
+    public_by_bib: dict[str, dict[str, Any]], source_event: dict[str, Any],
+    bindings: dict[str, dict[str, Any]],
 ) -> tuple[dict[str, Any], dict[str, Any], dict[tuple[str, str], int], dict[tuple[str, str], int], list[dict[str, Any]]]:
     source_id = conn.execute("SELECT id FROM sources WHERE code='eqtiming_official_resultlist'").fetchone()[0]
     web_races: dict[str, Any] = {}
@@ -202,8 +190,9 @@ def _insert_results(
     web_splits: list[dict[str, Any]] = []
     for race in config["races"]:
         race_key = race["race_key"]
+        binding = bindings[race_key]["source_race"]
         race_id, finish_id, gpx_distance = catalog[race_key]
-        columns, legacy_rows = _legacy_rows(race)
+        columns, legacy_rows = _legacy_rows(binding)
         legacy_index = {str(row.get("Bib") or ""): row for row in legacy_rows}
         records: list[dict[str, Any]] = []
         statuses: Counter[str] = Counter()
@@ -239,7 +228,7 @@ def _insert_results(
             if not public_contestant:
                 raise ValueError(f"Public EQ Timing snapshot is missing bib {bib}")
             public_stage = ((public_contestant.get("Pulje") or {}).get("Navn"))
-            if public_stage != race["source_race_name"]:
+            if public_stage != binding["source_race_name"]:
                 raise ValueError(f"Public EQ Timing race mismatch for bib {bib}: {public_stage}")
             public_athlete = public_contestant.get("Utover") or {}
             public_class = public_contestant.get("Klasse") or {}
@@ -253,7 +242,7 @@ def _insert_results(
                 or official_clean(public_contestant.get("Klubbnavn"))
                 or official_clean(public_athlete.get("Klubbnavn"))
             )
-            raw = _raw_sources(race, bib, primary, legacy, cross_indexes, start_index, public_contestant)
+            raw = _raw_sources(binding, source_event, bib, primary, legacy, cross_indexes, start_index, public_contestant)
             athlete_id = team_id = None
             if entity_type == "athlete":
                 with conn:
@@ -303,7 +292,7 @@ def _insert_results(
             for passage in public_passes:
                 station = passage.get("StasjonsOppsett") or {}
                 source_name = official_clean(station.get("Navn"))
-                checkpoint_key = SOURCE_POINT_KEYS.get(source_name or "")
+                checkpoint_key = source_event["checkpoint_map"].get(source_name or "")
                 if checkpoint_key not in checkpoint_ids:
                     continue
                 placing = passage.get("Plassering") or {}
@@ -385,14 +374,14 @@ def _insert_results(
                 "finish_point_only": not bool(imported_passes), "split_count": imported_passes,
             })
         web_races[race_key] = {
-            "race_key": race_key, "section": race["section"], "source_race_name": race["source_race_name"],
+            "race_key": race_key, "section": race["section"], "source_race_name": binding["source_race_name"],
             "event_key": config["event"]["event_key"], "race_family": race["race_family"],
             "year": race["year"], "race_date": race["race_date"], "course_version": race["course_version"],
             "type": race["type"], "nominal_distance_km": race["nominal_distance_km"],
             "gpx_distance_km": gpx_distance, "records": records,
         }
         report_races[race_key] = {
-            "section": race["section"], "source_race_name": race["source_race_name"], "record_count": len(records),
+            "section": race["section"], "source_race_name": binding["source_race_name"], "record_count": len(records),
             "original_column_count": len(columns), "original_columns": columns, "statuses": dict(statuses),
             "classes": dict(classes),
             "point_names": sorted({clean(row.get("PointName")) for row in legacy_rows if clean(row.get("PointName"))}),
@@ -408,13 +397,16 @@ def _insert_relay_data(
     conn: sqlite3.Connection, primary_by_race: dict[str, list[dict[str, Any]]],
     assignments_by_race: dict[str, list[dict[str, Any]]], patterns: dict[str, dict[str, Any]],
     result_ids: dict[tuple[str, str], int], team_ids: dict[tuple[str, str], int],
+    source_event: dict[str, Any], bindings: dict[str, dict[str, Any]],
 ) -> tuple[dict[str, Any], list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
-    report: dict[str, Any] = {"event_id": 77906, "races": {}, "conflicts": []}
+    report: dict[str, Any] = {"event_id": source_event["event_id"], "races": {}, "conflicts": []}
     web_teams: list[dict[str, Any]] = []
     web_members: list[dict[str, Any]] = []
     web_assignments: list[dict[str, Any]] = []
-    for race_key in ("relay-75-2026", "relay-35-2026"):
-        max_legs = int(RACE_RULES[race_key]["legs"])
+    relay_bindings = {key: item for key, item in bindings.items() if isinstance(item["source_race"].get("relay"), dict)}
+    for race_key, resolved in relay_bindings.items():
+        binding = resolved["source_race"]
+        max_legs = int(binding["relay"]["legs"])
         teams = {str(row["Startnumber"]): row for row in primary_by_race[race_key]}
         assignments_by_team: dict[str, list[dict[str, Any]]] = {}
         for assignment in assignments_by_race[race_key]:
@@ -424,7 +416,7 @@ def _insert_relay_data(
             team_id = team_ids[(race_key, bib)]
             result_id = result_ids[(race_key, bib)]
             team_assignments = assignments_by_team[bib]
-            members = relay_member_sources(team, team_assignments, max_legs)
+            members = relay_member_sources(team, team_assignments, max_legs, source_event)
             member_ids: dict[str, int] = {}
             for member in members:
                 with conn:
@@ -462,7 +454,7 @@ def _insert_relay_data(
                 web_assignments.append(public_assignment)
                 if assignment["assignment_status"] == "conflict":
                     report["conflicts"].append({
-                        "race": RACE_RULES[race_key]["name"], "team": assignment["team_name"], "team_bib": bib,
+                        "race": binding["source_race_name"], "team": assignment["team_name"], "team_bib": bib,
                         "leg_no": assignment["leg_no"], "xml_value": assignment["xml_runner"],
                         "result_list_value": assignment["result_list_runner"], "source_evidence": assignment["source_evidence"],
                     })
@@ -480,7 +472,7 @@ def _insert_relay_data(
             })
         statuses = Counter(item["assignment_status"] for item in assignments_by_race[race_key])
         report["races"][race_key] = {
-            "source_race_name": RACE_RULES[race_key]["name"], "teams": len(teams),
+            "source_race_name": binding["source_race_name"], "teams": len(teams),
             "possible_leg_slots": len(teams) * max_legs,
             "verified_runner_legs": statuses["verified_xml"] + statuses["verified_xml_and_result_list"],
             "verified_xml": statuses["verified_xml"],
@@ -494,14 +486,15 @@ def _insert_relay_data(
 
 
 def _write_split_coverage(
-    config: dict[str, Any], web_races: dict[str, Any], web_splits: list[dict[str, Any]]
+    config: dict[str, Any], web_races: dict[str, Any], web_splits: list[dict[str, Any]],
+    source_event: dict[str, Any], bindings: dict[str, dict[str, Any]],
 ) -> dict[str, Any]:
     checkpoint_catalog = {item["key"]: item for item in config["checkpoints"]}
     split_index: dict[tuple[str, str], list[dict[str, Any]]] = {}
     for split in web_splits:
         split_index.setdefault((split["race_key"], split["bib"]), []).append(split)
     report: dict[str, Any] = {
-        "event_id": 77906,
+        "event_id": source_event["event_id"],
         "positive_passage_rule": "elapsed_seconds > 0",
         "finish_comparison_tolerance_seconds": 2.0,
         "races": {},
@@ -584,9 +577,15 @@ def _write_split_coverage(
     for race_key, item in report["races"].items():
         status = item["status_counts"]
         lines.append(f"| {race_key} | {item['result_count']} | {status['FINISHED']} | {status['DNF']} | {status['DNS']} | {item['results_with_positive_passage']} | {item['complete_checkpoint_series']} | {item['partial_checkpoint_series']} | {item['imported_passages']} |")
-    individual = report["races"]["individual-75-2026"]
-    lines.extend(["", "## Individual 75 discrepancy", "",
-                  f"The 221 records with positive passages comprise 206 FINISHED, 13 DNF and {individual['dns_with_positive_passages']} DNS. Status is preserved from the official result source.", ""])
+    for race_key, resolved in bindings.items():
+        title = resolved["source_race"].get("coverage_report_title")
+        if title:
+            item = report["races"][race_key]
+            status = item["status_counts"]
+            lines.extend(["", f"## {title}", "",
+                          f"The {item['results_with_positive_passage']} records with positive passages comprise "
+                          f"{status['FINISHED']} FINISHED, {status['DNF']} DNF and {item['dns_with_positive_passages']} DNS. "
+                          "Status is preserved from the official result source.", ""])
     for race_key, item in report["races"].items():
         lines.extend([f"## {race_key}", "",
                       f"- FINISHED missing one or more checkpoints: {item['finished_missing_checkpoints']}",
@@ -598,12 +597,15 @@ def _write_split_coverage(
 
 
 def _write_reports(
-    files_analysis: dict[str, Any], relay_report: dict[str, Any], report: dict[str, Any]
+    files_analysis: dict[str, Any], relay_report: dict[str, Any], report: dict[str, Any],
+    source_event: dict[str, Any],
 ) -> None:
+    primary_results = source_event["primary_results"]
+    primary_relay_legs = source_event["primary_relay_legs"]
     write_json(ROOT / "reports" / "eqtiming-files-analysis.json", files_analysis)
     file_md = [
-        "# EQ Timing file analysis", "", f"Primary results: `{PRIMARY_RESULTS}`", "",
-        f"Primary relay leg evidence: `{PRIMARY_RELAY_LEGS}`", "",
+        "# EQ Timing file analysis", "", f"Primary results: `{primary_results}`", "",
+        f"Primary relay leg evidence: `{primary_relay_legs}`", "",
         "| File | Format | Records | Fields | Races | Members | Leg codes | Splits |",
         "|---|---|---:|---:|---|---|---|---|",
     ]
@@ -639,7 +641,7 @@ def _write_reports(
     write_json(
         ROOT / "reports" / "eqtiming-missing-data.json",
         {
-            "event_id": 77906,
+            "event_id": source_event["event_id"],
             "intermediate_splits_found": True,
             "available": "Official cumulative passages, split times, pace, speed and placings from EQ Timing's public contestant endpoint.",
             "known_limitations": [
@@ -655,49 +657,56 @@ def _write_reports(
 
 def import_all_official() -> None:
     config = json.loads(CONFIG.read_text(encoding="utf-8"))
+    source_event, bindings = eqtiming_source_context(config)
+    primary_results = source_event["primary_results"]
+    primary_relay_legs = source_event["primary_relay_legs"]
+    public_event = {
+        "event_key": config["event"]["event_key"],
+        "name": config["event"]["name"],
+        "eqtiming_event_id": source_event["event_id"],
+        "official_results_url": source_event["results_url"],
+        **{key: value for key, value in config["event"].items() if key not in {"event_key", "name"}},
+    }
     route = load_route(config)
     gpx_artifacts = build_gpx_artifacts(ROOT, route)
     route["elevation_profile"] = gpx_artifacts["profile"]["meta"]
     route["route_master"] = "official_gpx"
     WEB_ROUTE.parent.mkdir(parents=True, exist_ok=True)
     WEB_ROUTE.write_text(json.dumps(route, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-    primary_rows = load_primary_results()
-    public_by_bib = _load_public_contestants()
-    primary_by_race = {
-        race["race_key"]: [row for row in primary_rows if row.get("Stage") == race["source_race_name"]]
-        for race in config["races"]
-    }
-    for race_key, expected in EXPECTED_COUNTS.items():
-        actual = len(primary_by_race[race_key])
-        if actual != expected:
-            raise ValueError(f"{PRIMARY_RESULTS}: {race_key} has {actual}, expected {expected}")
+    primary_rows = load_primary_results(source_event)
+    public_by_bib = _load_public_contestants(source_event)
+    primary_by_race = bind_primary_results(primary_rows, source_event, bindings)
 
-    xml_rows = load_xml_starts()
+    xml_rows = load_xml_starts(source_event)
     assignments_by_race: dict[str, list[dict[str, Any]]] = {}
     patterns: dict[str, dict[str, Any]] = {}
-    for race_key in ("relay-75-2026", "relay-35-2026"):
-        assignments, pattern = build_relay_assignments(race_key, primary_by_race[race_key], xml_rows)
+    relay_bindings = {key: item for key, item in bindings.items() if isinstance(item["source_race"].get("relay"), dict)}
+    for race_key, resolved in relay_bindings.items():
+        assignments, pattern = build_relay_assignments(
+            race_key, primary_by_race[race_key], xml_rows, resolved["source_race"], source_event
+        )
         if not pattern["verified"]:
             raise ValueError(f"Relay code pattern was not verified for {race_key}: {pattern}")
         assignments_by_race[race_key] = assignments
         patterns[race_key] = pattern
 
-    cross_indexes, start_index = _cross_validation_indexes()
+    cross_indexes, start_index = _cross_validation_indexes(source_event)
     conn = prepare_db()
-    catalog = _insert_catalog(conn, config, route)
+    catalog = _insert_catalog(conn, config, route, source_event, bindings)
     web_races, report_races, result_ids, team_ids, web_splits = _insert_results(
-        conn, config, catalog, primary_by_race, cross_indexes, start_index, route, public_by_bib
+        conn, config, catalog, primary_by_race, cross_indexes, start_index, route, public_by_bib,
+        source_event, bindings,
     )
     relay_report, web_teams, web_members, web_assignments = _insert_relay_data(
-        conn, primary_by_race, assignments_by_race, patterns, result_ids, team_ids
+        conn, primary_by_race, assignments_by_race, patterns, result_ids, team_ids, source_event, bindings
     )
     conn.commit()
     conn.close()
 
-    split_coverage = _write_split_coverage(config, web_races, web_splits)
+    split_coverage = _write_split_coverage(config, web_races, web_splits, source_event, bindings)
     report = {
-        "event": config["event"], "primary_result_source": PRIMARY_RESULTS,
-        "primary_relay_leg_source": PRIMARY_RELAY_LEGS,
+        "event": public_event, "primary_result_source": primary_results,
+        "primary_relay_leg_source": primary_relay_legs,
         "route": {"point_count": route["point_count"], "full_distance_km": route["full_distance_km"],
                   "floda_start": route["floda_start"]},
         "races": report_races,
@@ -708,13 +717,13 @@ def import_all_official() -> None:
             "All original fields from CSV, XML and public JSON sources are preserved in raw_json.",
         ],
     }
-    files_analysis = analyze_source_files()
-    _write_reports(files_analysis, relay_report, report)
+    files_analysis = analyze_source_files(source_event, bindings)
+    _write_reports(files_analysis, relay_report, report, source_event)
     web_payload = {
         "meta": {
-            "project": "Gotaleden Splits", "event": config["event"],
-            "primary_result_source": PRIMARY_RESULTS, "primary_relay_leg_source": PRIMARY_RELAY_LEGS,
-            "public_api_source": str(PUBLIC_API_SNAPSHOT.relative_to(ROOT)).replace("\\", "/"),
+            "project": "Gotaleden Splits", "event": public_event,
+            "primary_result_source": primary_results, "primary_relay_leg_source": primary_relay_legs,
+            "public_api_source": str(source_event["public_snapshot"]).replace("\\", "/"),
             "raw_fields_preserved": True, "intermediate_splits_available": True,
             "split_coverage": {
                 key: {

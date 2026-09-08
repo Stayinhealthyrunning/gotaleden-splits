@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Cache contestant details from EQ Timing's public event 77906 endpoint.
+"""Cache contestant details from a configured EQ Timing source event.
 
 The adapter is deliberately narrow: it only requests bibs already present in the
 official combined result list, validates race and bib, and writes one reproducible
@@ -15,11 +15,17 @@ import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
+from build_project_data import CONFIG
+from eqtiming_official_import import eqtiming_source_context, source_dir
+
 ROOT = Path(__file__).resolve().parents[1]
-EVENT_ID = 77906
-RESULTS = ROOT / "data/source/eqtiming/Resultlist-77906-20260719155435.csv"
-OUTPUT = ROOT / "data/source/eqtiming/api/event-77906-contestants.json"
-ENDPOINT = f"https://live.eqtiming.com/api/Result/Contestant/{EVENT_ID}"
+SOURCE_EVENT, _ = eqtiming_source_context(json.loads(CONFIG.read_text(encoding="utf-8")))
+EVENT_ID = int(SOURCE_EVENT["event_id"])
+RESULTS = source_dir(SOURCE_EVENT) / SOURCE_EVENT["primary_results"]
+OUTPUT = ROOT / SOURCE_EVENT["public_snapshot"]
+ENDPOINT = SOURCE_EVENT["contestant_endpoint"]
+BULK_ENDPOINT = SOURCE_EVENT["contestants_endpoint"]
+EXPECTED_RECORDS = int(SOURCE_EVENT["expected_records"])
 
 
 def result_rows() -> list[dict[str, str]]:
@@ -47,7 +53,7 @@ def fetch_bib(bib: str, timeout: float) -> dict[str, object]:
 
 def fetch_all(timeout: float) -> dict[str, object]:
     request = urllib.request.Request(
-        f"https://live.eqtiming.com/api/Contestants/{EVENT_ID}",
+        BULK_ENDPOINT,
         headers={"EQLiveLocale": "sv-SE", "User-Agent": "Gotaleden-Splits/1.0"},
     )
     with urllib.request.urlopen(request, timeout=timeout) as response:
@@ -59,7 +65,7 @@ def fetch_all(timeout: float) -> dict[str, object]:
     for offset in range(0, len(ids), 100):
         body = json.dumps(ids[offset : offset + 100]).encode("utf-8")
         detail_request = urllib.request.Request(
-            f"https://live.eqtiming.com/api/Contestants/{EVENT_ID}?passes=true",
+            f"{BULK_ENDPOINT}?passes=true",
             data=body,
             headers={
                 "Content-Type": "application/json",
@@ -85,6 +91,8 @@ def main() -> None:
     args = parser.parse_args()
 
     rows = result_rows()
+    if len(rows) != EXPECTED_RECORDS:
+        raise ValueError(f"{RESULTS} has {len(rows)} rows, expected {EXPECTED_RECORDS}")
     cache = load_cache()
     contestants = cache.setdefault("contestants", {})
     assert isinstance(contestants, dict)

@@ -81,6 +81,9 @@ eller härledas i publikt UI.
 ## Arkitektur
 
 - Separera rådata, processad data och webbdata.
+- En race edition refererar en provider-neutral `source_binding`; flera editions får dela samma
+  source event. Providerfält och source-routing hör till source-konfigurationen/adaptern och får
+  inte härledas från race key, år, distans eller ortnamn.
 - Bygg import och validering reproducerbart i Python och GitHub Actions.
 - Bevara källspårning och importdiagnostik.
 - GitHub Pages publiceras från `docs/`.
