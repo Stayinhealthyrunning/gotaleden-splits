@@ -13,13 +13,13 @@
   <meta name="twitter:description" content="Analysera resultat, verkliga passager, fart och loppförlopp för Gotaleden Stafett & Ultra 2026.">
   <title>Gotaleden Splits</title>
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=1.9.4">
-  <link rel="stylesheet" href="assets/style.css?v=20260907-favorites1">
+  <link rel="stylesheet" href="assets/style.css?v=20260908-goal-pace1">
 </head>
 <body>
   <header class="hero">
     <div class="hero__glow"></div>
     <div class="hero__inner">
-      <p class="eyebrow">GÖTEBORG · FLODA · ALINGSÅS</p>
+      <p class="eyebrow" id="hero-eyebrow">GÖTEBORG · FLODA · ALINGSÅS</p>
       <h1>Gotaleden <em>Splits</em></h1>
       <p class="hero__lead">Följ loppet kontroll för kontroll. Upptäck tempot, placeringarna och berättelsen längs leden.</p>
       <div class="hero__route" aria-label="Banans orter">
@@ -38,16 +38,18 @@
 
     <nav class="analysis-nav" aria-label="Analysnavigation">
       <div class="analysis-nav__scroll">
-        <button class="active" data-target="overview">Översikt</button>
-      <button data-target="gender">Genusperspektiv</button>
-      <button data-target="age-analysis">Klass & ålder</button>
-      <button data-target="segments">Delsträckor</button>
-        <button data-target="clubs">Klubb & ort</button>
-        <button data-target="runner-lookup">Löpare</button>
+        <button class="active" data-target="runner-lookup">Löpare</button>
         <button data-target="map-duel">Karta &amp; Kartduell</button>
+        <button data-target="goal-pace">Måltempo</button>
+        <button data-target="overview">Översikt</button>
+        <button data-target="statistics">Statistik</button>
+        <button data-target="gender">Genusperspektiv</button>
+        <button data-target="age-analysis">Klass &amp; ålder</button>
+        <button data-target="segments">Delsträckor</button>
+        <button data-target="clubs">Klubb & ort</button>
         <button data-target="results">Resultat</button>
       </div>
-      <button class="share-view" id="share-view" type="button">Dela vy</button>
+      <button class="share-view" id="share-view" type="button" aria-label="Dela aktuell vy">Dela</button>
     </nav>
 
     <section class="panel runner-lookup" id="runner-lookup">
@@ -62,7 +64,6 @@
         <div class="suggestions" id="runner-suggestions" hidden></div>
       </div>
     </section>
-
     <section class="panel favorites-panel" id="favorites">
       <div class="favorites-heading"><p class="eyebrow ink">FAVORITER</p><h2 id="favorites-title">Sparade löpare</h2><p>Favoriter sparas endast i den här webbläsaren.</p></div>
       <div id="favorites-list"></div>
@@ -87,6 +88,12 @@
       <label>Fartenhet<select id="unit-filter"><option value="pace">min/km</option><option value="speed">km/h</option></select></label>
       <button class="button secondary" id="reset-filters" type="button">Återställ</button>
     </section>
+
+    <section class="panel goal-pace" id="goal-pace">
+      <div class="goal-pace-head"><div><p class="eyebrow ink">PERSONLIG LOPPPLAN</p><h2>Måltempo</h2><p>Gör en önskad sluttid till en bananpassad plan för det valda individuella loppet.</p></div><span class="pill" id="goal-pace-race">Individuellt 75</span></div>
+      <div id="goal-pace-content"></div>
+    </section>
+    <div class="active-filter-summary" id="active-filter-summary" aria-live="polite"></div>
 
     <section class="kpis" id="overview-kpis" aria-label="Nyckeltal"></section>
     <section class="relay-class-kpis" id="relay-class-kpis" aria-label="Stafettklasser" hidden></section>
@@ -154,7 +161,7 @@
     </section>
 
     <section class="audience-world" id="clubs">
-      <div class="section-intro"><p class="eyebrow ink">KLUBB- OCH ORTSARENAN</p><h2>Gemenskap i siffror</h2><p>Sök en klubb eller välj upp till fyra för att jämföra deltagare, målgång och fart.</p></div>
+      <div class="section-intro"><p class="eyebrow ink">KLUBB- OCH ORTSARENAN</p><h2>Gemenskap i siffror</h2><p>Sök en klubb eller välj upp till fyra för att jämföra deltagare, målgång och fart i det valda loppet.</p><span class="pill">Valt lopp</span></div>
       <article class="panel club-arena">
         <div class="club-picker"><label>Sök klubb<input id="club-search" type="search" autocomplete="off" placeholder="Skriv klubbnamn"></label><div class="suggestions" id="club-suggestions" hidden></div></div>
         <div class="selected-chips" id="selected-clubs"></div>
@@ -187,19 +194,21 @@
 
   <script src="vendor/leaflet/leaflet.js?v=1.9.4"></script>
   <script src="assets/data-index.js?v=20260720-parity3"></script>
-  <script src="assets/data-adapter.js?v=20260907-head-to-head1"></script>
+  <script src="assets/data-adapter.js?v=20260907-product-completion1"></script>
   <script src="assets/charts.js?v=20260907-head-to-head1"></script>
   <script src="assets/map-engine.js?v=20260904-course-difficulty1"></script>
-  <script src="assets/analysis-help-content.js?v=20260907-head-to-head1"></script>
-  <script src="assets/analysis-help.js?v=20260907-head-to-head1"></script>
+  <script src="assets/analysis-help-content.js?v=20260908-goal-pace1"></script>
+  <script src="assets/analysis-help.js?v=20260908-goal-pace1"></script>
   <script src="assets/course-difficulty.js?v=20260907-semantic-copy1"></script>
   <script src="assets/race-media.js?v=20260901-music1"></script>
-  <script src="assets/runner-replay.js?v=20260907-semantic-copy1"></script>
+  <script src="assets/runner-replay.js?v=20260907-product-completion1"></script>
   <script src="assets/profile-journey.js?v=20260904-journey2"></script>
   <script src="assets/map-duel.js?v=20260903-standalone-map2"></script>
   <script src="assets/head-to-head.js?v=20260907-head-to-head1"></script>
-  <script src="assets/interactive-analysis.js?v=20260907-semantic-copy1"></script>
+  <script src="assets/personal-summary.js?v=20260908-goal-pace1"></script>
+  <script src="assets/goal-pace.js?v=20260908-goal-pace1"></script>
+  <script src="assets/interactive-analysis.js?v=20260907-product-completion1"></script>
   <script src="assets/favorites.js?v=20260907-favorites1"></script>
-  <script src="assets/app.js?v=20260907-favorites1"></script>
+  <script src="assets/app.js?v=20260908-goal-pace1"></script>
 </body>
 </html>

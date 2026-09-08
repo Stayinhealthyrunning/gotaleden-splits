@@ -43,7 +43,7 @@ class FinalUiDataCorrectionsTests(unittest.TestCase):
             "document.addEventListener('click'",
         ):
             self.assertIn(token, self.app)
-        self.assertIn("$('#club-filter').oninput=filtersChanged", self.app)
+        self.assertIn("setTimeout(filtersChanged,150)", self.app)
 
     def test_boras_query_resolves_to_the_canonical_club(self):
         records = self.results["races"]["individual-75-2026"]["records"]
