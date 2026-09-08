@@ -14,6 +14,7 @@ class InteractivityParityTests(unittest.TestCase):
     def setUpClass(cls):
         cls.index = (DOCS / "index.html").read_text(encoding="utf-8")
         cls.app = (DOCS / "assets" / "app.js").read_text(encoding="utf-8")
+        cls.app_state = (DOCS / "assets" / "app-state.js").read_text(encoding="utf-8")
         cls.adapter = (DOCS / "assets" / "data-adapter.js").read_text(encoding="utf-8")
         cls.replay = (DOCS / "assets" / "runner-replay.js").read_text(encoding="utf-8")
         cls.duel = (DOCS / "assets" / "map-duel.js").read_text(encoding="utf-8")
@@ -129,6 +130,7 @@ class InteractivityParityTests(unittest.TestCase):
         self.assertNotIn("relay_leg_assignments", self.index + self.app + self.interactive)
 
     def test_compact_share_state_restores_filters_profile_and_duel(self):
+        state_sources = self.app + self.app_state
         for parameter in (
             "race",
             "section",
@@ -140,7 +142,7 @@ class InteractivityParityTests(unittest.TestCase):
             "runner",
             "duel",
         ):
-            self.assertRegex(self.app, rf"(?:get|set)\('{parameter}'")
+            self.assertRegex(state_sources, rf"(?:get|set)\('{parameter}'")
         self.assertIn("history.replaceState", self.app)
         self.assertIn("navigator.clipboard.writeText", self.app)
 

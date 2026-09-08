@@ -1,0 +1,3 @@
+# Source captures are immutable byte-for-byte inputs; never normalize line endings.
+# Their original CRLF endings are data, not trailing whitespace.
+data/source/** -text whitespace=cr-at-eol
