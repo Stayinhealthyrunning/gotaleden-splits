@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Parsers and evidence rules for the official EQ Timing event 77906 files."""
+"""EQ Timing adapter: configured source files, validation, and evidence rules."""
 from __future__ import annotations
 
 import csv
@@ -12,30 +12,51 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
+from source_bindings import SourceBindingError, resolve_source_bindings
+
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE_DIR = ROOT / "data" / "source" / "eqtiming"
 
-PRIMARY_RESULTS = "Resultlist-77906-20260719155435.csv"
-PRIMARY_RELAY_LEGS = "Startlist-77906-20260719155427.xml"
 
-RESULTLIST_FILES = (
-    "Resultlist-77906-20260719155309.csv",
-    "Resultlist-77906-20260719155433.csv",
-    "Resultlist-77906-20260719155434.csv",
-    PRIMARY_RESULTS,
-)
-STARTLIST_FILES = (
-    PRIMARY_RELAY_LEGS,
-    "Startlist-77906-20260719155429.csv",
-    "Startlist-77906-20260719155430.csv",
-)
+def eqtiming_source_context(config: dict[str, Any]) -> tuple[dict[str, Any], dict[str, dict[str, Any]]]:
+    resolved = resolve_source_bindings(config)
+    event_keys = {item["source_event_key"] for item in resolved.values()}
+    if len(event_keys) != 1:
+        raise SourceBindingError("The current EQ Timing snapshot build requires exactly one shared source event")
+    source_event = next(iter(resolved.values()))["source_event"]
+    required_event = (
+        "event_id", "results_url", "contestant_endpoint", "contestants_endpoint", "source_dir",
+        "public_snapshot", "primary_results", "primary_relay_legs", "result_files", "result_list_files",
+        "start_list_files", "start_cross_validation_file", "expected_records", "checkpoint_map",
+    )
+    missing_event = [key for key in required_event if source_event.get(key) in (None, "", [], {})]
+    if source_event.get("provider") != "eqtiming" or missing_event:
+        raise SourceBindingError(f"Invalid EQ Timing source event; missing or invalid: {', '.join(missing_event) or 'provider'}")
+    required_race = ("source_race_name", "legacy_csv", "expected_records", "start_time")
+    for race_key, item in resolved.items():
+        binding = item["source_race"]
+        missing_race = [key for key in required_race if binding.get(key) in (None, "")]
+        relay = binding.get("relay")
+        if missing_race:
+            raise SourceBindingError(f"Invalid source binding for {race_key}; missing: {', '.join(missing_race)}")
+        if (item["race"].get("type") == "relay") != isinstance(relay, dict):
+            raise SourceBindingError(f"Source relay rule does not match race type for {race_key}")
+        if isinstance(relay, dict):
+            start_number = relay.get("start_number")
+            if not relay.get("legs") or not isinstance(start_number, dict):
+                raise SourceBindingError(f"Invalid relay source rule for {race_key}")
+            for key in ("team_bib_multiplier", "leg_multiplier", "offset", "description"):
+                if key not in start_number:
+                    raise SourceBindingError(f"Relay source rule for {race_key} is missing {key}")
+    expected_total = sum(int(item["source_race"]["expected_records"]) for item in resolved.values())
+    if expected_total != int(source_event["expected_records"]):
+        raise SourceBindingError(
+            f"Source event expected_records={source_event['expected_records']} does not match binding total {expected_total}"
+        )
+    return source_event, resolved
 
-RACE_RULES = {
-    "individual-75-2026": {"name": "Ultra 75 km", "start_time": "07:00:00"},
-    "individual-35-2026": {"name": "Sprint 35 km", "start_time": "12:00:00"},
-    "relay-75-2026": {"name": "Stafett 75 km", "start_time": "08:00:00", "legs": 9},
-    "relay-35-2026": {"name": "Stafett 35 km", "start_time": "12:00:00", "legs": 4},
-}
+
+def source_dir(source_event: dict[str, Any]) -> Path:
+    return ROOT / str(source_event["source_dir"])
 
 
 def clean(value: Any) -> str | None:
@@ -99,13 +120,34 @@ def read_csv_file(path: Path, delimiter: str) -> tuple[list[str], list[dict[str,
     return normalized_header, records
 
 
-def load_primary_results() -> list[dict[str, str | None]]:
-    _, rows = read_csv_file(SOURCE_DIR / PRIMARY_RESULTS, ";")
+def load_primary_results(source_event: dict[str, Any]) -> list[dict[str, str | None]]:
+    _, rows = read_csv_file(source_dir(source_event) / source_event["primary_results"], ";")
     return rows
 
 
-def load_xml_starts() -> list[dict[str, str]]:
-    root = ET.parse(SOURCE_DIR / PRIMARY_RELAY_LEGS).getroot()
+def bind_primary_results(
+    rows: list[dict[str, str | None]], source_event: dict[str, Any],
+    bindings: dict[str, dict[str, Any]],
+) -> dict[str, list[dict[str, str | None]]]:
+    primary_results = source_event["primary_results"]
+    expected_total = int(source_event["expected_records"])
+    if len(rows) != expected_total:
+        raise SourceBindingError(f"{primary_results} has {len(rows)} rows, expected {expected_total}")
+    grouped: dict[str, list[dict[str, str | None]]] = {}
+    for race_key, resolved in bindings.items():
+        binding = resolved["source_race"]
+        matches = [row for row in rows if row.get("Stage") == binding["source_race_name"]]
+        expected = int(binding["expected_records"])
+        if len(matches) != expected:
+            raise SourceBindingError(f"{primary_results}: {race_key} has {len(matches)}, expected {expected}")
+        grouped[race_key] = matches
+    if sum(map(len, grouped.values())) != expected_total:
+        raise SourceBindingError(f"{primary_results} source race mapping is overlapping or incomplete")
+    return grouped
+
+
+def load_xml_starts(source_event: dict[str, Any]) -> list[dict[str, str]]:
+    root = ET.parse(source_dir(source_event) / source_event["primary_relay_legs"]).getroot()
     return [dict(node.attrib) for node in root.findall("start")]
 
 
@@ -125,22 +167,22 @@ def xml_runner_name(entry: dict[str, str] | None) -> str | None:
     return clean(" ".join(part for part in (clean(entry.get("fornavn")), clean(entry.get("etternavn"))) if part))
 
 
-def leg_start_number(race_key: str, team_bib: int, leg_no: int) -> int:
-    if race_key == "relay-75-2026":
-        return leg_no * 1000 + team_bib
-    if race_key == "relay-35-2026":
-        return team_bib + leg_no * 1000
-    raise ValueError(f"Not a relay race: {race_key}")
+def leg_start_number(binding: dict[str, Any], team_bib: int, leg_no: int) -> int:
+    rule = binding["relay"]["start_number"]
+    return int(team_bib * int(rule["team_bib_multiplier"]) + leg_no * int(rule["leg_multiplier"]) + int(rule["offset"]))
 
 
 def build_relay_assignments(
     race_key: str,
     team_rows: list[dict[str, str | None]],
     xml_rows: list[dict[str, str]],
+    binding: dict[str, Any],
+    source_event: dict[str, Any],
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    rule = RACE_RULES[race_key]
-    max_legs = int(rule["legs"])
-    start_time = str(rule["start_time"])
+    relay_rule = binding["relay"]
+    max_legs = int(relay_rule["legs"])
+    start_time = str(binding["start_time"])
+    relay_file = str(source_event["primary_relay_legs"])
     xml_index: dict[tuple[str, int], list[dict[str, str]]] = {}
     for row in xml_rows:
         number = to_int(row.get("startno"))
@@ -156,7 +198,7 @@ def build_relay_assignments(
         bib = int(team["Startnumber"] or 0)
         result_members = member_positions(team.get("Surname"))
         for leg_no in range(1, max_legs + 1):
-            code = leg_start_number(race_key, bib, leg_no)
+            code = leg_start_number(binding, bib, leg_no)
             candidates = xml_index.get((start_time, code), [])
             if len(candidates) > 1:
                 duplicate_codes.append(code)
@@ -168,19 +210,19 @@ def build_relay_assignments(
                 if normalize_name(xml_name) == normalize_name(result_name):
                     matches += 1
                     status = "verified_xml_and_result_list"
-                    evidence = f"{PRIMARY_RELAY_LEGS} startno={code} + ordered result member list"
+                    evidence = f"{relay_file} startno={code} + ordered result member list"
                 else:
                     status = "conflict"
                     evidence = f"Conflict: XML runner {xml_name}; result list runner {result_name}"
             elif xml_name:
                 status = "verified_xml"
-                evidence = f"{PRIMARY_RELAY_LEGS} startno={code}"
+                evidence = f"{relay_file} startno={code}"
             else:
                 status = "missing"
                 evidence = (
-                    f"{PRIMARY_RELAY_LEGS} startno={code} has no runner name"
+                    f"{relay_file} startno={code} has no runner name"
                     if xml_entry
-                    else f"No {PRIMARY_RELAY_LEGS} entry for startno={code} at {start_time}"
+                    else f"No {relay_file} entry for startno={code} at {start_time}"
                 )
             assignments.append(
                 {
@@ -198,18 +240,14 @@ def build_relay_assignments(
                 }
             )
 
-    relevant_codes = {leg_start_number(race_key, bib, leg) for bib in team_bibs for leg in range(1, max_legs + 1)}
+    relevant_codes = {leg_start_number(binding, bib, leg) for bib in team_bibs for leg in range(1, max_legs + 1)}
     cross_race_code_collisions = sorted(
         int(row["startno"])
         for row in xml_rows
         if to_int(row.get("startno")) in relevant_codes and row.get("starttid") != start_time
     )
     pattern = {
-        "formula": (
-            "startno = leg_no * 1000 + team_bib"
-            if race_key == "relay-75-2026"
-            else "startno = team_bib + leg_no * 1000 (prefix 2-5 maps to legs 1-4)"
-        ),
+        "formula": relay_rule["start_number"]["description"],
         "required_start_time": start_time,
         "team_count": len(team_rows),
         "possible_leg_slots": len(team_rows) * max_legs,
@@ -226,22 +264,25 @@ def build_relay_assignments(
 
 
 def relay_member_sources(
-    team: dict[str, str | None], assignments: list[dict[str, Any]], max_legs: int
+    team: dict[str, str | None], assignments: list[dict[str, Any]], max_legs: int,
+    source_event: dict[str, Any],
 ) -> list[dict[str, Any]]:
+    primary_results = str(source_event["primary_results"])
+    primary_relay_legs = str(source_event["primary_relay_legs"])
     evidence_by_name: dict[str, dict[str, Any]] = {}
     positions = member_positions(team.get("Surname"))
     for leg_no, name in enumerate(positions[:max_legs], 1):
         if name:
             key = normalize_name(name)
             item = evidence_by_name.setdefault(key, {"name": name, "evidence": [], "legs": []})
-            item["evidence"].append(f"{PRIMARY_RESULTS} ordered member list position {leg_no}")
+            item["evidence"].append(f"{primary_results} ordered member list position {leg_no}")
     for assignment in assignments:
         name = assignment.get("xml_runner")
         if name:
             key = normalize_name(name)
             item = evidence_by_name.setdefault(key, {"name": name, "evidence": [], "legs": []})
             item["evidence"].append(
-                f"{PRIMARY_RELAY_LEGS} startno={assignment['source_start_number']}"
+                f"{primary_relay_legs} startno={assignment['source_start_number']}"
             )
             item["legs"].append(assignment["leg_no"])
     return [
@@ -255,8 +296,11 @@ def relay_member_sources(
     ]
 
 
-def _races_for_file(name: str, rows: list[dict[str, Any]] | None, text: str) -> list[str]:
-    race_names = [str(rule["name"]) for rule in RACE_RULES.values()]
+def _races_for_file(
+    name: str, rows: list[dict[str, Any]] | None, text: str,
+    source_event: dict[str, Any], bindings: dict[str, dict[str, Any]],
+) -> list[str]:
+    race_names = [str(item["source_race"]["source_race_name"]) for item in bindings.values()]
     found: set[str] = set()
     for race_name in race_names:
         if race_name in text:
@@ -266,19 +310,29 @@ def _races_for_file(name: str, rows: list[dict[str, Any]] | None, text: str) -> 
             for field in ("Stage", "Race", "RaceName", "Group", "GroupdName"):
                 if row.get(field) in race_names:
                     found.add(str(row[field]))
-    if name == PRIMARY_RELAY_LEGS:
-        found.update(race_names)
-    if name == "Startlist-77906-20260719155430.csv":
-        found.update(race_names)
-    if name == "Startlist-77906-20260719155429.csv":
+    if name in source_event.get("all_races_files", []):
         found.update(race_names)
     return sorted(found)
 
 
-def analyze_source_files() -> dict[str, Any]:
+def analyze_source_files(source_event: dict[str, Any], bindings: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    directory = source_dir(source_event)
+    primary_results = str(source_event["primary_results"])
+    primary_relay_legs = str(source_event["primary_relay_legs"])
+    relay_names = {
+        str(item["source_race"]["source_race_name"])
+        for item in bindings.values() if isinstance(item["source_race"].get("relay"), dict)
+    }
+    individual_names = {
+        str(item["source_race"]["source_race_name"])
+        for item in bindings.values() if item["source_race"].get("relay") is None
+    }
+    result_files = set(source_event["result_files"])
+    result_files.update(Path(item["source_race"]["legacy_csv"]).name for item in bindings.values())
+    start_files = set(source_event["start_list_files"])
     structured: dict[str, set[str]] = {}
     analyses: list[dict[str, Any]] = []
-    for path in sorted(SOURCE_DIR.iterdir()):
+    for path in sorted(directory.iterdir()):
         if not path.is_file():
             continue
         data = path.read_bytes()
@@ -298,13 +352,13 @@ def analyze_source_files() -> dict[str, Any]:
             char = {"tab": "\t", "semicolon": ";", "comma": ","}[delimiter]
             fields, rows = read_csv_file(path, char)
         structured[path.name] = set(fields)
-        races = _races_for_file(path.name, rows, text)
-        is_result = path.name.startswith("Resultlist") or path.name.startswith(("individual-", "relay-"))
-        is_start = path.name.startswith("Startlist")
-        relay_result = any(name.startswith("Stafett") for name in races) and is_result
-        individual_result = any(name in {"Ultra 75 km", "Sprint 35 km"} for name in races) and is_result
+        races = _races_for_file(path.name, rows, text, source_event, bindings)
+        is_result = path.name in result_files
+        is_start = path.name in start_files
+        relay_result = any(name in relay_names for name in races) and is_result
+        individual_result = any(name in individual_names for name in races) and is_result
         contains_members = (
-            path.name == PRIMARY_RELAY_LEGS
+            path.name == primary_relay_legs
             or (relay_result and rows is not None and any(clean(row.get("Surname")) and str(row.get("Surname")).startswith("(") for row in rows))
         )
         analyses.append(
@@ -325,7 +379,7 @@ def analyze_source_files() -> dict[str, Any]:
                 "contains_start_list": is_start,
                 "contains_relay_members": contains_members,
                 "contains_team_name": relay_result,
-                "contains_leg_encoding": path.name == PRIMARY_RELAY_LEGS,
+                "contains_leg_encoding": path.name == primary_relay_legs,
                 "contains_intermediate_splits": bool(rows and any(clean(row.get("PointName")) not in {None, "Mål"} for row in rows)),
                 "finish_results_only": is_result,
             }
@@ -346,22 +400,18 @@ def analyze_source_files() -> dict[str, Any]:
         analysis["byte_identical_to"] = same_hash
 
     return {
-        "event_id": 77906,
-        "primary_result_source": PRIMARY_RESULTS,
-        "primary_relay_leg_source": PRIMARY_RELAY_LEGS,
+        "event_id": source_event["event_id"],
+        "primary_result_source": primary_results,
+        "primary_relay_leg_source": primary_relay_legs,
         "files": analyses,
         "source_priority": [
-            PRIMARY_RESULTS,
-            PRIMARY_RELAY_LEGS,
+            primary_results,
+            primary_relay_legs,
             "Other official Resultlist files (cross-validation)",
-            "Startlist-77906-20260719155430.csv (start-data cross-validation)",
+            f"{source_event['start_cross_validation_file']} (start-data cross-validation)",
             "Legacy 81-column per-race CSV files (fallback and raw-field preservation)",
         ],
-        "notes": [
-            "Startlist-77906-20260719155429.csv has eight labelled header fields but nine values in data rows; the ninth field is retained as _unlabelled_9.",
-            "Empty member-list positions are semantically significant and are preserved.",
-            "No official file contains separate checkpoint passages; no intermediate split is synthesized.",
-        ],
+        "notes": list(source_event.get("notes", [])),
     }
 
 

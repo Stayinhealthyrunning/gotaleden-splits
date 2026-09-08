@@ -11,6 +11,8 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any
 
+from source_bindings import SourceBindingError, resolve_source_bindings
+
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = ROOT / "config" / "races.json"
 DB = ROOT / "data" / "gotaleden.sqlite"
@@ -128,6 +130,18 @@ def prepare_db():
 
 def import_all():
     config = json.loads(CONFIG.read_text(encoding="utf-8"))
+    bindings = resolve_source_bindings(config)
+    source_event_keys = {item["source_event_key"] for item in bindings.values()}
+    if len(source_event_keys) != 1:
+        raise SourceBindingError("The legacy snapshot build requires exactly one shared source event")
+    source_event = next(iter(bindings.values()))["source_event"]
+    public_event = {
+        "event_key": config["event"]["event_key"],
+        "name": config["event"]["name"],
+        "eqtiming_event_id": source_event["event_id"],
+        "official_results_url": source_event["results_url"],
+        **{key: value for key, value in config["event"].items() if key not in {"event_key", "name"}},
+    }
     route = load_route(config)
     WEB_ROUTE.parent.mkdir(parents=True, exist_ok=True)
     WEB_ROUTE.write_text(json.dumps(route, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
@@ -136,14 +150,14 @@ def import_all():
     with conn:
         conn.execute(
             "INSERT INTO sources(code,name,base_url,source_type) VALUES(?,?,?,?)",
-            ("eqtiming_csv", "EQ Timing resultat-/pressfil", "https://live.eqtiming.com/77906", "csv")
+            ("eqtiming_csv", "EQ Timing resultat-/pressfil", source_event["results_url"], "csv")
         )
     source_id = conn.execute("SELECT id FROM sources WHERE code='eqtiming_csv'").fetchone()[0]
 
     checkpoint_catalog = {cp["key"]: cp for cp in config["checkpoints"]}
     web_races = {}
     report = {
-        "event": config["event"],
+        "event": public_event,
         "route": {
             "point_count": route["point_count"],
             "full_distance_km": route["full_distance_km"],
@@ -158,6 +172,7 @@ def import_all():
     }
 
     for race in config["races"]:
+        binding = bindings[race["race_key"]]["source_race"]
         gpx_distance = route["full_distance_km"] if race["route_start"] == "gothenburg" else route["floda_start"]["remaining_distance_km"]
         with conn:
             conn.execute(
@@ -166,8 +181,8 @@ def import_all():
                    VALUES(?,?,?,?,?,?,?,?,?,?,?,?)""",
                 (
                     race["race_key"], config["event"]["event_key"], race["race_family"], race["course_version"],
-                    race["section"], race["source_race_name"], race["type"], race["year"], race["race_date"], race["nominal_distance_km"],
-                    gpx_distance, config["event"]["official_results_url"]
+                    race["section"], binding["source_race_name"], race["type"], race["year"], race["race_date"], race["nominal_distance_km"],
+                    gpx_distance, source_event["results_url"]
                 )
             )
         race_id = conn.execute("SELECT id FROM races WHERE race_key=?", (race["race_key"],)).fetchone()[0]
@@ -195,7 +210,7 @@ def import_all():
             "SELECT id FROM checkpoints WHERE race_id=? AND checkpoint_key=?", (race_id, finish_key)
         ).fetchone()[0]
 
-        csv_path = ROOT / race["source_csv"]
+        csv_path = ROOT / binding["legacy_csv"]
         with csv_path.open("r", encoding="utf-8-sig", newline="") as fh:
             reader = csv.DictReader(fh)
             rows = list(reader)
@@ -304,7 +319,7 @@ def import_all():
             "race_date": race["race_date"],
             "course_version": race["course_version"],
             "section": race["section"],
-            "source_race_name": race["source_race_name"],
+            "source_race_name": binding["source_race_name"],
             "type": race["type"],
             "nominal_distance_km": race["nominal_distance_km"],
             "gpx_distance_km": gpx_distance,
@@ -312,7 +327,7 @@ def import_all():
         }
         report["races"][race["race_key"]] = {
             "section": race["section"],
-            "source_race_name": race["source_race_name"],
+            "source_race_name": binding["source_race_name"],
             "record_count": len(normalized_rows),
             "original_column_count": len(original_columns),
             "original_columns": original_columns,
@@ -329,7 +344,7 @@ def import_all():
     web_payload = {
         "meta": {
             "project": "Gotaleden Splits",
-            "event": config["event"],
+            "event": public_event,
             "data_source": "EQ Timing CSV export",
             "raw_fields_preserved": True,
             "intermediate_splits_available_in_current_csv": False,
