@@ -107,6 +107,17 @@ inaktiva under premiäråret 2026.
 python -m unittest discover -s tests -v
 ```
 
+Browserflöden körs mot den verkliga statiska sidan med Playwright:
+
+```bash
+pnpm install
+pnpm run test:e2e:install
+pnpm run test:e2e
+```
+
+Playwright startar själv en lokal statisk server för `docs/`. Installation av Chromium behöver bara
+göras första gången eller när Playwright-versionen ändras.
+
 Testerna verifierar bland annat fyra lopp, källintegritet, splitimport, Nolhagas roll, stafettregler,
 rådata, GPX-slicing, elevation fallback, replay-ankare och att runner-to-leg inte visas publikt.
 
