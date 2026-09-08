@@ -45,7 +45,7 @@ class ProductCompletionTests(unittest.TestCase):
         self.assertIn("navigator.share", module)
         self.assertIn("navigator.clipboard", module)
         self.assertIn('aria-live="polite"', module)
-        self.assertIn("personal-summary.js?v=20260907-product-completion1", html)
+        self.assertIn("personal-summary.js?v=20260908-goal-pace1", html)
 
 
 if __name__ == "__main__":

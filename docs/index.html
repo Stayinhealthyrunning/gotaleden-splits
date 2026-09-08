@@ -13,7 +13,7 @@
   <meta name="twitter:description" content="Analysera resultat, verkliga passager, fart och loppförlopp för Gotaleden Stafett & Ultra 2026.">
   <title>Gotaleden Splits</title>
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=1.9.4">
-  <link rel="stylesheet" href="assets/style.css?v=20260907-product-completion1">
+  <link rel="stylesheet" href="assets/style.css?v=20260908-goal-pace1">
 </head>
 <body>
   <header class="hero">
@@ -40,6 +40,7 @@
       <div class="analysis-nav__scroll">
         <button class="active" data-target="runner-lookup">Löpare</button>
         <button data-target="map-duel">Karta &amp; Kartduell</button>
+        <button data-target="goal-pace">Måltempo</button>
         <button data-target="overview">Översikt</button>
         <button data-target="statistics">Statistik</button>
         <button data-target="gender">Genusperspektiv</button>
@@ -86,6 +87,11 @@
       <label>Status<select id="status-filter"><option value="">Alla</option></select></label>
       <label>Fartenhet<select id="unit-filter"><option value="pace">min/km</option><option value="speed">km/h</option></select></label>
       <button class="button secondary" id="reset-filters" type="button">Återställ</button>
+    </section>
+
+    <section class="panel goal-pace" id="goal-pace">
+      <div class="goal-pace-head"><div><p class="eyebrow ink">PERSONLIG LOPPPLAN</p><h2>Måltempo</h2><p>Gör en önskad sluttid till en bananpassad plan för det valda individuella loppet.</p></div><span class="pill" id="goal-pace-race">Individuellt 75</span></div>
+      <div id="goal-pace-content"></div>
     </section>
     <div class="active-filter-summary" id="active-filter-summary" aria-live="polite"></div>
 
@@ -191,17 +197,18 @@
   <script src="assets/data-adapter.js?v=20260907-product-completion1"></script>
   <script src="assets/charts.js?v=20260907-head-to-head1"></script>
   <script src="assets/map-engine.js?v=20260904-course-difficulty1"></script>
-  <script src="assets/analysis-help-content.js?v=20260907-head-to-head1"></script>
-  <script src="assets/analysis-help.js?v=20260907-head-to-head1"></script>
+  <script src="assets/analysis-help-content.js?v=20260908-goal-pace1"></script>
+  <script src="assets/analysis-help.js?v=20260908-goal-pace1"></script>
   <script src="assets/course-difficulty.js?v=20260907-semantic-copy1"></script>
   <script src="assets/race-media.js?v=20260901-music1"></script>
   <script src="assets/runner-replay.js?v=20260907-product-completion1"></script>
   <script src="assets/profile-journey.js?v=20260904-journey2"></script>
   <script src="assets/map-duel.js?v=20260903-standalone-map2"></script>
   <script src="assets/head-to-head.js?v=20260907-head-to-head1"></script>
-  <script src="assets/personal-summary.js?v=20260907-product-completion1"></script>
+  <script src="assets/personal-summary.js?v=20260908-goal-pace1"></script>
+  <script src="assets/goal-pace.js?v=20260908-goal-pace1"></script>
   <script src="assets/interactive-analysis.js?v=20260907-product-completion1"></script>
   <script src="assets/favorites.js?v=20260907-favorites1"></script>
-  <script src="assets/app.js?v=20260907-product-completion1"></script>
+  <script src="assets/app.js?v=20260908-goal-pace1"></script>
 </body>
 </html>
