@@ -53,6 +53,18 @@ python tools/build_project_data.py
 
 Bygget skapar SQLite-databasen, kompakt webbdata under `docs/data/` och diagnostik under `reports/`.
 
+### Race-katalogens kontrakt
+
+`config/races.json` skiljer på ett stabilt `event_key`, en stabil `race_family` och varje faktisk
+race edition med oförändrat `race_key`, `year`, `race_date` och `course_version`. `course_version`
+är ett stabilt, event-lokalt id för den banmodell som editionen använder; nuvarande modell heter
+`course-v1`. Fälten är explicita och får inte härledas från race key, distans eller ortnamn.
+
+Samma metadata följer oförändrad genom SQLite-tabellen `races` och webbexportens race-poster.
+`GDataAdapter.race()` exponerar den som `key`, `eventKey`, `family`, `year`, `raceDate`,
+`courseVersion` och `type`. Eventets toppnivå beskriver eventet; editionens år och datum kommer
+alltid från respektive race-post.
+
 ## Analyswebb
 
 Den statiska GitHub Pages-sidan i `docs/` innehåller:
