@@ -1,0 +1,196 @@
+{
+  "event_id": 77906,
+  "positive_passage_rule": "elapsed_seconds > 0",
+  "finish_comparison_tolerance_seconds": 2.0,
+  "races": {
+    "individual-75-2026": {
+      "result_count": 274,
+      "status_counts": {
+        "FINISHED": 206,
+        "DNF": 13,
+        "DNS": 55,
+        "other": 0
+      },
+      "required_checkpoint_series": [
+        "skatas",
+        "kasjon",
+        "jonsered",
+        "lerum",
+        "floda",
+        "tollered",
+        "norsesund",
+        "vastra_bodarna",
+        "nolhaga",
+        "alingsas"
+      ],
+      "results_with_positive_passage": 221,
+      "complete_checkpoint_series": 202,
+      "partial_checkpoint_series": 19,
+      "finished_with_complete_series": 202,
+      "finished_missing_checkpoints": 4,
+      "finished_with_finish_passage": 206,
+      "dnf_with_passages": 13,
+      "dns_with_positive_passages": 2,
+      "missing_passages_by_checkpoint": {
+        "skatas": 55,
+        "kasjon": 55,
+        "jonsered": 56,
+        "lerum": 57,
+        "floda": 59,
+        "tollered": 65,
+        "norsesund": 68,
+        "vastra_bodarna": 68,
+        "nolhaga": 71,
+        "alingsas": 65
+      },
+      "imported_passages": 2121,
+      "positive_passages_with_status_other_than_finished_or_dnf": [
+        {
+          "bib": "782",
+          "name": "Johanna Kloepsch",
+          "status": "DNS",
+          "passage_count": 1
+        },
+        {
+          "bib": "519",
+          "name": "Peter Karlsson",
+          "status": "DNS",
+          "passage_count": 1
+        }
+      ],
+      "finish_time_comparison": {
+        "compared": 206,
+        "differences_over_tolerance": 0,
+        "difference_samples": []
+      },
+      "non_monotonic_elapsed_results": []
+    },
+    "individual-35-2026": {
+      "result_count": 163,
+      "status_counts": {
+        "FINISHED": 127,
+        "DNF": 2,
+        "DNS": 34,
+        "other": 0
+      },
+      "required_checkpoint_series": [
+        "tollered",
+        "norsesund",
+        "vastra_bodarna",
+        "nolhaga",
+        "alingsas"
+      ],
+      "results_with_positive_passage": 129,
+      "complete_checkpoint_series": 127,
+      "partial_checkpoint_series": 2,
+      "finished_with_complete_series": 127,
+      "finished_missing_checkpoints": 0,
+      "finished_with_finish_passage": 127,
+      "dnf_with_passages": 2,
+      "dns_with_positive_passages": 0,
+      "missing_passages_by_checkpoint": {
+        "tollered": 34,
+        "norsesund": 35,
+        "vastra_bodarna": 36,
+        "nolhaga": 36,
+        "alingsas": 36
+      },
+      "imported_passages": 638,
+      "positive_passages_with_status_other_than_finished_or_dnf": [],
+      "finish_time_comparison": {
+        "compared": 127,
+        "differences_over_tolerance": 0,
+        "difference_samples": []
+      },
+      "non_monotonic_elapsed_results": []
+    },
+    "relay-75-2026": {
+      "result_count": 121,
+      "status_counts": {
+        "FINISHED": 109,
+        "DNF": 1,
+        "DNS": 11,
+        "other": 0
+      },
+      "required_checkpoint_series": [
+        "skatas",
+        "kasjon",
+        "jonsered",
+        "lerum",
+        "floda",
+        "tollered",
+        "norsesund",
+        "vastra_bodarna",
+        "nolhaga",
+        "alingsas"
+      ],
+      "results_with_positive_passage": 110,
+      "complete_checkpoint_series": 92,
+      "partial_checkpoint_series": 18,
+      "finished_with_complete_series": 92,
+      "finished_missing_checkpoints": 17,
+      "finished_with_finish_passage": 109,
+      "dnf_with_passages": 1,
+      "dns_with_positive_passages": 0,
+      "missing_passages_by_checkpoint": {
+        "skatas": 12,
+        "kasjon": 12,
+        "jonsered": 17,
+        "lerum": 13,
+        "floda": 13,
+        "tollered": 13,
+        "norsesund": 15,
+        "vastra_bodarna": 12,
+        "nolhaga": 14,
+        "alingsas": 12
+      },
+      "imported_passages": 1077,
+      "positive_passages_with_status_other_than_finished_or_dnf": [],
+      "finish_time_comparison": {
+        "compared": 109,
+        "differences_over_tolerance": 0,
+        "difference_samples": []
+      },
+      "non_monotonic_elapsed_results": []
+    },
+    "relay-35-2026": {
+      "result_count": 49,
+      "status_counts": {
+        "FINISHED": 45,
+        "DNF": 1,
+        "DNS": 3,
+        "other": 0
+      },
+      "required_checkpoint_series": [
+        "tollered",
+        "norsesund",
+        "vastra_bodarna",
+        "nolhaga",
+        "alingsas"
+      ],
+      "results_with_positive_passage": 46,
+      "complete_checkpoint_series": 42,
+      "partial_checkpoint_series": 4,
+      "finished_with_complete_series": 42,
+      "finished_missing_checkpoints": 3,
+      "finished_with_finish_passage": 45,
+      "dnf_with_passages": 1,
+      "dns_with_positive_passages": 0,
+      "missing_passages_by_checkpoint": {
+        "tollered": 5,
+        "norsesund": 4,
+        "vastra_bodarna": 5,
+        "nolhaga": 5,
+        "alingsas": 3
+      },
+      "imported_passages": 223,
+      "positive_passages_with_status_other_than_finished_or_dnf": [],
+      "finish_time_comparison": {
+        "compared": 45,
+        "differences_over_tolerance": 0,
+        "difference_samples": []
+      },
+      "non_monotonic_elapsed_results": []
+    }
+  }
+}

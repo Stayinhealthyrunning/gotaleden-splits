@@ -47,11 +47,13 @@ Mål är alltid exakt GPX-ruttens slutpunkt.
 Den publika snapshoten finns incheckad för reproducerbara byggen. En ny snapshot hämtas uttryckligen:
 
 ```bash
-python tools/fetch_eqtiming_public.py --refresh
+python tools/fetch_eqtiming_public.py --source-event eqtiming-gotaleden-2026 --refresh
 python tools/build_project_data.py
 ```
 
-Bygget skapar SQLite-databasen, kompakt webbdata under `docs/data/` och diagnostik under `reports/`.
+Bygget skapar SQLite-databasen, den årneutrala webbexporten `docs/data/results.json` och diagnostik
+under `reports/`. `results-2026.json` och `import-summary-2026.json` skrivs tills vidare som
+byte-identiska kompatibilitetsalias.
 
 ### Race-katalogens kontrakt
 
@@ -64,6 +66,12 @@ Samma metadata följer oförändrad genom SQLite-tabellen `races` och webbexport
 `GDataAdapter.race()` exponerar den som `key`, `eventKey`, `family`, `year`, `raceDate`,
 `courseVersion` och `type`. Eventets toppnivå beskriver eventet; editionens år och datum kommer
 alltid från respektive race-post.
+
+Varje edition har dessutom explicit `data_status`: `available` kräver en provider-neutral
+`source_binding`, medan `planned` får finnas i katalogen utan källa och exponeras då som icke
+analyserbar. Bygget grupperar tillgängliga editions per `(provider, source_event)` och kör varje
+source-event exakt en gång via sin adapter. Source- och resultatidentiteter är event-skopade, så
+samma provider-id kan förekomma i olika års source-events utan kollision.
 
 ## Analyswebb
 

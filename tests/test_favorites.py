@@ -70,7 +70,7 @@ const favorites=window.GFavorites.create({storage:broken});favorites.add('relay-
         self.assertNotIn("★", self.runtime)
         self.assertNotIn("☆", self.runtime)
         self.assertIn('assets/favorites.js?v=20260907-favorites1', self.html)
-        self.assertIn('assets/app.js?v=20260909-e2e1', self.html)
+        self.assertIn('assets/app.js?v=20260908-multiyear1', self.html)
         self.assertLess(self.html.index("favorites.js"), self.html.index("app.js"))
 
     def test_results_profile_panel_accessibility_and_shared_selection(self):
