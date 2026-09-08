@@ -2,9 +2,109 @@
   "event": {
     "event_key": "gotaleden-stafett-ultra",
     "name": "Gotaleden Stafett & Ultra",
-    "eqtiming_event_id": 77906,
-    "official_results_url": "https://live.eqtiming.com/77906",
     "official_site_url": "https://www.gotaledenstafettultra.se/"
+  },
+  "source_events": {
+    "eqtiming-gotaleden-2026": {
+      "provider": "eqtiming",
+      "event_id": 77906,
+      "results_url": "https://live.eqtiming.com/77906",
+      "contestant_endpoint": "https://live.eqtiming.com/api/Result/Contestant/77906",
+      "contestants_endpoint": "https://live.eqtiming.com/api/Contestants/77906",
+      "source_dir": "data/source/eqtiming",
+      "public_snapshot": "data/source/eqtiming/api/event-77906-contestants.json",
+      "primary_results": "Resultlist-77906-20260719155435.csv",
+      "primary_relay_legs": "Startlist-77906-20260719155427.xml",
+      "result_files": [
+        "Resultlist-77906-20260719155309.csv",
+        "Resultlist-77906-20260719155432.txt",
+        "Resultlist-77906-20260719155433.csv",
+        "Resultlist-77906-20260719155434.csv",
+        "Resultlist-77906-20260719155435.csv"
+      ],
+      "result_list_files": [
+        "Resultlist-77906-20260719155309.csv",
+        "Resultlist-77906-20260719155433.csv",
+        "Resultlist-77906-20260719155434.csv",
+        "Resultlist-77906-20260719155435.csv"
+      ],
+      "start_list_files": [
+        "Startlist-77906-20260719155427.xml",
+        "Startlist-77906-20260719155429.csv",
+        "Startlist-77906-20260719155430.csv"
+      ],
+      "start_cross_validation_file": "Startlist-77906-20260719155430.csv",
+      "all_races_files": [
+        "Startlist-77906-20260719155427.xml",
+        "Startlist-77906-20260719155429.csv",
+        "Startlist-77906-20260719155430.csv"
+      ],
+      "expected_records": 607,
+      "checkpoint_map": {
+        "Skatås": "skatas",
+        "Kåsjön": "kasjon",
+        "Jonsered": "jonsered",
+        "Lerum": "lerum",
+        "Floda": "floda",
+        "Tollered": "tollered",
+        "Norsesund": "norsesund",
+        "V:a Bodarna": "vastra_bodarna",
+        "Nolhaga": "nolhaga",
+        "Mål": "alingsas"
+      },
+      "race_bindings": {
+        "ultra": {
+          "source_race_name": "Ultra 75 km",
+          "legacy_csv": "data/source/eqtiming/individual-75-2026.csv",
+          "expected_records": 274,
+          "start_time": "07:00:00",
+          "coverage_report_title": "Individual 75 discrepancy",
+          "relay": null
+        },
+        "sprint": {
+          "source_race_name": "Sprint 35 km",
+          "legacy_csv": "data/source/eqtiming/individual-35-2026.csv",
+          "expected_records": 163,
+          "start_time": "12:00:00",
+          "relay": null
+        },
+        "relay-long": {
+          "source_race_name": "Stafett 75 km",
+          "legacy_csv": "data/source/eqtiming/relay-75-2026.csv",
+          "expected_records": 121,
+          "start_time": "08:00:00",
+          "relay": {
+            "legs": 9,
+            "start_number": {
+              "team_bib_multiplier": 1,
+              "leg_multiplier": 1000,
+              "offset": 0,
+              "description": "startno = leg_no * 1000 + team_bib"
+            }
+          }
+        },
+        "relay-short": {
+          "source_race_name": "Stafett 35 km",
+          "legacy_csv": "data/source/eqtiming/relay-35-2026.csv",
+          "expected_records": 49,
+          "start_time": "12:00:00",
+          "relay": {
+            "legs": 4,
+            "start_number": {
+              "team_bib_multiplier": 1,
+              "leg_multiplier": 1000,
+              "offset": 0,
+              "description": "startno = team_bib + leg_no * 1000 (prefix 2-5 maps to legs 1-4)"
+            }
+          }
+        }
+      },
+      "notes": [
+        "Startlist-77906-20260719155429.csv has eight labelled header fields but nine values in data rows; the ninth field is retained as _unlabelled_9.",
+        "Empty member-list positions are semantically significant and are preserved.",
+        "No official file contains separate checkpoint passages; no intermediate split is synthesized."
+      ]
+    }
   },
   "route": {
     "source_gpx": "data/source/gpx/Gotaleden_Ultra_75km-30april.gpx",
@@ -23,12 +123,13 @@
       "year": 2026,
       "race_date": "2026-05-09",
       "course_version": "course-v1",
+      "source_binding": {
+        "source_event": "eqtiming-gotaleden-2026",
+        "race": "ultra"
+      },
       "section": "Individuellt 75",
-      "source_race_name": "Ultra 75 km",
       "type": "individual",
-      "source_csv": "data/source/eqtiming/individual-75-2026.csv",
       "nominal_distance_km": 78.0,
-      "start_time": "07:00:00",
       "route_start": "gothenburg",
       "checkpoints": [
         "gothenburg",
@@ -50,12 +151,13 @@
       "year": 2026,
       "race_date": "2026-05-09",
       "course_version": "course-v1",
+      "source_binding": {
+        "source_event": "eqtiming-gotaleden-2026",
+        "race": "sprint"
+      },
       "section": "Individuellt 35",
-      "source_race_name": "Sprint 35 km",
       "type": "individual",
-      "source_csv": "data/source/eqtiming/individual-35-2026.csv",
       "nominal_distance_km": 36.5,
-      "start_time": "12:00:00",
       "route_start": "floda",
       "checkpoints": [
         "floda",
@@ -72,12 +174,13 @@
       "year": 2026,
       "race_date": "2026-05-09",
       "course_version": "course-v1",
+      "source_binding": {
+        "source_event": "eqtiming-gotaleden-2026",
+        "race": "relay-long"
+      },
       "section": "Stafett 75",
-      "source_race_name": "Stafett 75 km",
       "type": "relay",
-      "source_csv": "data/source/eqtiming/relay-75-2026.csv",
       "nominal_distance_km": 78.0,
-      "start_time": "08:00:00",
       "route_start": "gothenburg",
       "checkpoints": [
         "gothenburg",
@@ -99,12 +202,13 @@
       "year": 2026,
       "race_date": "2026-05-09",
       "course_version": "course-v1",
+      "source_binding": {
+        "source_event": "eqtiming-gotaleden-2026",
+        "race": "relay-short"
+      },
       "section": "Stafett 35",
-      "source_race_name": "Stafett 35 km",
       "type": "relay",
-      "source_csv": "data/source/eqtiming/relay-35-2026.csv",
       "nominal_distance_km": 36.5,
-      "start_time": "12:00:00",
       "route_start": "floda",
       "checkpoints": [
         "floda",

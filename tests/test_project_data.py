@@ -12,7 +12,7 @@ TOOLS = ROOT / "tools"
 if str(TOOLS) not in sys.path:
     sys.path.insert(0, str(TOOLS))
 
-from eqtiming_official_import import build_relay_assignments  # noqa: E402
+from eqtiming_official_import import build_relay_assignments, eqtiming_source_context  # noqa: E402
 
 
 EXPECTED_SOURCE_HASHES = {
@@ -38,6 +38,8 @@ class ProjectDataTests(unittest.TestCase):
         cls.route = json.loads((ROOT / "docs/data/route.json").read_text(encoding="utf-8"))
         cls.report = json.loads((ROOT / "reports/import-summary-2026.json").read_text(encoding="utf-8"))
         cls.relay_report = json.loads((ROOT / "reports/relay-member-import-report.json").read_text(encoding="utf-8"))
+        cls.config = json.loads((ROOT / "config/races.json").read_text(encoding="utf-8"))
+        cls.source_event, cls.source_bindings = eqtiming_source_context(cls.config)
 
     @contextmanager
     def connect(self):
@@ -137,7 +139,8 @@ class ProjectDataTests(unittest.TestCase):
     def test_synthetic_conflict_is_not_verified(self):
         teams = [{"Startnumber": "78", "Firstname": "Team", "Surname": "(Wrong Runner)"}]
         xml = [{"startno": "1078", "starttid": "08:00:00", "fornavn": "Right", "etternavn": "Runner"}]
-        assignments, _ = build_relay_assignments("relay-75-2026", teams, xml)
+        binding = self.source_bindings["relay-75-2026"]["source_race"]
+        assignments, _ = build_relay_assignments("relay-75-2026", teams, xml, binding, self.source_event)
         self.assertEqual(assignments[0]["assignment_status"], "conflict")
         self.assertIsNone(assignments[0]["runner_name"])
 
