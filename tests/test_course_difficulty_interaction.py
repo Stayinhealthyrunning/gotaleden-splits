@@ -54,14 +54,21 @@ const fs=require('fs'),vm=require('vm');global.window={};vm.runInThisContext(fs.
 if(window.GCharts.elevation(points,checkpoints).includes('elevation-range-highlight'))throw new Error('old call');const html=window.GCharts.elevation(points,checkpoints,{highlightRange:{from:.5,to:1.5}});if(!html.includes('data-highlight-from="0.5"')||!html.includes('data-highlight-to="1.5"'))throw new Error(html);
 """)
 
+    def test_elevation_exposes_one_keyboard_hit_area_per_complete_segment(self):
+        self.run_node(r"""
+const fs=require('fs'),vm=require('vm');global.window={};vm.runInThisContext(fs.readFileSync('docs/assets/charts.js','utf8'));
+const points=[{route_distance_km:0,elevation_m:0},{route_distance_km:1,elevation_m:10},{route_distance_km:2,elevation_m:5}],segments=[{index:0,name:'Start–Mitt',fromDistance:0,toDistance:1},{index:1,name:'Mitt–Mål',fromDistance:1,toDistance:2}],html=window.GCharts.elevation(points,[],{interactiveSegments:segments});
+if((html.match(/class="elevation-segment-hit"/g)||[]).length!==2||!html.includes('data-course-segment="1"')||!html.includes('aria-label="Välj delsträcka Mitt–Mål"'))throw new Error(html);
+""")
+
     def test_selection_is_accessible_synchronized_and_never_scrolls(self):
-        for token in ('data-course-row','aria-pressed','onmouseenter','onmouseleave','onfocus','onblur','renderSegmentLab?.()','data-course-distribution'):
+        for token in ('data-course-row','aria-pressed','onmouseenter','onmouseleave','onfocus','onblur','renderSegmentLab?.()','data-course-distribution','onSegmentSelect','interactiveSegments:profile.segments','bindSegmentEvents'):
             self.assertIn(token,self.course)
         self.assertNotIn('scrollIntoView',self.course)
         self.assertIn('highlightRange?.(',self.course)
         self.assertIn('map?.destroy()',self.course)
         self.assertIn('interactiveSegments:true',self.course)
-        self.assertIn("[data-course-distribution] [data-course-segment]",self.course)
+        self.assertIn("bindSegmentEvents(container.querySelector('[data-course-distribution]'))",self.course)
         self.assertNotIn('element.click()',self.course)
 
     def test_relay_course_copy_uses_teams(self):
