@@ -2,11 +2,14 @@ PRAGMA foreign_keys = ON;
 
 CREATE TABLE IF NOT EXISTS sources (
   id INTEGER PRIMARY KEY,
-  code TEXT NOT NULL UNIQUE,
+  code TEXT NOT NULL,
+  provider TEXT NOT NULL,
+  source_event_key TEXT NOT NULL,
   name TEXT NOT NULL,
   base_url TEXT,
   source_type TEXT NOT NULL,
-  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(provider, source_event_key, code)
 );
 
 CREATE TABLE IF NOT EXISTS races (
@@ -14,9 +17,12 @@ CREATE TABLE IF NOT EXISTS races (
   race_key TEXT NOT NULL UNIQUE,
   event_key TEXT NOT NULL,
   race_family TEXT NOT NULL,
-  course_version TEXT NOT NULL,
+  course_version TEXT,
+  data_status TEXT NOT NULL CHECK(data_status IN ('available','planned')),
+  is_analyzable INTEGER NOT NULL DEFAULT 0,
+  source_event_key TEXT,
   section_name TEXT NOT NULL,
-  source_race_name TEXT NOT NULL,
+  source_race_name TEXT,
   race_type TEXT NOT NULL CHECK(race_type IN ('individual','relay')),
   year INTEGER NOT NULL,
   race_date TEXT,

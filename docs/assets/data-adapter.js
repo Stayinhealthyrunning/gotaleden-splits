@@ -24,7 +24,7 @@
   function relayClassMeta(value){const record=typeof value==='object'&&value?value:null,name=normalizeRelayClassName(record?.class_name??value),base=RELAY_CLASS_DEFINITIONS[name]||{id:`other-${name.toLocaleLowerCase('sv').replace(/[^a-z0-9åäö]+/g,'-').replace(/^-|-$/g,'')||'unknown'}`,family:'other',shortLabel:name||'Klass saknas',fullLabel:name||'Klass saknas',ranked:true,competitionType:'competitive',color:'#66756f',softColor:'#edf1ef'},ranked=record&&record.class_is_ranked!==undefined&&record.class_is_ranked!==null?record.class_is_ranked===true||record.class_is_ranked===1||record.class_is_ranked==='true':base.ranked,competitionType=record?.class_competition_type||base.competitionType;return{...base,fullLabel:name||base.fullLabel,ranked:competitionType==='non_competitive'?false:ranked,competitionType}}
 
   function create(data,route,elevation){
-    const races=new Map(),records=new Map(),splitsByResult=new Map(),teams=new Map(),profileCache=new Map(),referenceCache=new Map(),journeyReferenceCache=new Map();
+    const races=new Map(),raceCatalog=new Map(Object.entries(data.race_catalog||{})),records=new Map(),splitsByResult=new Map(),teams=new Map(),profileCache=new Map(),referenceCache=new Map(),journeyReferenceCache=new Map();
     const elevationPoints=elevation?.profile||elevation?.points||[];
     for(const team of data.teams||[])teams.set(`${team.race_key}:${team.bib}`,team);
     for(const [raceKey,source] of Object.entries(data.races||{})){
@@ -39,6 +39,9 @@
         year:Number(source.year),
         raceDate:source.race_date,
         courseVersion:source.course_version,
+        dataStatus:source.data_status||'available',
+        sourceEventKey:source.source_event_key||null,
+        analyzable:source.analyzable!==false,
         section:source.section,
         type:source.type,
         isRelay:source.type==='relay',
@@ -257,7 +260,7 @@
       const referenceLabel=raceValue?.isRelay?'egen stafettklass':'hela fältet';let story=[];if(dns)story=['Ingen registrerad start eller splitberättelse finns.'];else if(finish){story.push(`${item.name} gick i mål på ${Math.floor(item.finish_seconds/3600)}:${String(Math.floor(item.finish_seconds%3600/60)).padStart(2,'0')}:${String(Math.round(item.finish_seconds%60)).padStart(2,'0')}.`);if(relative.strongest)story.push(`${relative.strongest.name} var loppets bästa segment relativt ${referenceLabel}.`);if(gain?.placeGain>0)story.push(`Den största officiella placeringsvinsten var ${gain.placeGain} platser på ${gain.name}.`)}else{story.push(last?`Senaste verkliga analyskontroll var ${last.name} efter ${Math.round(last.elapsedSeconds/60)} minuter.`:'Inga verkliga analyskontroller finns registrerade.');story.push(`Täckning ${coverage.observed} av ${coverage.total} analyskontroller.`)}
       return{record:item,race:raceValue,profile:profileValue,status,finish,place:finish&&finite(item.overall_place)?Number(item.overall_place):null,fieldPercentile,classPercentile,rankedRelay,relativeBest:relative.strongest||null,relativeWeak:relative.weakest||null,largestPlacementGain:gain?.placeGain>0?gain:null,largestPlacementLoss:loss?.placeGain<0?loss:null,lastAnalysisCheckpoint:last,coverage,complete:coverage.complete,referenceLabel,story:story.slice(0,3).join(' ')};
     }
-    return{headToHeadAnalysis,data,route,elevation,races,records,race,record,resultSplits,team,profile,distanceAtTime,timeAtDistance,stateAtTime,analysisIntervalAtDistance,elevationAtDistance,elevationRangeStats,completeProfiles,referenceProfiles,referenceGap,journeyCompleteProfiles,journeyReferences,journeyGap,journeyRelativePerformance,journeyPacingCategory,journeyAnalysis,routePoint,routeSlice,elevationSlice,filtered,segmentStats,segmentDistributionProfile,segmentGroupDistribution,courseDifficultyProfile,wholeRacePaceProfile,relayClassMeta,relayClassRecords,relayClassGroups,relayClassPercentile,relayClassAdvancements,percentile,relativeProfile,personalRaceSummary,advancements,segmentRanking,normalizeClubName,clubKey,clubDisplayName,clubRecords,clubNames,clubStats,fieldFlow,dnfByLastAnalysisCheckpoint,median,quantile,average,distributionSummary,statusFinished,statusStarter,MIN_REFERENCE_SIZE};
+    return{headToHeadAnalysis,data,route,elevation,races,raceCatalog,records,race,record,resultSplits,team,profile,distanceAtTime,timeAtDistance,stateAtTime,analysisIntervalAtDistance,elevationAtDistance,elevationRangeStats,completeProfiles,referenceProfiles,referenceGap,journeyCompleteProfiles,journeyReferences,journeyGap,journeyRelativePerformance,journeyPacingCategory,journeyAnalysis,routePoint,routeSlice,elevationSlice,filtered,segmentStats,segmentDistributionProfile,segmentGroupDistribution,courseDifficultyProfile,wholeRacePaceProfile,relayClassMeta,relayClassRecords,relayClassGroups,relayClassPercentile,relayClassAdvancements,percentile,relativeProfile,personalRaceSummary,advancements,segmentRanking,normalizeClubName,clubKey,clubDisplayName,clubRecords,clubNames,clubStats,fieldFlow,dnfByLastAnalysisCheckpoint,median,quantile,average,distributionSummary,statusFinished,statusStarter,MIN_REFERENCE_SIZE};
   }
   window.GDataAdapter={create,median,quantile,average,distributionSummary,statusFinished,statusStarter,normalizeClubName,clubKey,normalizeRelayClassName,relayClassMeta,RELAY_CLASS_DEFINITIONS,MIN_REFERENCE_SIZE};
 })();

@@ -12,26 +12,23 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-from source_bindings import SourceBindingError, resolve_source_bindings
+from source_bindings import SourceBindingError, group_source_bindings
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def eqtiming_source_context(config: dict[str, Any]) -> tuple[dict[str, Any], dict[str, dict[str, Any]]]:
-    resolved = resolve_source_bindings(config)
-    event_keys = {item["source_event_key"] for item in resolved.values()}
-    if len(event_keys) != 1:
-        raise SourceBindingError("The current EQ Timing snapshot build requires exactly one shared source event")
-    source_event = next(iter(resolved.values()))["source_event"]
+def _validate_eqtiming_context(
+    source_event_key: str, source_event: dict[str, Any], resolved: dict[str, dict[str, Any]],
+) -> tuple[dict[str, Any], dict[str, dict[str, Any]]]:
     required_event = (
         "event_id", "results_url", "contestant_endpoint", "contestants_endpoint", "source_dir",
-        "public_snapshot", "primary_results", "primary_relay_legs", "result_files", "result_list_files",
-        "start_list_files", "start_cross_validation_file", "expected_records", "checkpoint_map",
+        "public_snapshot", "primary_results", "result_files", "result_list_files", "expected_records", "checkpoint_map",
     )
     missing_event = [key for key in required_event if source_event.get(key) in (None, "", [], {})]
     if source_event.get("provider") != "eqtiming" or missing_event:
-        raise SourceBindingError(f"Invalid EQ Timing source event; missing or invalid: {', '.join(missing_event) or 'provider'}")
+        raise SourceBindingError(f"Invalid EQ Timing source event {source_event_key!r}; missing or invalid: {', '.join(missing_event) or 'provider'}")
     required_race = ("source_race_name", "legacy_csv", "expected_records", "start_time")
+    has_relay = False
     for race_key, item in resolved.items():
         binding = item["source_race"]
         missing_race = [key for key in required_race if binding.get(key) in (None, "")]
@@ -41,18 +38,47 @@ def eqtiming_source_context(config: dict[str, Any]) -> tuple[dict[str, Any], dic
         if (item["race"].get("type") == "relay") != isinstance(relay, dict):
             raise SourceBindingError(f"Source relay rule does not match race type for {race_key}")
         if isinstance(relay, dict):
+            has_relay = True
             start_number = relay.get("start_number")
             if not relay.get("legs") or not isinstance(start_number, dict):
                 raise SourceBindingError(f"Invalid relay source rule for {race_key}")
             for key in ("team_bib_multiplier", "leg_multiplier", "offset", "description"):
                 if key not in start_number:
                     raise SourceBindingError(f"Relay source rule for {race_key} is missing {key}")
+    if has_relay:
+        relay_event_fields = ("primary_relay_legs", "start_list_files", "start_cross_validation_file")
+        missing_relay = [key for key in relay_event_fields if source_event.get(key) in (None, "", [])]
+        if missing_relay:
+            raise SourceBindingError(f"EQ Timing source event {source_event_key!r} is missing relay fields: {', '.join(missing_relay)}")
     expected_total = sum(int(item["source_race"]["expected_records"]) for item in resolved.values())
     if expected_total != int(source_event["expected_records"]):
         raise SourceBindingError(
             f"Source event expected_records={source_event['expected_records']} does not match binding total {expected_total}"
         )
     return source_event, resolved
+
+
+def eqtiming_source_contexts(config: dict[str, Any]) -> list[tuple[str, dict[str, Any], dict[str, dict[str, Any]]]]:
+    return [
+        (group["source_event_key"], *_validate_eqtiming_context(
+            group["source_event_key"], group["source_event"], group["bindings"]
+        ))
+        for group in group_source_bindings(config)
+        if group["provider"] == "eqtiming"
+    ]
+
+
+def eqtiming_source_context(
+    config: dict[str, Any], source_event_key: str | None = None,
+) -> tuple[dict[str, Any], dict[str, dict[str, Any]]]:
+    contexts = {key: (event, bindings) for key, event, bindings in eqtiming_source_contexts(config)}
+    if source_event_key is not None:
+        if source_event_key not in contexts:
+            raise SourceBindingError(f"Unknown EQ Timing source event {source_event_key!r}")
+        return contexts[source_event_key]
+    if len(contexts) != 1:
+        raise SourceBindingError("Select one EQ Timing source event explicitly")
+    return next(iter(contexts.values()))
 
 
 def source_dir(source_event: dict[str, Any]) -> Path:
@@ -268,7 +294,7 @@ def relay_member_sources(
     source_event: dict[str, Any],
 ) -> list[dict[str, Any]]:
     primary_results = str(source_event["primary_results"])
-    primary_relay_legs = str(source_event["primary_relay_legs"])
+    primary_relay_legs = str(source_event.get("primary_relay_legs") or "")
     evidence_by_name: dict[str, dict[str, Any]] = {}
     positions = member_positions(team.get("Surname"))
     for leg_no, name in enumerate(positions[:max_legs], 1):
@@ -329,7 +355,7 @@ def analyze_source_files(source_event: dict[str, Any], bindings: dict[str, dict[
     }
     result_files = set(source_event["result_files"])
     result_files.update(Path(item["source_race"]["legacy_csv"]).name for item in bindings.values())
-    start_files = set(source_event["start_list_files"])
+    start_files = set(source_event.get("start_list_files", []))
     structured: dict[str, set[str]] = {}
     analyses: list[dict[str, Any]] = []
     for path in sorted(directory.iterdir()):
@@ -358,7 +384,7 @@ def analyze_source_files(source_event: dict[str, Any], bindings: dict[str, dict[
         relay_result = any(name in relay_names for name in races) and is_result
         individual_result = any(name in individual_names for name in races) and is_result
         contains_members = (
-            path.name == primary_relay_legs
+            bool(primary_relay_legs) and path.name == primary_relay_legs
             or (relay_result and rows is not None and any(clean(row.get("Surname")) and str(row.get("Surname")).startswith("(") for row in rows))
         )
         analyses.append(
@@ -379,7 +405,7 @@ def analyze_source_files(source_event: dict[str, Any], bindings: dict[str, dict[
                 "contains_start_list": is_start,
                 "contains_relay_members": contains_members,
                 "contains_team_name": relay_result,
-                "contains_leg_encoding": path.name == primary_relay_legs,
+                "contains_leg_encoding": bool(primary_relay_legs) and path.name == primary_relay_legs,
                 "contains_intermediate_splits": bool(rows and any(clean(row.get("PointName")) not in {None, "Mål"} for row in rows)),
                 "finish_results_only": is_result,
             }
@@ -404,13 +430,13 @@ def analyze_source_files(source_event: dict[str, Any], bindings: dict[str, dict[
         "primary_result_source": primary_results,
         "primary_relay_leg_source": primary_relay_legs,
         "files": analyses,
-        "source_priority": [
+        "source_priority": [item for item in (
             primary_results,
-            primary_relay_legs,
+            primary_relay_legs or None,
             "Other official Resultlist files (cross-validation)",
-            f"{source_event['start_cross_validation_file']} (start-data cross-validation)",
+            f"{source_event['start_cross_validation_file']} (start-data cross-validation)" if source_event.get("start_cross_validation_file") else None,
             "Legacy 81-column per-race CSV files (fallback and raw-field preservation)",
-        ],
+        ) if item],
         "notes": list(source_event.get("notes", [])),
     }
 
