@@ -19,13 +19,26 @@ from build_project_data import CONFIG
 from eqtiming_official_import import eqtiming_source_context, source_dir
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE_EVENT, _ = eqtiming_source_context(json.loads(CONFIG.read_text(encoding="utf-8")))
-EVENT_ID = int(SOURCE_EVENT["event_id"])
-RESULTS = source_dir(SOURCE_EVENT) / SOURCE_EVENT["primary_results"]
-OUTPUT = ROOT / SOURCE_EVENT["public_snapshot"]
-ENDPOINT = SOURCE_EVENT["contestant_endpoint"]
-BULK_ENDPOINT = SOURCE_EVENT["contestants_endpoint"]
-EXPECTED_RECORDS = int(SOURCE_EVENT["expected_records"])
+SOURCE_EVENT: dict[str, object]
+EVENT_ID: int
+RESULTS: Path
+OUTPUT: Path
+ENDPOINT: str
+BULK_ENDPOINT: str
+EXPECTED_RECORDS: int
+
+
+def configure(source_event_key: str | None) -> None:
+    global SOURCE_EVENT, EVENT_ID, RESULTS, OUTPUT, ENDPOINT, BULK_ENDPOINT, EXPECTED_RECORDS
+    SOURCE_EVENT, _ = eqtiming_source_context(
+        json.loads(CONFIG.read_text(encoding="utf-8")), source_event_key
+    )
+    EVENT_ID = int(SOURCE_EVENT["event_id"])
+    RESULTS = source_dir(SOURCE_EVENT) / str(SOURCE_EVENT["primary_results"])
+    OUTPUT = ROOT / str(SOURCE_EVENT["public_snapshot"])
+    ENDPOINT = str(SOURCE_EVENT["contestant_endpoint"])
+    BULK_ENDPOINT = str(SOURCE_EVENT["contestants_endpoint"])
+    EXPECTED_RECORDS = int(SOURCE_EVENT["expected_records"])
 
 
 def result_rows() -> list[dict[str, str]]:
@@ -88,7 +101,9 @@ def main() -> None:
     parser.add_argument("--timeout", type=float, default=30.0)
     parser.add_argument("--refresh", action="store_true")
     parser.add_argument("--individual", action="store_true", help="Use one request per bib instead of the bulk endpoint")
+    parser.add_argument("--source-event", help="Configured EQ Timing source_event key; required when more than one exists")
     args = parser.parse_args()
+    configure(args.source_event)
 
     rows = result_rows()
     if len(rows) != EXPECTED_RECORDS:

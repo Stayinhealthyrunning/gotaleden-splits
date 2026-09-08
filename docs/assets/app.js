@@ -15,7 +15,7 @@
 
   async function load(){
     try{
-      const version='20260907-product-completion1',urls=['data/results-2026.json','data/route.json','data/route-elevation-2026.json'];const [data,route,elevation]=await Promise.all(urls.map(path=>fetch(`${path}?v=${version}`).then(response=>{if(!response.ok)throw new Error(`${path}: HTTP ${response.status}`);return response.json()})));
+      const version='20260908-multiyear1',urls=['data/results.json','data/route.json','data/route-elevation-2026.json'];const [data,route,elevation]=await Promise.all(urls.map(path=>fetch(`${path}?v=${version}`).then(response=>{if(!response.ok)throw new Error(`${path}: HTTP ${response.status}`);return response.json()})));
       state.adapter=window.GDataAdapter.create(data,route,elevation);state.favorites=window.GFavorites.create();state.favorites.prune(['individual-75-2026','individual-35-2026','relay-75-2026','relay-35-2026'].flatMap(key=>state.adapter.race(key).records.map(record=>record.id)));setup();
     }catch(error){console.error(error);$('#loading').innerHTML=`<p><strong>Analysdatan kunde inte läsas.</strong><br><small>${esc(error.message)}</small></p>`}
   }

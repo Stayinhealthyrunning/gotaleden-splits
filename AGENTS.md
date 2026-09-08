@@ -84,6 +84,12 @@ eller härledas i publikt UI.
 - En race edition refererar en provider-neutral `source_binding`; flera editions får dela samma
   source event. Providerfält och source-routing hör till source-konfigurationen/adaptern och får
   inte härledas från race key, år, distans eller ortnamn.
+- Editions med `data_status=available` måste ha en giltig source binding. `planned` får katalogiseras
+  utan resultatkälla och ska då inte exponeras som analyserbar. Import körs en gång per
+  `(provider, source_event)` och source-/resultatidentiteter måste vara event-skopade.
+- Race family, race edition och source event är skilda identiteter. En full build inkluderar alla
+  editions med tillgänglig data från samtliga source events; kanonisk webbexport är flerårig och
+  routing får inte innehålla års- eller race-key-specialfall. Providerlogik hör hemma i adaptern.
 - Bygg import och validering reproducerbart i Python och GitHub Actions.
 - Bevara källspårning och importdiagnostik.
 - GitHub Pages publiceras från `docs/`.

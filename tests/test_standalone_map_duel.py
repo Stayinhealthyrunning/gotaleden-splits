@@ -70,8 +70,8 @@ if(timed.time!==15272)throw new Error('initial clock time');
 if(!window.GMapPage.selectionFrom('?race=individual-75-2026&entries=1,2,3,4,5,6',adapter).error)throw new Error('max five');
 """
         self.run_node(script)
-        for asset in ("map-duel.js", "map-page.js"):
-            self.assertIn(f'assets/{asset}?v=20260903-standalone-map2', self.map_html)
+        self.assertIn('assets/map-duel.js?v=20260903-standalone-map2', self.map_html)
+        self.assertIn('assets/map-page.js?v=20260908-multiyear1', self.map_html)
         self.assertIn('assets/map-page.css?v=20260903-standalone-map2', self.map_html)
 
     def test_standalone_clock_is_wired_to_every_runtime_time_change(self):
