@@ -11,14 +11,25 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any
 
-from source_bindings import SourceBindingError, resolve_source_bindings
+from source_bindings import resolve_source_bindings
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = ROOT / "config" / "races.json"
 DB = ROOT / "data" / "gotaleden.sqlite"
-WEB_RESULTS = ROOT / "docs" / "data" / "results-2026.json"
+WEB_RESULTS = ROOT / "docs" / "data" / "results.json"
+WEB_RESULTS_COMPAT = (ROOT / "docs" / "data" / "results-2026.json",)
 WEB_ROUTE = ROOT / "docs" / "data" / "route.json"
-REPORT = ROOT / "reports" / "import-summary-2026.json"
+REPORT = ROOT / "reports" / "import-summary.json"
+REPORT_COMPAT = (ROOT / "reports" / "import-summary-2026.json",)
+
+
+def write_payload(path: Path, payload: dict, aliases: tuple[Path, ...] = (), *, compact: bool = True) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    content = json.dumps(payload, ensure_ascii=False, separators=(",", ":")) if compact else json.dumps(payload, ensure_ascii=False, indent=2)
+    path.write_text(content, encoding="utf-8")
+    for alias in aliases:
+        alias.parent.mkdir(parents=True, exist_ok=True)
+        alias.write_text(content, encoding="utf-8")
 
 def normalize(value: str | None) -> str:
     if not value:
@@ -131,28 +142,19 @@ def prepare_db():
 def import_all():
     config = json.loads(CONFIG.read_text(encoding="utf-8"))
     bindings = resolve_source_bindings(config)
-    source_event_keys = {item["source_event_key"] for item in bindings.values()}
-    if len(source_event_keys) != 1:
-        raise SourceBindingError("The legacy snapshot build requires exactly one shared source event")
-    source_event = next(iter(bindings.values()))["source_event"]
-    public_event = {
-        "event_key": config["event"]["event_key"],
-        "name": config["event"]["name"],
-        "eqtiming_event_id": source_event["event_id"],
-        "official_results_url": source_event["results_url"],
-        **{key: value for key, value in config["event"].items() if key not in {"event_key", "name"}},
-    }
+    source_events = {item["source_event_key"]: item["source_event"] for item in bindings.values()}
+    public_event = config["event"]
     route = load_route(config)
     WEB_ROUTE.parent.mkdir(parents=True, exist_ok=True)
     WEB_ROUTE.write_text(json.dumps(route, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
 
     conn = prepare_db()
     with conn:
-        conn.execute(
-            "INSERT INTO sources(code,name,base_url,source_type) VALUES(?,?,?,?)",
-            ("eqtiming_csv", "EQ Timing resultat-/pressfil", source_event["results_url"], "csv")
+        conn.executemany(
+            "INSERT INTO sources(code,provider,source_event_key,name,base_url,source_type) VALUES(?,?,?,?,?,?)",
+            [("legacy_csv", event["provider"], key, "Legacy finish export", event["results_url"], "csv") for key, event in source_events.items()]
         )
-    source_id = conn.execute("SELECT id FROM sources WHERE code='eqtiming_csv'").fetchone()[0]
+    source_ids = {row[0]: row[1] for row in conn.execute("SELECT source_event_key,id FROM sources WHERE code='legacy_csv'")}
 
     checkpoint_catalog = {cp["key"]: cp for cp in config["checkpoints"]}
     web_races = {}
@@ -171,17 +173,21 @@ def import_all():
         ]
     }
 
-    for race in config["races"]:
-        binding = bindings[race["race_key"]]["source_race"]
+    for race in (item for item in config["races"] if item["race_key"] in bindings):
+        resolved = bindings[race["race_key"]]
+        binding = resolved["source_race"]
+        source_event = resolved["source_event"]
+        source_id = source_ids[resolved["source_event_key"]]
         gpx_distance = route["full_distance_km"] if race["route_start"] == "gothenburg" else route["floda_start"]["remaining_distance_km"]
         with conn:
             conn.execute(
-                """INSERT INTO races(race_key,event_key,race_family,course_version,section_name,source_race_name,race_type,year,race_date,
-                   nominal_distance_km,gpx_distance_km,official_url)
-                   VALUES(?,?,?,?,?,?,?,?,?,?,?,?)""",
+                """INSERT INTO races(race_key,event_key,race_family,course_version,data_status,is_analyzable,source_event_key,
+                   section_name,source_race_name,race_type,year,race_date,nominal_distance_km,gpx_distance_km,official_url)
+                   VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 (
                     race["race_key"], config["event"]["event_key"], race["race_family"], race["course_version"],
-                    race["section"], binding["source_race_name"], race["type"], race["year"], race["race_date"], race["nominal_distance_km"],
+                    race["data_status"], 1, resolved["source_event_key"], race["section"], binding["source_race_name"],
+                    race["type"], race["year"], race["race_date"], race["nominal_distance_km"],
                     gpx_distance, source_event["results_url"]
                 )
             )
@@ -351,9 +357,8 @@ def import_all():
         },
         "races": web_races,
     }
-    WEB_RESULTS.write_text(json.dumps(web_payload, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-    REPORT.parent.mkdir(parents=True, exist_ok=True)
-    REPORT.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    write_payload(WEB_RESULTS, web_payload, WEB_RESULTS_COMPAT)
+    write_payload(REPORT, report, REPORT_COMPAT, compact=False)
     print(json.dumps(report, ensure_ascii=False, indent=2))
 
 if __name__ == "__main__":

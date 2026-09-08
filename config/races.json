@@ -123,6 +123,7 @@
       "year": 2026,
       "race_date": "2026-05-09",
       "course_version": "course-v1",
+      "data_status": "available",
       "source_binding": {
         "source_event": "eqtiming-gotaleden-2026",
         "race": "ultra"
@@ -151,6 +152,7 @@
       "year": 2026,
       "race_date": "2026-05-09",
       "course_version": "course-v1",
+      "data_status": "available",
       "source_binding": {
         "source_event": "eqtiming-gotaleden-2026",
         "race": "sprint"
@@ -174,6 +176,7 @@
       "year": 2026,
       "race_date": "2026-05-09",
       "course_version": "course-v1",
+      "data_status": "available",
       "source_binding": {
         "source_event": "eqtiming-gotaleden-2026",
         "race": "relay-long"
@@ -202,6 +205,7 @@
       "year": 2026,
       "race_date": "2026-05-09",
       "course_version": "course-v1",
+      "data_status": "available",
       "source_binding": {
         "source_event": "eqtiming-gotaleden-2026",
         "race": "relay-short"
