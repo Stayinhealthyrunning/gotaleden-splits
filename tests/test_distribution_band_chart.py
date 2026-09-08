@@ -22,6 +22,7 @@ const d=(n,median,q25=null,q75=null,q10=null,q90=null)=>({n,median,q25,q75,q10,q
 const html=window.GCharts.distributionBand([{id:'F',name:'Kvinnor',color:'#db2777',n:20,segments:[d(20,360,330,390,310,420),d(7,370)]}],['A','B'],{format:v=>Math.round(v)+'s',unitLabel:' /km',interactiveSegments:true});
 for(const token of ['class="distribution-band"','class="plot-line distribution-median"','data-series="F"','data-course-segment="0"','tabindex="0"','role="button"','Q25–Q75: 330s–390s /km','Q10–Q90: 310s–420s /km','n=7 · Litet underlag'])if(!html.includes(token))throw new Error(token);
 if((html.match(/class="distribution-band"/g)||[]).length!==1)throw new Error('small sample band');
+if((html.match(/class="distribution-segment-hit"/g)||[]).length!==2)throw new Error('logical segment hit areas');
 """)
 
     def test_default_is_noninteractive_and_legend_explains_small_samples(self):
