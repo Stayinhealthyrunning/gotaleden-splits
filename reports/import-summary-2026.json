@@ -1,8 +1,7 @@
 {
   "event": {
+    "event_key": "gotaleden-stafett-ultra",
     "name": "Gotaleden Stafett & Ultra",
-    "year": 2026,
-    "date": "2026-05-09",
     "eqtiming_event_id": 77906,
     "official_results_url": "https://live.eqtiming.com/77906",
     "official_site_url": "https://www.gotaledenstafettultra.se/"

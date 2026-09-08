@@ -127,7 +127,7 @@ for(const [key,count] of Object.entries(expected)){
         self.assertIn("Fart relativt hela loppet", self.html)
         self.assertIn("100 = medianfart för hela loppet", self.html)
         self.assertIn("100 = respektive köns medianfart över hela loppet", self.html)
-        self.assertIn("data-adapter.js?v=20260907-product-completion1", self.html)
+        self.assertIn("data-adapter.js?v=20260908-race-catalog1", self.html)
         self.assertIn("interactive-analysis.js?v=20260907-product-completion1", self.html)
         self.assertIn("app.js?v=20260909-e2e1", self.html)
 

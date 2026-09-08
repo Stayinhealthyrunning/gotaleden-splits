@@ -12,6 +12,9 @@ CREATE TABLE IF NOT EXISTS sources (
 CREATE TABLE IF NOT EXISTS races (
   id INTEGER PRIMARY KEY,
   race_key TEXT NOT NULL UNIQUE,
+  event_key TEXT NOT NULL,
+  race_family TEXT NOT NULL,
+  course_version TEXT NOT NULL,
   section_name TEXT NOT NULL,
   source_race_name TEXT NOT NULL,
   race_type TEXT NOT NULL CHECK(race_type IN ('individual','relay')),

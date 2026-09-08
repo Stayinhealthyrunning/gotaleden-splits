@@ -161,12 +161,12 @@ def import_all():
         gpx_distance = route["full_distance_km"] if race["route_start"] == "gothenburg" else route["floda_start"]["remaining_distance_km"]
         with conn:
             conn.execute(
-                """INSERT INTO races(race_key,section_name,source_race_name,race_type,year,race_date,
+                """INSERT INTO races(race_key,event_key,race_family,course_version,section_name,source_race_name,race_type,year,race_date,
                    nominal_distance_km,gpx_distance_km,official_url)
-                   VALUES(?,?,?,?,?,?,?,?,?)""",
+                   VALUES(?,?,?,?,?,?,?,?,?,?,?,?)""",
                 (
-                    race["race_key"], race["section"], race["source_race_name"], race["type"],
-                    config["event"]["year"], config["event"]["date"], race["nominal_distance_km"],
+                    race["race_key"], config["event"]["event_key"], race["race_family"], race["course_version"],
+                    race["section"], race["source_race_name"], race["type"], race["year"], race["race_date"], race["nominal_distance_km"],
                     gpx_distance, config["event"]["official_results_url"]
                 )
             )
@@ -298,6 +298,11 @@ def import_all():
 
         web_races[race["race_key"]] = {
             "race_key": race["race_key"],
+            "event_key": config["event"]["event_key"],
+            "race_family": race["race_family"],
+            "year": race["year"],
+            "race_date": race["race_date"],
+            "course_version": race["course_version"],
             "section": race["section"],
             "source_race_name": race["source_race_name"],
             "type": race["type"],

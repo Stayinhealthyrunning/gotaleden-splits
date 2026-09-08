@@ -34,6 +34,11 @@
       const replayCheckpoints=checkpoints.filter(checkpoint=>checkpoint.replay_anchor!==false);
       const race={
         key:raceKey,
+        eventKey:source.event_key,
+        family:source.race_family,
+        year:Number(source.year),
+        raceDate:source.race_date,
+        courseVersion:source.course_version,
         section:source.section,
         type:source.type,
         isRelay:source.type==='relay',
