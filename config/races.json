@@ -1,8 +1,7 @@
 {
   "event": {
+    "event_key": "gotaleden-stafett-ultra",
     "name": "Gotaleden Stafett & Ultra",
-    "year": 2026,
-    "date": "2026-05-09",
     "eqtiming_event_id": 77906,
     "official_results_url": "https://live.eqtiming.com/77906",
     "official_site_url": "https://www.gotaledenstafettultra.se/"
@@ -20,6 +19,10 @@
   "races": [
     {
       "race_key": "individual-75-2026",
+      "race_family": "individual-75",
+      "year": 2026,
+      "race_date": "2026-05-09",
+      "course_version": "course-v1",
       "section": "Individuellt 75",
       "source_race_name": "Ultra 75 km",
       "type": "individual",
@@ -43,6 +46,10 @@
     },
     {
       "race_key": "individual-35-2026",
+      "race_family": "individual-35",
+      "year": 2026,
+      "race_date": "2026-05-09",
+      "course_version": "course-v1",
       "section": "Individuellt 35",
       "source_race_name": "Sprint 35 km",
       "type": "individual",
@@ -61,6 +68,10 @@
     },
     {
       "race_key": "relay-75-2026",
+      "race_family": "relay-75",
+      "year": 2026,
+      "race_date": "2026-05-09",
+      "course_version": "course-v1",
       "section": "Stafett 75",
       "source_race_name": "Stafett 75 km",
       "type": "relay",
@@ -84,6 +95,10 @@
     },
     {
       "race_key": "relay-35-2026",
+      "race_family": "relay-35",
+      "year": 2026,
+      "race_date": "2026-05-09",
+      "course_version": "course-v1",
       "section": "Stafett 35",
       "source_race_name": "Stafett 35 km",
       "type": "relay",
