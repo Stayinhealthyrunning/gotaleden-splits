@@ -45,7 +45,7 @@ if(points[0][0]!==2.5||points.at(-1)[0]!==17.5||points.length!==3)throw new Erro
         self.run_node(r"""
 const fs=require('fs'),vm=require('vm');global.window={};vm.runInThisContext(fs.readFileSync('docs/assets/map-engine.js','utf8'));
 const highlight={innerHTML:''},runners={innerHTML:''},container={_html:'',set innerHTML(v){this._html=v},get innerHTML(){return this._html},querySelector(s){return s.includes('highlight')?highlight:runners}},adapter={route:{points:[[0,0,0,0],[1,1,0,1],[2,2,0,2]]},routeSlice(){return[[0,0,0],[1,1,1],[2,2,2]]},routePoint(d){return[d,d,d]}};
-const map=window.GMapEngine.create(container,{adapter,race:{}});map.highlightRange(.25,.75);const first=highlight.innerHTML;if(!first.includes('route-range-highlight'))throw new Error('create');map.highlightRange(1.25,1.75);if(highlight.innerHTML===first)throw new Error('replace');map.clearHighlight();if(highlight.innerHTML)throw new Error('clear');map.destroy();if(!map.destroyed||container.innerHTML)throw new Error('destroy');
+const map=window.GMapEngine.create(container,{adapter,race:{}});map.highlightRange(.25,.75);const first=highlight.innerHTML;if(!first.includes('route-range-highlight')||!first.includes('data-map-highlight-from="0.25"')||!first.includes('data-map-highlight-to="0.75"'))throw new Error('create');map.highlightRange(1.25,1.75);if(highlight.innerHTML===first)throw new Error('replace');map.clearHighlight();if(highlight.innerHTML)throw new Error('clear');map.destroy();if(!map.destroyed||container.innerHTML)throw new Error('destroy');
 """)
 
     def test_optional_elevation_highlight_is_backwards_compatible(self):
