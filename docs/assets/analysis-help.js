@@ -9,6 +9,7 @@
     ['head-to-head-field-pacing','#head-to-head-dialog [data-head-help="field-pacing"]',null,null],
     ['head-to-head-course','#head-to-head-dialog [data-head-help="course"]',null,null],
     ['filters','.toolbar','.toolbar',null],
+    ['goal-pace','#goal-pace-content','#goal-pace','h2'],
     ['overview-kpis','#overview-kpis','#overview-kpis',null],
     ['finish-distribution','#finish-histogram','.panel','h2'],
     ['overview-segment-pace','#median-pace','.panel','h2'],

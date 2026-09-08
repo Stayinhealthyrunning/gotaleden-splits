@@ -70,7 +70,7 @@ const favorites=window.GFavorites.create({storage:broken});favorites.add('relay-
         self.assertNotIn("★", self.runtime)
         self.assertNotIn("☆", self.runtime)
         self.assertIn('assets/favorites.js?v=20260907-favorites1', self.html)
-        self.assertIn('assets/app.js?v=20260907-favorites1', self.html)
+        self.assertIn('assets/app.js?v=20260908-goal-pace1', self.html)
         self.assertLess(self.html.index("favorites.js"), self.html.index("app.js"))
 
     def test_results_profile_panel_accessibility_and_shared_selection(self):
@@ -92,7 +92,7 @@ const favorites=window.GFavorites.create({storage:broken});favorites.add('relay-
         self.assertIn("race.isRelay?'Sparade lag':'Sparade löpare'", self.app)
         self.assertNotIn("record.sex", self.runtime)
         content = (ASSETS / "analysis-help-content.js").read_text(encoding="utf-8")
-        self.assertEqual(content.count('"title":'), 45)
+        self.assertEqual(content.count('"title":'), 46)
 
 
 if __name__ == "__main__":
