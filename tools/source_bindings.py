@@ -20,7 +20,7 @@ def race_catalog(config: dict[str, Any]) -> list[dict[str, Any]]:
         if not isinstance(race, dict):
             raise SourceBindingError("Each race edition must be an object")
         race_key = race.get("race_key")
-        missing = [key for key in ("race_key", "race_family", "year", "section", "type", "data_status") if race.get(key) in (None, "")]
+        missing = [key for key in ("race_key", "race_family", "year", "section", "type", "data_status", "course_version", "route_range", "checkpoint_keys") if race.get(key) in (None, "")]
         if missing:
             raise SourceBindingError(f"Race {race_key or '<missing>'} is missing catalog fields: {', '.join(missing)}")
         if race_key in seen:

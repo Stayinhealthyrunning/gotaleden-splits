@@ -282,12 +282,24 @@ def build_elevation_profile(official: dict[str, Any], reference: dict[str, Any] 
     return {"meta": metadata, "points": samples}, {"matches": matches, "profile_meta": metadata}
 
 
-def build_gpx_artifacts(root: Path, route_data: dict[str, Any] | None = None, reference_path: Path | None = None) -> dict[str, Any]:
-    official_path = root / "data/source/gpx" / OFFICIAL_NAME
+def build_gpx_artifacts(
+    root: Path,
+    route_data: dict[str, Any] | None = None,
+    reference_path: Path | None = None,
+    *,
+    official_path: Path | None = None,
+    profile_path: Path | None = None,
+    report_stem: str = "gpx-comparison",
+) -> dict[str, Any]:
+    official_path = official_path if official_path is not None else root / "data/source/gpx" / OFFICIAL_NAME
     reference_path = reference_path if reference_path is not None else root / "data/source/gpx" / REFERENCE_NAME
+    official_name = official_path.name
+    reference_name = reference_path.name
     official = parse_gpx(official_path)
     reference = parse_gpx(reference_path) if reference_path.exists() else None
     profile, detail = build_elevation_profile(official, reference)
+    profile["meta"]["route_master"] = official_name
+    profile["meta"]["reference_file"] = reference_name if reference else None
     official_summary = summarize(official)
     reference_summary = summarize(reference) if reference else None
     matches = detail["matches"]
@@ -312,8 +324,8 @@ def build_gpx_artifacts(root: Path, route_data: dict[str, Any] | None = None, re
             "finish_distance_from_official_m": round(haversine_m((official["points"][-1]["lat"], official["points"][-1]["lon"]), (route_finish[0], route_finish[1])), 2),
         }
     report = {
-        "route_master": {"file": OFFICIAL_NAME, "role": "official geometry, distance, checkpoint projection and replay"},
-        "personal_reference": {"file": REFERENCE_NAME, "device": "Suunto 9 Baro", "official": False, "role": "start/finish verification, elevation reference and quality control", "known_geometry_issue": "The runner is known to have left the official route at least once; reference geometry never replaces the master route."},
+        "route_master": {"file": official_name, "role": "official geometry, distance, checkpoint projection and replay"},
+        "personal_reference": {"file": reference_name, "device": "reference measurement", "official": False, "role": "start/finish verification, elevation reference and quality control", "known_geometry_issue": "Reference geometry never replaces the configured route master."},
         "official": official_summary,
         "suunto_reference": reference_summary,
         "generated_route_data_verification": route_verification,
@@ -333,7 +345,7 @@ def build_gpx_artifacts(root: Path, route_data: dict[str, Any] | None = None, re
     }
     report_dir = root / "reports"
     report_dir.mkdir(parents=True, exist_ok=True)
-    (report_dir / "gpx-comparison.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    (report_dir / f"{report_stem}.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     lines = [
         "# GPX comparison", "",
         "The official GPX remains the sole route master. The Suunto 9 Baro file is a personal reference measurement and never replaces route geometry.", "",
@@ -350,8 +362,8 @@ def build_gpx_artifacts(root: Path, route_data: dict[str, Any] | None = None, re
         f"Elevation profile source: **{profile['meta']['source']}**. Vertical alignment applied: {profile['meta']['vertical_datum_adjustment_m']} m. Reference coverage: {profile['meta']['reference_coverage_km']} km.", "",
         "See `gpx-comparison.json` for section boundaries and exact metrics.",
     ]
-    (report_dir / "gpx-comparison.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
-    profile_path = root / PROFILE_RELATIVE_PATH
+    (report_dir / f"{report_stem}.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    profile_path = profile_path if profile_path is not None else root / PROFILE_RELATIVE_PATH
     profile_path.parent.mkdir(parents=True, exist_ok=True)
     profile_path.write_text(json.dumps(profile, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     return {"report": report, "profile": profile}

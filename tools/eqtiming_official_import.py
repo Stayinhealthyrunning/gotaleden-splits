@@ -27,6 +27,11 @@ def _validate_eqtiming_context(
     missing_event = [key for key in required_event if source_event.get(key) in (None, "", [], {})]
     if source_event.get("provider") != "eqtiming" or missing_event:
         raise SourceBindingError(f"Invalid EQ Timing source event {source_event_key!r}; missing or invalid: {', '.join(missing_event) or 'provider'}")
+    identity = source_event.get("person_identity")
+    if not isinstance(identity, dict) or identity.get("scope") not in {"race_edition", "source_event", "provider"}:
+        raise SourceBindingError(f"EQ Timing source event {source_event_key!r} must declare a valid person_identity scope")
+    if identity.get("id_type") in (None, "") or identity.get("confidence") != "verified":
+        raise SourceBindingError(f"EQ Timing source event {source_event_key!r} has incomplete person_identity evidence")
     required_race = ("source_race_name", "legacy_csv", "expected_records", "start_time")
     has_relay = False
     for race_key, item in resolved.items():
@@ -112,6 +117,19 @@ def parse_hms(value: str | None) -> float | None:
     else:
         return None
     return hours * 3600 + minutes * 60 + seconds
+
+
+def person_identity_evidence(contestant: dict[str, Any], source_event: dict[str, Any]) -> list[dict[str, Any]]:
+    """Translate EQ Timing contestant fields into provider-neutral identity evidence."""
+    identity = source_event.get("person_identity") or {}
+    external_id = to_int(contestant.get("UID"))
+    if external_id is None:
+        return []
+    return [{
+        "provider": source_event["provider"], "id_type": identity["id_type"],
+        "scope": identity["scope"], "external_id": external_id,
+        "confidence": identity["confidence"], "evidence": identity.get("evidence"),
+    }]
 
 
 def to_int(value: Any) -> int | None:

@@ -7,7 +7,7 @@
   const paceSpan=value=>{if(!finite(value))return'–';const seconds=Math.round(Number(value));return`${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}`};
   const signed=value=>finite(value)?`${Number(value)>=0?'+':''}${number(value)} %`:'–';
   function create(container,{adapter,race,renderSegmentLab}){
-    const profile=adapter.courseDifficultyProfile(race),elevationPoints=adapter.elevationSlice(race),sourceLabel=adapter.elevation?.meta?.reference_used?'Normaliserad referenshöjd':'Officiell GPX-höjd',initialFrom=document.querySelector('#segment-from')?.value,initialTo=document.querySelector('#segment-to')?.value,initialIndex=Math.max(0,profile.segments.findIndex(segment=>segment.from===initialFrom&&segment.to===initialTo));let selectedSegmentIndex=initialIndex,map=null,destroyed=false;
+    const profile=adapter.courseDifficultyProfile(race),elevationPoints=adapter.elevationSlice(race),sourceLabel=adapter.course(race).elevation?.meta?.reference_used?'Normaliserad referenshöjd':'Officiell GPX-höjd',initialFrom=document.querySelector('#segment-from')?.value,initialTo=document.querySelector('#segment-to')?.value,initialIndex=Math.max(0,profile.segments.findIndex(segment=>segment.from===initialFrom&&segment.to===initialTo));let selectedSegmentIndex=initialIndex,map=null,destroyed=false;
     const standoutCards=[
       {key:'mostClimbing',label:'MEST KLÄTTRING',detail:segment=>`+${number(segment.ascentM)} m · ${number(segment.climbIntensity)} m+/km`},
       {key:'biggestSlowdown',label:'LÅNGSAMMAST MOT HEL-LOPPSMEDIAN',detail:segment=>`${signed(segment.slowdownPercent)} mot hel-loppsmedian · ${pace(segment.pace.median)}`},

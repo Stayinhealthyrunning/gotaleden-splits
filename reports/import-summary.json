@@ -4,22 +4,11 @@
     "name": "Gotaleden Stafett & Ultra",
     "official_site_url": "https://www.gotaledenstafettultra.se/"
   },
-  "route": {
-    "point_count": 13842,
-    "full_distance_km": 77.1194,
-    "floda_start": {
-      "requested": [
-        57.80629,
-        12.35532
-      ],
-      "route_point": [
-        57.806296,
-        12.355289
-      ],
-      "route_index": 9405,
-      "distance_from_requested_m": 1.95,
-      "cumulative_km_from_gothenburg": 41.333,
-      "remaining_distance_km": 35.7864
+  "course_versions": {
+    "course-v1": {
+      "fingerprint": "976a87c029971cf73e10a58f073268893a8e8d37196ace24cf1e87912f3a1527",
+      "point_count": 13842,
+      "full_distance_km": 77.1194
     }
   },
   "source_events": {
@@ -28,24 +17,9 @@
       "provider": "eqtiming",
       "primary_result_source": "Resultlist-77906-20260719155435.csv",
       "primary_relay_leg_source": "Startlist-77906-20260719155427.xml",
-      "route": {
-        "point_count": 13842,
-        "full_distance_km": 77.1194,
-        "floda_start": {
-          "requested": [
-            57.80629,
-            12.35532
-          ],
-          "route_point": [
-            57.806296,
-            12.355289
-          ],
-          "route_index": 9405,
-          "distance_from_requested_m": 1.95,
-          "cumulative_km_from_gothenburg": 41.333,
-          "remaining_distance_km": 35.7864
-        }
-      },
+      "course_versions": [
+        "course-v1"
+      ],
       "races": {
         "individual-75-2026": {
           "section": "Individuellt 75",

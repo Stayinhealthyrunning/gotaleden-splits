@@ -19,7 +19,6 @@ from build_project_data import (
     WEB_RESULTS_COMPAT,
     WEB_ROUTE,
     clean,
-    load_route,
     normalize,
     prepare_db,
     status_code,
@@ -37,12 +36,20 @@ from eqtiming_official_import import (
     load_xml_starts,
     normalize_name,
     parse_hms,
+    person_identity_evidence,
     read_csv_file,
     relay_member_sources,
     source_dir,
     write_json,
 )
+from course_versions import (
+    CourseConfigError,
+    race_course_geometry,
+    resolve_all_courses,
+    web_course_catalog,
+)
 from gpx_analysis import build_gpx_artifacts
+from identity import IdentityConflictError, external_identity_row, resolve_person_identity
 from source_bindings import dispatch_source_groups, group_source_bindings, race_catalog, resolve_source_bindings, web_race_catalog
 
 def _load_public_contestants(source_event: dict[str, Any]) -> dict[str, dict[str, Any]]:
@@ -63,23 +70,41 @@ def _public_passes(contestant: dict[str, Any]) -> list[dict[str, Any]]:
     return sorted(passages, key=lambda item: int((item.get("StasjonsOppsett") or {}).get("Sortering") or 0))
 
 
-def _checkpoint_route_distance_km(checkpoint: dict[str, Any], route: dict[str, Any]) -> float:
-    """Map nominal distance onto official GPX, anchored at the known Floda point."""
-    nominal = float(checkpoint["nominal_cumulative_km_75"])
-    full_km = float(route["full_distance_km"])
-    floda_nominal_km = 41.5
-    floda_route_km = float(route["floda_start"]["cumulative_km_from_gothenburg"])
-    if nominal <= floda_nominal_km:
-        mapped = nominal / floda_nominal_km * floda_route_km
-    else:
-        mapped = floda_route_km + (nominal - floda_nominal_km) / (78.0 - floda_nominal_km) * (full_km - floda_route_km)
-    if nominal == 0:
-        return 0.0
-    if nominal == 78.0:
-        return full_km
-    if checkpoint["key"] == "floda":
-        return floda_route_km
-    return round(mapped, 4)
+def _find_or_create_athlete(
+    conn: sqlite3.Connection, identity: dict[str, Any], *, source_external_id: str,
+    canonical_name: str, normalized_name: str, first_name: str | None = None,
+    last_name: str | None = None, sex: str | None = None, nationality: str | None = None,
+    age: int | None = None, birth_year: int | None = None, public_uid: int | None = None,
+) -> int:
+    with conn:
+        conn.execute(
+            """INSERT OR IGNORE INTO athletes(person_key,identity_status,identity_scope,source_external_id,
+               public_contestant_uid,canonical_name,normalized_name,first_name,last_name,sex,nationality,age,birth_year)
+               VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            (identity["person_key"], identity["status"], identity["scope"], source_external_id, public_uid,
+             canonical_name, normalized_name, first_name, last_name, sex, nationality, age, birth_year),
+        )
+    row = conn.execute("SELECT id FROM athletes WHERE person_key=?", (identity["person_key"],)).fetchone()
+    if row is None:
+        raise IdentityConflictError(f"Could not resolve canonical person {identity['person_key']}")
+    return int(row[0])
+
+
+def _register_external_identity(
+    conn: sqlite3.Connection, athlete_id: int, evidence: dict[str, Any], *, race_key: str, source_event_key: str,
+) -> None:
+    row = external_identity_row(
+        evidence, athlete_id=athlete_id, race_key=race_key, source_event_key=source_event_key,
+    )
+    existing = conn.execute("SELECT athlete_id FROM athlete_external_ids WHERE identity_namespace=?", (row[-1],)).fetchone()
+    if existing and int(existing[0]) != athlete_id:
+        raise IdentityConflictError(f"Verified identity namespace {row[-1]!r} points to multiple canonical people")
+    with conn:
+        conn.execute(
+            """INSERT OR IGNORE INTO athlete_external_ids(athlete_id,provider,id_type,identity_scope,scope_key,
+               external_id,confidence,evidence,identity_namespace) VALUES(?,?,?,?,?,?,?,?,?)""",
+            row,
+        )
 
 
 def _legacy_rows(binding: dict[str, Any]) -> tuple[list[str], list[dict[str, str]]]:
@@ -126,51 +151,72 @@ def _insert_source_event(conn: sqlite3.Connection, source_event_key: str, source
 
 
 def _insert_catalog(
-    conn: sqlite3.Connection, config: dict[str, Any], route: dict[str, Any],
-) -> dict[str, tuple[int, int | None, float | None]]:
+    conn: sqlite3.Connection, config: dict[str, Any], courses: dict[str, dict[str, Any]],
+) -> tuple[dict[str, tuple[int, int | None, float | None]], dict[str, dict[str, Any]]]:
     bindings = resolve_source_bindings(config)
-    checkpoints = {checkpoint["key"]: checkpoint for checkpoint in config["checkpoints"]}
     catalog: dict[str, tuple[int, int | None, float | None]] = {}
+    geometries: dict[str, dict[str, Any]] = {}
+    with conn:
+        for key, course in courses.items():
+            definition = course["definition"]
+            conn.execute(
+                """INSERT INTO course_versions(course_version,event_key,fingerprint,route_source,
+                   elevation_reference_source,whole_course_comparison_group,route_asset,elevation_asset,raw_json)
+                   VALUES(?,?,?,?,?,?,?,?,?)""",
+                (key, course["event_key"], course["fingerprint"], definition["route_source"],
+                 definition.get("elevation_reference_source"), course.get("whole_course_comparison_group"),
+                 f"data/courses/{key}/route.json", f"data/courses/{key}/elevation.json",
+                 json.dumps(definition, ensure_ascii=False, separators=(",", ":"))),
+            )
     for race in race_catalog(config):
         resolved = bindings.get(race["race_key"])
         binding = resolved["source_race"] if resolved else None
-        route_start = race.get("route_start")
-        gpx_distance = route["full_distance_km"] if route_start == "gothenburg" else route["floda_start"]["remaining_distance_km"] if route_start == "floda" else None
+        course = courses.get(race.get("course_version"))
+        if course is None:
+            raise CourseConfigError(f"Race {race['race_key']!r} references unknown CourseVersion {race.get('course_version')!r}")
+        geometry = race_course_geometry(race, course)
+        geometries[race["race_key"]] = geometry
+        gpx_distance = geometry["gpx_distance_km"]
         with conn:
             conn.execute(
                 """INSERT INTO races(race_key,event_key,race_family,course_version,data_status,is_analyzable,source_event_key,
-                   section_name,source_race_name,race_type,year,race_date,nominal_distance_km,gpx_distance_km,official_url)
-                   VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                   section_name,source_race_name,race_type,year,race_date,nominal_distance_km,gpx_distance_km,
+                   route_start_distance_km,route_end_distance_km,official_url)
+                   VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 (race["race_key"], config["event"]["event_key"], race["race_family"], race.get("course_version"),
                  race["data_status"], 0, resolved["source_event_key"] if resolved else None, race["section"],
                  binding["source_race_name"] if binding else None, race["type"], race["year"], race.get("race_date"),
-                 race.get("nominal_distance_km"), gpx_distance,
+                 race.get("nominal_distance_km"), gpx_distance, geometry["start_route_distance_km"],
+                 geometry["end_route_distance_km"],
                  resolved["source_event"].get("results_url") if resolved else None),
             )
         race_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
-        for sequence, key in enumerate(race.get("checkpoints", [])):
-            checkpoint = checkpoints[key]
-            nominal = checkpoint["nominal_cumulative_km_75"]
-            if route_start == "floda":
-                nominal -= checkpoints["floda"]["nominal_cumulative_km_75"]
-            route_distance = _checkpoint_route_distance_km(checkpoint, route)
+        start_nominal = float(geometry["checkpoints"][0]["nominal_distance_km"])
+        segments = {item["from"]: item for item in course["segments"]}
+        for sequence, checkpoint in enumerate(geometry["checkpoints"]):
+            key = checkpoint["key"]
+            nominal = float(checkpoint["nominal_distance_km"]) - start_nominal
+            route_distance = checkpoint["route_distance_km"]
+            segment = segments.get(key)
             with conn:
                 conn.execute(
                     """INSERT INTO checkpoints(race_id,checkpoint_key,name,sequence_no,nominal_distance_km,
                        route_distance_km,is_timing_point,is_relay_exchange,timing_only,analysis_boundary,
-                       replay_anchor,speaker_checkpoint) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)""",
+                       replay_anchor,speaker_checkpoint,segment_key_to_next,segment_comparison_key_to_next)
+                       VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                     (race_id, key, checkpoint["name"], sequence, nominal, route_distance,
                      int(checkpoint.get("is_timing_point", True)), int(checkpoint.get("is_relay_exchange", False)),
                      int(checkpoint.get("timing_only", False)), int(checkpoint.get("analysis_boundary", True)),
-                     int(checkpoint.get("replay_anchor", True)), int(checkpoint.get("speaker_checkpoint", False))),
+                     int(checkpoint.get("replay_anchor", True)), int(checkpoint.get("speaker_checkpoint", False)),
+                     segment.get("key") if segment else None, segment.get("comparison_key") if segment else None),
                 )
         finish_id = None
-        if race.get("checkpoints"):
+        if geometry["checkpoints"]:
             finish_id = conn.execute(
-                "SELECT id FROM checkpoints WHERE race_id=? AND checkpoint_key=?", (race_id, race["checkpoints"][-1])
+                "SELECT id FROM checkpoints WHERE race_id=? AND checkpoint_key=?", (race_id, geometry["checkpoints"][-1]["key"])
             ).fetchone()[0]
         catalog[race["race_key"]] = (race_id, finish_id, gpx_distance)
-    return catalog
+    return catalog, geometries
 
 
 def _raw_sources(
@@ -199,7 +245,7 @@ def _raw_sources(
 def _insert_results(
     conn: sqlite3.Connection, config: dict[str, Any], catalog: dict[str, tuple[int, int | None, float | None]],
     primary_by_race: dict[str, list[dict[str, Any]]], cross_indexes: dict[str, dict[tuple[str, str], dict[str, Any]]],
-    start_index: dict[tuple[str, str], dict[str, Any]], route: dict[str, Any],
+    start_index: dict[tuple[str, str], dict[str, Any]],
     public_by_bib: dict[str, dict[str, Any]], source_event: dict[str, Any],
     bindings: dict[str, dict[str, Any]], source_id: int,
 ) -> tuple[dict[str, Any], dict[str, Any], dict[tuple[str, str], int], dict[tuple[str, str], int], list[dict[str, Any]]]:
@@ -213,6 +259,9 @@ def _insert_results(
         race_key = race["race_key"]
         binding = bindings[race_key]["source_race"]
         race_id, finish_id, gpx_distance = catalog[race_key]
+        route_start_distance, route_end_distance = conn.execute(
+            "SELECT route_start_distance_km,route_end_distance_km FROM races WHERE id=?", (race_id,)
+        ).fetchone()
         if finish_id is None or gpx_distance is None:
             raise SourceBindingError(f"Importable race {race_key} has no complete course/checkpoint geometry")
         columns, legacy_rows = _legacy_rows(binding)
@@ -267,15 +316,22 @@ def _insert_results(
             )
             raw = _raw_sources(binding, source_event, bib, primary, legacy, cross_indexes, start_index, public_contestant)
             athlete_id = team_id = None
+            identity = None
             if entity_type == "athlete":
-                with conn:
-                    conn.execute(
-                        """INSERT INTO athletes(source_external_id,public_contestant_uid,canonical_name,normalized_name,
-                           first_name,last_name,sex,nationality,age,birth_year) VALUES(?,?,?,?,?,?,?,?,?,?)""",
-                        (f"result:{race_key}:{bib}", public_uid, published_name, normalize(published_name), first_name,
-                         last_name, official_clean(primary.get("Gender")), official_clean(primary.get("Nat")), age, birth_year),
+                evidence = person_identity_evidence(public_contestant, source_event)
+                identity = resolve_person_identity(
+                    evidence, race_key=race_key, source_event_key=resolved["source_event_key"], local_result_id=bib,
+                )
+                athlete_id = _find_or_create_athlete(
+                    conn, identity, source_external_id=f"result:{race_key}:{bib}", canonical_name=published_name,
+                    normalized_name=normalize(published_name), first_name=first_name, last_name=last_name,
+                    sex=official_clean(primary.get("Gender")), nationality=official_clean(primary.get("Nat")),
+                    age=age, birth_year=birth_year, public_uid=public_uid,
+                )
+                for item in evidence:
+                    _register_external_identity(
+                        conn, athlete_id, item, race_key=race_key, source_event_key=resolved["source_event_key"],
                     )
-                athlete_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
             else:
                 with conn:
                     conn.execute(
@@ -378,11 +434,14 @@ def _insert_results(
                          to_int(primary.get("Rank Gender")), to_int(primary.get("Rank Class")), clean(legacy.get("PointName")),
                          1, json.dumps({"primary": primary, "legacy": legacy}, ensure_ascii=False, separators=(",", ":"))),
                     )
-                web_splits.append({"race_key": race_key, "bib": bib, "checkpoint": race["checkpoints"][-1],
+                web_splits.append({"race_key": race_key, "bib": bib, "checkpoint": race["checkpoint_keys"][-1],
                                    "elapsed_seconds": finish_seconds, "source_point_name": clean(legacy.get("PointName")),
                                    "is_finish_only_export": True})
             records.append({
                 "source_result_id": bib, "bib": bib, "entity_type": entity_type, "name": published_name,
+                "person_key": identity["person_key"] if identity else None,
+                "identity_status": identity["status"] if identity else None,
+                "identity_scope": identity["scope"] if identity else None,
                 "first_name": first_name, "last_name": last_name, "listed_contact_name": listed_contact,
                 "sex": official_clean(primary.get("Gender")), "class_name": class_name,
                 "nation": official_clean(primary.get("Nat")), "club": club,
@@ -402,7 +461,8 @@ def _insert_results(
             "year": race["year"], "race_date": race.get("race_date"), "course_version": race.get("course_version"),
             "data_status": race["data_status"], "source_event_key": resolved["source_event_key"], "analyzable": True,
             "type": race["type"], "nominal_distance_km": race["nominal_distance_km"],
-            "gpx_distance_km": gpx_distance, "records": records,
+            "gpx_distance_km": gpx_distance, "route_start_distance_km": route_start_distance,
+            "route_end_distance_km": route_end_distance, "records": records,
         }
         report_races[race_key] = {
             "section": race["section"], "source_race_name": binding["source_race_name"], "record_count": len(records),
@@ -445,12 +505,14 @@ def _insert_relay_data(
             members = relay_member_sources(team, team_assignments, max_legs, source_event)
             member_ids: dict[str, int] = {}
             for member in members:
-                with conn:
-                    conn.execute(
-                        "INSERT INTO athletes(source_external_id,canonical_name,normalized_name) VALUES(?,?,?)",
-                        (f"member:{race_key}:{bib}:{member['normalized_name']}", member["name"], member["normalized_name"]),
-                    )
-                athlete_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+                local_id = f"team-member:{bib}:{member['normalized_name']}"
+                identity = resolve_person_identity(
+                    [], race_key=race_key, source_event_key=resolved["source_event_key"], local_result_id=local_id,
+                )
+                athlete_id = _find_or_create_athlete(
+                    conn, identity, source_external_id=f"member:{race_key}:{bib}:{member['normalized_name']}",
+                    canonical_name=member["name"], normalized_name=member["normalized_name"],
+                )
                 member_ids[member["normalized_name"]] = athlete_id
                 with conn:
                     conn.execute(
@@ -459,7 +521,11 @@ def _insert_relay_data(
                          json.dumps(member, ensure_ascii=False, separators=(",", ":"))),
                     )
                 member_count += 1
-                web_members.append({"race_key": race_key, "team_bib": bib, "name": member["name"]})
+                web_members.append({
+                    "race_key": race_key, "team_bib": bib, "name": member["name"],
+                    "person_key": identity["person_key"], "identity_status": identity["status"],
+                    "identity_scope": identity["scope"],
+                })
             verified_names: list[str] = []
             for assignment in team_assignments:
                 athlete_id = None
@@ -516,7 +582,6 @@ def _write_split_coverage(
     source_event_key: str, source_event: dict[str, Any], bindings: dict[str, dict[str, Any]],
     compatibility: bool = False,
 ) -> dict[str, Any]:
-    checkpoint_catalog = {item["key"]: item for item in config["checkpoints"]}
     split_index: dict[tuple[str, str], list[dict[str, Any]]] = {}
     for split in web_splits:
         split_index.setdefault((split["race_key"], split["bib"]), []).append(split)
@@ -529,9 +594,13 @@ def _write_split_coverage(
     for resolved in bindings.values():
         race = resolved["race"]
         race_key = race["race_key"]
+        course_definition = config["course_versions"][race["course_version"]]
+        checkpoint_catalog = {
+            item["key"]: item for item in config["checkpoint_catalogs"][course_definition["checkpoint_catalog"]]
+        }
         records = web_races[race_key]["records"]
         required = [
-            key for index, key in enumerate(race["checkpoints"])
+            key for index, key in enumerate(race["checkpoint_keys"])
             if index > 0 and checkpoint_catalog[key].get("is_timing_point", True)
         ]
         status_counts = Counter(record["status"] for record in records)
@@ -558,7 +627,7 @@ def _write_split_coverage(
             if record["status"] == "FINISHED":
                 finished_complete += int(is_complete)
                 finished_missing += int(not is_complete)
-                finish_split = next((item for item in splits if item["checkpoint"] == "alingsas"), None)
+                finish_split = next((item for item in splits if item["checkpoint"] == race["checkpoint_keys"][-1]), None)
                 if finish_split:
                     finished_finish += 1
                     difference = finish_split["elapsed_seconds"] - record["finish_seconds"]
@@ -570,7 +639,7 @@ def _write_split_coverage(
                 dns_with += 1
             if record["status"] not in {"FINISHED", "DNF"} and has_passage:
                 extra_status_records.append({"bib": record["bib"], "name": record["name"], "status": record["status"], "passage_count": len(splits)})
-            ordered_by_checkpoint = sorted(splits, key=lambda item: race["checkpoints"].index(item["checkpoint"]))
+            ordered_by_checkpoint = sorted(splits, key=lambda item: race["checkpoint_keys"].index(item["checkpoint"]))
             if any(second["elapsed_seconds"] < first["elapsed_seconds"] for first, second in zip(ordered_by_checkpoint, ordered_by_checkpoint[1:])):
                 monotonic_anomalies.append({"bib": record["bib"], "name": record["name"]})
         report["races"][race_key] = {
@@ -711,7 +780,7 @@ def _write_reports(
 
 
 def _import_eqtiming_event(
-    conn: sqlite3.Connection, config: dict[str, Any], route: dict[str, Any],
+    conn: sqlite3.Connection, config: dict[str, Any],
     catalog: dict[str, tuple[int, int | None, float | None]], source_event_key: str,
     source_event: dict[str, Any], bindings: dict[str, dict[str, Any]], compatibility: bool,
 ) -> dict[str, Any]:
@@ -737,7 +806,7 @@ def _import_eqtiming_event(
     cross_indexes, start_index = _cross_validation_indexes(source_event)
     source_ids = _insert_source_event(conn, source_event_key, source_event)
     web_races, report_races, result_ids, team_ids, web_splits = _insert_results(
-        conn, config, catalog, primary_by_race, cross_indexes, start_index, route, public_by_bib,
+        conn, config, catalog, primary_by_race, cross_indexes, start_index, public_by_bib,
         source_event, bindings, source_ids["official_resultlist"],
     )
     relay_report, web_teams, web_members, web_assignments = _insert_relay_data(
@@ -749,8 +818,7 @@ def _import_eqtiming_event(
     report = {
         "source_event_key": source_event_key, "provider": "eqtiming", "primary_result_source": primary_results,
         "primary_relay_leg_source": primary_relay_legs,
-        "route": {"point_count": route["point_count"], "full_distance_km": route["full_distance_km"],
-                  "floda_start": route["floda_start"]},
+        "course_versions": sorted({item["race"]["course_version"] for item in bindings.values()}),
         "races": report_races,
         "limitations": [
             "CSV exports contain finish results only; official passages come from the cached public EQ Timing endpoint.",
@@ -772,15 +840,34 @@ def import_all_official() -> None:
     config = json.loads(CONFIG.read_text(encoding="utf-8"))
     groups = group_source_bindings(config)
 
-    route = load_route(config)
-    gpx_artifacts = build_gpx_artifacts(ROOT, route)
-    route["elevation_profile"] = gpx_artifacts["profile"]["meta"]
-    route["route_master"] = "official_gpx"
-    WEB_ROUTE.parent.mkdir(parents=True, exist_ok=True)
-    WEB_ROUTE.write_text(json.dumps(route, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    courses = resolve_all_courses(config, ROOT)
+    for index, (course_key, course) in enumerate(courses.items()):
+        definition = course["definition"]
+        asset_dir = ROOT / "docs" / "data" / "courses" / course_key
+        asset_dir.mkdir(parents=True, exist_ok=True)
+        gpx_artifacts = build_gpx_artifacts(
+            ROOT, course["route"], official_path=ROOT / definition["route_source"],
+            reference_path=ROOT / definition["elevation_reference_source"] if definition.get("elevation_reference_source") else ROOT / "__missing_reference__",
+            profile_path=asset_dir / "elevation.json", report_stem=f"gpx-comparison-{course_key}",
+        )
+        course["route"]["elevation_profile"] = gpx_artifacts["profile"]["meta"]
+        course["route"]["route_master"] = "configured_gpx"
+        course["elevation"] = gpx_artifacts["profile"]
+        (asset_dir / "route.json").write_text(
+            json.dumps(course["route"], ensure_ascii=False, separators=(",", ":")), encoding="utf-8",
+        )
+        if index == 0:
+            WEB_ROUTE.parent.mkdir(parents=True, exist_ok=True)
+            WEB_ROUTE.write_text(json.dumps(course["route"], ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+            (ROOT / "docs/data/route-elevation-2026.json").write_text(
+                json.dumps(gpx_artifacts["profile"], ensure_ascii=False, separators=(",", ":")), encoding="utf-8",
+            )
+            for suffix in ("json", "md"):
+                source = ROOT / "reports" / f"gpx-comparison-{course_key}.{suffix}"
+                (ROOT / "reports" / f"gpx-comparison.{suffix}").write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
 
     conn = prepare_db()
-    catalog = _insert_catalog(conn, config, route)
+    catalog, geometries = _insert_catalog(conn, config, courses)
     web_races: dict[str, Any] = {}
     report_races: dict[str, Any] = {}
     web_splits: list[dict[str, Any]] = []
@@ -795,7 +882,7 @@ def import_all_official() -> None:
         source_event_key = group["source_event_key"]
         source_event, bindings = eqtiming_source_context(config, source_event_key)
         imported = _import_eqtiming_event(
-            conn, config, route, catalog, source_event_key, source_event, bindings, len(groups) == 1
+            conn, config, catalog, source_event_key, source_event, bindings, len(groups) == 1
         )
         web_races.update(imported["web_races"])
         report_races.update(imported["report_races"])
@@ -828,29 +915,29 @@ def import_all_official() -> None:
                 for key, value in split_coverage.items()
             },
         },
+        "courses": web_course_catalog(courses),
         "race_catalog": web_race_catalog(config, analyzable),
         "checkpoints": {
             race["race_key"]: [
                 {
-                    "key": key,
-                    "name": next(item["name"] for item in config["checkpoints"] if item["key"] == key),
-                    "nominal_cumulative_km": next(item["nominal_cumulative_km_75"] for item in config["checkpoints"] if item["key"] == key),
-                    "race_distance_km": next(item["nominal_cumulative_km_75"] for item in config["checkpoints"] if item["key"] == key)
-                        - (41.5 if race["route_start"] == "floda" else 0),
-                    "route_distance_km": _checkpoint_route_distance_km(
-                        next(item for item in config["checkpoints"] if item["key"] == key), route
-                    ),
-                    "route_distance_mapping": "piecewise_proportional_anchored_at_floda",
-                    "is_timing_point": next(item.get("is_timing_point", True) for item in config["checkpoints"] if item["key"] == key),
-                    "is_relay_exchange": next(item.get("is_relay_exchange", False) for item in config["checkpoints"] if item["key"] == key),
-                    "timing_only": next(item.get("timing_only", False) for item in config["checkpoints"] if item["key"] == key),
-                    "analysis_boundary": next(item.get("analysis_boundary", True) for item in config["checkpoints"] if item["key"] == key),
-                    "replay_anchor": next(item.get("replay_anchor", True) for item in config["checkpoints"] if item["key"] == key),
-                    "speaker_checkpoint": next(item.get("speaker_checkpoint", False) for item in config["checkpoints"] if item["key"] == key),
+                    "key": checkpoint["key"], "name": checkpoint["name"],
+                    "nominal_cumulative_km": checkpoint["nominal_distance_km"],
+                    "race_distance_km": checkpoint["nominal_distance_km"] - geometry["checkpoints"][0]["nominal_distance_km"],
+                    "route_distance_km": checkpoint["route_distance_km"],
+                    "route_distance_mapping": "piecewise_linear_explicit_anchors",
+                    "is_timing_point": checkpoint.get("is_timing_point", True),
+                    "is_relay_exchange": checkpoint.get("is_relay_exchange", False),
+                    "timing_only": checkpoint.get("timing_only", False),
+                    "analysis_boundary": checkpoint.get("analysis_boundary", True),
+                    "replay_anchor": checkpoint.get("replay_anchor", True),
+                    "speaker_checkpoint": checkpoint.get("speaker_checkpoint", False),
+                    "segment_key_to_next": next((item["key"] for item in courses[race["course_version"]]["segments"] if item["from"] == checkpoint["key"]), None),
+                    "segment_comparison_key_to_next": next((item.get("comparison_key") for item in courses[race["course_version"]]["segments"] if item["from"] == checkpoint["key"]), None),
                 }
-                for key in race["checkpoints"]
+                for checkpoint in geometry["checkpoints"]
             ]
             for race in config["races"] if race["race_key"] in analyzable
+            for geometry in (geometries[race["race_key"]],)
         },
         "races": web_races, "splits": web_splits, "teams": web_teams,
         "team_members": web_members,
@@ -858,7 +945,11 @@ def import_all_official() -> None:
     write_payload(WEB_RESULTS, web_payload, WEB_RESULTS_COMPAT)
     report = {
         "event": config["event"],
-        "route": {"point_count": route["point_count"], "full_distance_km": route["full_distance_km"], "floda_start": route["floda_start"]},
+        "course_versions": {
+            key: {"fingerprint": course["fingerprint"], "point_count": course["route"]["point_count"],
+                  "full_distance_km": course["route"]["full_distance_km"]}
+            for key, course in courses.items()
+        },
         "source_events": source_reports, "races": report_races,
         "limitations": [
             "Missing passages remain missing and are never interpolated.",

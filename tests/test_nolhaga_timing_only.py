@@ -23,7 +23,8 @@ class NolhagaTimingOnlyTests(unittest.TestCase):
         }
 
     def test_nolhaga_metadata_is_explicit_and_consistent(self):
-        configured = next(item for item in self.config["checkpoints"] if item["key"] == "nolhaga")
+        catalog = self.config["course_versions"]["course-v1"]["checkpoint_catalog"]
+        configured = next(item for item in self.config["checkpoint_catalogs"][catalog] if item["key"] == "nolhaga")
         self.assertEqual(
             {key: configured[key] for key in (
                 "is_timing_point", "is_relay_exchange", "timing_only",
@@ -41,7 +42,7 @@ class NolhagaTimingOnlyTests(unittest.TestCase):
         for race_key, checkpoints in self.results["checkpoints"].items():
             exported = next(item for item in checkpoints if item["key"] == "nolhaga")
             for key, value in configured.items():
-                if key not in {"nominal_cumulative_km_75"}:
+                if key not in {"nominal_distance_km"}:
                     self.assertEqual(exported.get(key), value, (race_key, key))
 
     def test_official_analysis_boundaries_are_nine_and_four_segments(self):
