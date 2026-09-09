@@ -23,6 +23,8 @@ EXPECTED_IDS = {
     "runner-replay", "journey-gap", "journey-placement", "journey-pacing", "map-duel",
     "results-database", "data-principles",
     "goal-pace",
+    "history-overview", "history-participation", "history-performance", "history-segments",
+    "history-people",
 }
 
 
@@ -54,7 +56,7 @@ console.log(JSON.stringify(window.GAnalysisHelpContent));
     def test_registry_has_exact_reviewed_entries_and_quality(self):
         registry = self.registry()
         self.assertEqual(set(registry), EXPECTED_IDS)
-        self.assertEqual(len(registry), 46)
+        self.assertEqual(len(registry), 51)
         for help_id, entry in registry.items():
             self.assertTrue(entry.get("title", "").strip(), help_id)
             self.assertTrue(entry.get("html", "").strip(), help_id)

@@ -1,6 +1,6 @@
 (function(){
   'use strict';
-  const SECTIONS=['runner-lookup','map-duel','goal-pace','overview','statistics','gender','age-analysis','segments','clubs','results'];
+  const SECTIONS=['runner-lookup','map-duel','goal-pace','overview','statistics','gender','age-analysis','segments','history','clubs','results'];
 
   function parse(search,{raceExists,storedRace,defaultRace='individual-75-2026'}={}){
     const params=new URLSearchParams(search||''),requested=params.get('race');
