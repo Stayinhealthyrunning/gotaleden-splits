@@ -16,6 +16,10 @@ if str(TOOLS) not in sys.path:
 
 from course_versions import (  # noqa: E402
     CourseConfigError,
+    _fingerprint_material,
+    _gpx_geometry_digest,
+    _material_definition,
+    checkpoint_catalog,
     course_comparability,
     race_course_geometry,
     resolve_all_courses,
@@ -91,6 +95,18 @@ class CourseVersionCoreTests(unittest.TestCase):
         self.config["checkpoint_catalogs"]["catalog-a"][1]["nominal_distance_km"] = 1.1
         with self.assertRaisesRegex(CourseConfigError, "fingerprint changed"):
             resolve_course_version(self.config, self.root, "course-a")
+
+    def test_fingerprint_is_line_ending_independent_but_geometry_sensitive(self):
+        fixture = (ROOT / "tests/fixtures/course/route.gpx").read_bytes()
+        course = self.config["course_versions"]["course-a"]
+        checkpoints = checkpoint_catalog(self.config, course)
+        fingerprint = lambda raw: _fingerprint_material(_material_definition(
+            self.root, "course-a", course, checkpoints,
+            {"route_source": _gpx_geometry_digest(raw), "elevation_reference_source": None},
+        ))
+        lf = fingerprint(fixture.replace(b"\r\n", b"\n"))
+        self.assertEqual(lf, fingerprint(fixture.replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")))
+        self.assertNotEqual(lf, fingerprint(fixture.replace(b'lon="0.02"', b'lon="0.03"')))
 
     def test_frontend_loader_selects_assets_and_caches_each_version(self):
         node = os.environ.get("GOTALEDEN_NODE") or shutil.which("node")

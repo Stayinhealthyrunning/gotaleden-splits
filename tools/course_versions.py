@@ -73,11 +73,42 @@ def _route_points(path: Path) -> list[list[float | None]]:
     return points
 
 
-def _material_definition(root: Path, key: str, course: dict[str, Any], checkpoints: list[dict[str, Any]]) -> dict[str, Any]:
+def _gpx_geometry_digest(raw: bytes) -> str:
+    root = ET.fromstring(raw)
+    namespace = root.tag.split("}")[0][1:] if root.tag.startswith("{") else ""
+    prefix = f"{{{namespace}}}" if namespace else ""
+    nodes = root.findall(f".//{prefix}trkpt") or root.findall(f".//{prefix}rtept")
+    if not nodes:
+        raise CourseConfigError("No route points in GPX source")
+    material = {
+        "format": "gpx-geometry-v1",
+        "points": [
+            [
+                float(node.attrib["lat"]),
+                float(node.attrib["lon"]),
+                None if (elevation := node.find(f"{prefix}ele")) is None or not elevation.text else float(elevation.text),
+            ]
+            for node in nodes
+        ],
+    }
+    payload = json.dumps(material, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def _source_material_digest(path: Path) -> str:
+    """Hash semantic GPX geometry, falling back to newline-normalized text."""
+    raw = path.read_bytes()
+    if path.suffix.casefold() == ".gpx":
+        return _gpx_geometry_digest(raw)
+    raw = raw.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    return hashlib.sha256(raw).hexdigest()
+
+
+def _material_definition(root: Path, key: str, course: dict[str, Any], checkpoints: list[dict[str, Any]], source_digests: dict[str, str | None] | None = None) -> dict[str, Any]:
     source_fields = {}
     for field in ("route_source", "elevation_reference_source"):
         relative = course.get(field)
-        source_fields[field] = None if not relative else hashlib.sha256((root / relative).read_bytes()).hexdigest()
+        source_fields[field] = source_digests[field] if source_digests is not None else None if not relative else _source_material_digest(root / relative)
     return {
         "key": key,
         "event_key": course["event_key"],
@@ -90,8 +121,12 @@ def _material_definition(root: Path, key: str, course: dict[str, Any], checkpoin
 
 
 def course_fingerprint(root: Path, key: str, course: dict[str, Any], checkpoints: list[dict[str, Any]]) -> str:
-    material = json.dumps(_material_definition(root, key, course, checkpoints), ensure_ascii=False, sort_keys=True, separators=(",", ":"))
-    return hashlib.sha256(material.encode("utf-8")).hexdigest()
+    return _fingerprint_material(_material_definition(root, key, course, checkpoints))
+
+
+def _fingerprint_material(material: dict[str, Any]) -> str:
+    payload = json.dumps(material, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
 def _resolve_anchors(course: dict[str, Any], checkpoints: list[dict[str, Any]], points: list[list[float | None]]) -> list[dict[str, Any]]:
