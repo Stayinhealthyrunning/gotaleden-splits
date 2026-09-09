@@ -179,6 +179,26 @@ window.GAnalysisHelpContent = {
     "title": "Måltempo – bananpassad loppplan",
     "html": "<h4>Vad gör Måltempo?</h4><p>Måltempo fördelar en vald sluttid över loppets verkliga analyssegment. Det är ett planeringsverktyg, inte ett löfte eller en prognos.</p><h4>Hur räknas planen?</h4><p>Segmentens vikter bygger på medianpace bland kompletta målgångare på respektive delsträcka, multiplicerad med GPX-distansen. Vikterna skalas till den valda måltiden och avrundningen stäms av exakt i mål.</p><h4>Varför varierar tempot?</h4><p>Historiska segmentmönster och banans egenskaper gör att planen inte använder samma pace överallt. Om ett stabilt historiskt underlag saknas visas det tydligt; endast en distansbaserad reservplan kan då användas.</p><h4>Begränsningar</h4><p>Väder, underlag, trängsel, stopp, nutrition och individuella styrkor kan göra att verkligt tävlingstempo skiljer sig. Planen fabricerar inga passager och blandar aldrig 35 km- och 75 km-data.</p>"
   },
+  "history-overview": {
+    "title": "Historik",
+    "html": "<h4>Vad visar detta?</h4><p>Historik samlar verkliga RaceEditions i den aktuella race family. Saknade år skapar aldrig en datapunkt.</p><h4>Jämförbarhet</h4><p>Deltagande och status kan visas över banbyten. Tider kräver explicit CourseVersion-jämförbarhet: exakt samma bana, jämförbar banversion eller inte jämförbar.</p><h4>Begränsningar</h4><p>Planerade eller ej analyserbara editions visas med status men utan fabricerade nollor eller mått.</p>"
+  },
+  "history-participation": {
+    "title": "Historik – deltagande",
+    "html": "<h4>Vad visar detta?</h4><p>Diagrammet visar verkligt antal startande och fullföljande per edition.</p><h4>Jämförbarhet</h4><p>Detta är deltagandemått och kan följas över banversioner. En frånvarande edition eller ett saknat år betyder inte noll.</p>"
+  },
+  "history-performance": {
+    "title": "Historik – resultatutveckling",
+    "html": "<h4>Vad visar detta?</h4><p>Median sluttid bland fullföljande för varje edition i valt urval.</p><h4>Banjämförelse</h4><p>Exakt samma bana visas normalt. En uttryckligen jämförbar banversion märks som sådan. Inte jämförbara banor binds inte samman och får ingen performance-delta.</p>"
+  },
+  "history-segments": {
+    "title": "Historik – delsträckor",
+    "html": "<h4>Vad visar detta?</h4><p>Medianpace och antal observationer för vald analytisk delsträcka.</p><h4>Jämförbarhet</h4><p>Segment över banversioner kräver explicit comparison identity; samma visningsnamn räcker aldrig. Timing-only checkpoints blir inte segment.</p>"
+  },
+  "history-people": {
+    "title": "Historik – personer",
+    "html": "<h4>Vad visar detta?</h4><p>Listan visar bara verifierade canonical identities som återkommer i flera editions.</p><h4>Skydd</h4><p>Namn, lag- eller ortnamn matchas aldrig automatiskt. Samma person innebär inte automatiskt att sluttider får jämföras över olika banversioner.</p>"
+  },
   "data-principles": {
     "title": "Dataprinciper",
     "html": "<h4>Datakällor</h4><p>Gotaleden Splits kombinerar publicerade resultat och passager från EQ Timing med officiell GPX och verktygets normaliserade höjdreferens.</p><h4>Officiellt och härlett</h4><p>Officiella observationer är exempelvis sluttid, passage och placering. Härledda mått är exempelvis segmentpace, median, kvantil och fartindex.</p><h4>Saknade data</h4><p>Saknade passageobservationer fylls aldrig ut i resultattabeller, segmentanalyser, placeringsdiagram eller Journey.</p><h4>Interpolation</h4><p>Interpolation används bara där produkten uttryckligen visar uppskattad rörelse, framför allt Runner Replay och Kartduell. Interpolerad rörelse får aldrig presenteras som officiell passage eller GPS-position.</p><h4>Bana och Nolhaga</h4><p>Officiell GPX är master för geometri och distans. 35 km är Floda–Alingsås-slicen. Nolhaga är timing-/speakerpunkt och replayankare, aldrig stafettväxling eller analytisk segmentgräns.</p><h4>Stafett</h4><p>Publik analys är lagbaserad. Ingen person i medlemslistan kopplas till en specifik etapp.</p>"
