@@ -90,6 +90,15 @@ eller härledas i publikt UI.
 - Race family, race edition och source event är skilda identiteter. En full build inkluderar alla
   editions med tillgänglig data från samtliga source events; kanonisk webbexport är flerårig och
   routing får inte innehålla års- eller race-key-specialfall. Providerlogik hör hemma i adaptern.
+- Varje RaceEdition refererar explicit en CourseVersion och neutral `route_range`. Course geometry,
+  checkpoints, ankare och segment definieras i course-config utan ort-, distans- eller årsheuristik.
+  Samma course-version-id är immutable och skyddas av fingerprint; geometriändring kräver nytt id.
+  Olika course versions är inte whole-course-jämförbara utan explicit comparison group, och segment
+  över versioner kräver explicit gemensam comparison identity.
+- Ett race-resultat är en edition-bunden appearance, inte automatiskt en canonical person. External
+  IDs måste ha explicit scope; namn/demografi får aldrig ensamma mergea personer, lokal identity får
+  inte tolkas cross-year och konflikter får inte tyst mergeas. Lagidentitet får inte skapas över år
+  enbart från lagnamn.
 - Bygg import och validering reproducerbart i Python och GitHub Actions.
 - Bevara källspårning och importdiagnostik.
 - GitHub Pages publiceras från `docs/`.

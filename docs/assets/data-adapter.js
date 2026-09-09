@@ -23,9 +23,13 @@
   const normalizeRelayClassName=value=>String(value||'').trim().replace(/\s+/g,' ');
   function relayClassMeta(value){const record=typeof value==='object'&&value?value:null,name=normalizeRelayClassName(record?.class_name??value),base=RELAY_CLASS_DEFINITIONS[name]||{id:`other-${name.toLocaleLowerCase('sv').replace(/[^a-z0-9åäö]+/g,'-').replace(/^-|-$/g,'')||'unknown'}`,family:'other',shortLabel:name||'Klass saknas',fullLabel:name||'Klass saknas',ranked:true,competitionType:'competitive',color:'#66756f',softColor:'#edf1ef'},ranked=record&&record.class_is_ranked!==undefined&&record.class_is_ranked!==null?record.class_is_ranked===true||record.class_is_ranked===1||record.class_is_ranked==='true':base.ranked,competitionType=record?.class_competition_type||base.competitionType;return{...base,fullLabel:name||base.fullLabel,ranked:competitionType==='non_competitive'?false:ranked,competitionType}}
 
-  function create(data,route,elevation){
-    const races=new Map(),raceCatalog=new Map(Object.entries(data.race_catalog||{})),records=new Map(),splitsByResult=new Map(),teams=new Map(),profileCache=new Map(),referenceCache=new Map(),journeyReferenceCache=new Map();
-    const elevationPoints=elevation?.profile||elevation?.points||[];
+  function create(data,courseInput,elevationInput){
+    const races=new Map(),raceCatalog=new Map(Object.entries(data.race_catalog||{})),records=new Map(),splitsByResult=new Map(),teams=new Map(),profileCache=new Map(),referenceCache=new Map(),journeyReferenceCache=new Map(),courseAssets=new Map();
+    const legacyRoute=courseInput?.points?courseInput:null,legacyElevation=elevationInput||null;
+    function registerCourse(key,bundle){if(!key||!bundle?.route?.points)throw new Error(`CourseVersion ${key||'<missing>'} saknar giltig ruttdata.`);courseAssets.set(key,{route:bundle.route,elevation:bundle.elevation||{points:[]}});return courseAssets.get(key)}
+    if(legacyRoute){const keys=[...new Set(Object.values(data.races||{}).map(item=>item.course_version).filter(Boolean))];for(const key of keys.length?keys:['legacy'])registerCourse(key,{route:legacyRoute,elevation:legacyElevation})}
+    else for(const [key,bundle] of Object.entries(courseInput||{}))registerCourse(key,bundle);
+    const defaultCourse=courseAssets.values().next().value||{route:{points:[],full_distance_km:0},elevation:{points:[]}},route=defaultCourse.route,elevation=defaultCourse.elevation;
     for(const team of data.teams||[])teams.set(`${team.race_key}:${team.bib}`,team);
     for(const [raceKey,source] of Object.entries(data.races||{})){
       const checkpoints=(data.checkpoints?.[raceKey]||[]).map((checkpoint,index)=>({...checkpoint,index}));
@@ -47,8 +51,8 @@
         isRelay:source.type==='relay',
         distanceKm:Number(source.gpx_distance_km),
         nominalDistanceKm:Number(source.nominal_distance_km),
-        startDistanceKm:Number(checkpoints[0]?.route_distance_km||0),
-        endDistanceKm:Number(checkpoints.at(-1)?.route_distance_km||route.full_distance_km),
+        startDistanceKm:finite(source.route_start_distance_km)?Number(source.route_start_distance_km):Number(checkpoints[0]?.route_distance_km||0),
+        endDistanceKm:finite(source.route_end_distance_km)?Number(source.route_end_distance_km):Number(checkpoints.at(-1)?.route_distance_km||route.full_distance_km),
         checkpoints,
         analysisCheckpoints,
         replayCheckpoints,
@@ -57,7 +61,7 @@
       };
       for(const sourceRecord of source.records||[]){
         const id=`${raceKey}:${sourceRecord.bib}`;
-        const record={...sourceRecord,class_name:race.isRelay?normalizeRelayClassName(sourceRecord.class_name):sourceRecord.class_name,id,raceKey,isRelay:race.isRelay,displayType:race.isRelay?'lag':'löpare'};
+        const record={...sourceRecord,personKey:sourceRecord.person_key||null,identityStatus:sourceRecord.identity_status||null,identityScope:sourceRecord.identity_scope||null,class_name:race.isRelay?normalizeRelayClassName(sourceRecord.class_name):sourceRecord.class_name,id,raceKey,isRelay:race.isRelay,displayType:race.isRelay?'lag':'löpare'};
         race.records.push(record);records.set(id,record);
       }
       races.set(raceKey,race);
@@ -72,29 +76,34 @@
     for(const values of splitsByResult.values())values.sort((a,b)=>a.routeDistanceKm-b.routeDistanceKm||a.elapsed_seconds-b.elapsed_seconds);
 
     function race(key){return races.get(key)}
+    function course(value){const item=typeof value==='string'?race(value):value,asset=courseAssets.get(item?.courseVersion)||(legacyRoute?defaultCourse:null);if(!asset)throw new Error(`CourseVersion ${item?.courseVersion||'<missing>'} är inte laddad.`);return asset}
+    function courseVersion(value){const item=typeof value==='string'?race(value):value;return item?.courseVersion?data.courses?.[item.courseVersion]||null:null}
+    function courseAsset(value,kind){return courseVersion(value)?.assets?.[kind]||null}
+    function courseComparability(first,second){const a=typeof first==='string'?race(first):first,b=typeof second==='string'?race(second):second;if(!a||!b||a.family!==b.family)return'incomparable';if(a.courseVersion===b.courseVersion&&courseVersion(a))return'exact';const ga=courseVersion(a)?.whole_course_comparison_group,gb=courseVersion(b)?.whole_course_comparison_group;return ga&&ga===gb?'compatible':'incomparable'}
+    function segmentComparability(first,second){if(first?.course_version===second?.course_version&&first?.key===second?.key)return'exact';return first?.comparison_key&&first.comparison_key===second?.comparison_key?'compatible':'incomparable'}
     function record(id){return records.get(id)}
     function resultSplits(value){return splitsByResult.get(typeof value==='string'?value:value?.id)||[]}
     function team(value){const item=typeof value==='string'?record(value):value;return item?.isRelay?teams.get(`${item.raceKey}:${item.bib}`):null}
-    function routePoint(distance){
-      const points=route.points||[],target=Math.max(0,Math.min(Number(route.full_distance_km),Number(distance)||0));let low=0,high=points.length-1;
+    function routePoint(distance,raceValue){
+      const routeValue=raceValue?course(raceValue).route:route,points=routeValue.points||[],target=Math.max(0,Math.min(Number(routeValue.full_distance_km),Number(distance)||0));let low=0,high=points.length-1;
       while(low<high){const middle=(low+high)>>1;if(Number(points[middle][3])<target)low=middle+1;else high=middle}
       const current=points[low],previous=points[Math.max(0,low-1)],span=Number(current?.[3])-Number(previous?.[3]),share=span>0?(target-Number(previous[3]))/span:0;
       return [Number(previous?.[0])+(Number(current?.[0])-Number(previous?.[0]))*share,Number(previous?.[1])+(Number(current?.[1])-Number(previous?.[1]))*share,target];
     }
     function routeSlice(raceValue){
-      const item=typeof raceValue==='string'?race(raceValue):raceValue,start=item.startDistanceKm,end=item.endDistanceKm,points=[routePoint(start)];
-      for(const point of route.points||[])if(Number(point[3])>start&&Number(point[3])<end)points.push([Number(point[0]),Number(point[1]),Number(point[3])]);
-      points.push(routePoint(end));return points;
+      const item=typeof raceValue==='string'?race(raceValue):raceValue,routeValue=course(item).route,start=item.startDistanceKm,end=item.endDistanceKm,points=[routePoint(start,item)];
+      for(const point of routeValue.points||[])if(Number(point[3])>start&&Number(point[3])<end)points.push([Number(point[0]),Number(point[1]),Number(point[3])]);
+      points.push(routePoint(end,item));return points;
     }
     function elevationSlice(raceValue){
-      const item=typeof raceValue==='string'?race(raceValue):raceValue,start=item.startDistanceKm,end=item.endDistanceKm;
+      const item=typeof raceValue==='string'?race(raceValue):raceValue,elevationPoints=course(item).elevation?.profile||course(item).elevation?.points||[],start=item.startDistanceKm,end=item.endDistanceKm;
       return elevationPoints.filter(point=>Number(point.route_distance_km)>=start&&Number(point.route_distance_km)<=end).map(point=>({...point}));
     }
     function profile(value){
       const item=typeof value==='string'?record(value):value;if(profileCache.has(item.id))return profileCache.get(item.id);const raceValue=race(item.raceKey),known=resultSplits(item),anchors=[{checkpoint:raceValue.checkpoints[0].key,name:raceValue.checkpoints[0].name,elapsedSeconds:0,distance:raceValue.startDistanceKm,placeOverall:null,placeClass:null,placeGender:null,kind:'start'}];
       for(const split of known){
         const checkpoint=raceValue.checkpointMap.get(split.checkpoint),previous=anchors.at(-1);if(checkpoint?.replay_anchor===false||split.routeDistanceKm<=previous.distance||Number(split.elapsed_seconds)<=previous.elapsedSeconds)continue;
-        anchors.push({checkpoint:split.checkpoint,name:checkpoint.name,sourceName:split.source_point_name||checkpoint.name,elapsedSeconds:Number(split.elapsed_seconds),distance:split.routeDistanceKm,placeOverall:number(split.place_overall),placeClass:number(split.place_class),placeGender:number(split.place_gender),splitPlaceOverall:number(split.split_place_overall),splitSeconds:number(split.split_seconds),splitSpeedKmh:number(split.split_speed_kmh),splitPaceMinKm:number(split.split_pace_min_per_km),cumulativeSpeedKmh:number(split.cumulative_speed_kmh),cumulativePaceMinKm:number(split.cumulative_pace_min_per_km),source:split,kind:split.checkpoint==='alingsas'?'finish':'checkpoint'});
+        anchors.push({checkpoint:split.checkpoint,name:checkpoint.name,sourceName:split.source_point_name||checkpoint.name,elapsedSeconds:Number(split.elapsed_seconds),distance:split.routeDistanceKm,placeOverall:number(split.place_overall),placeClass:number(split.place_class),placeGender:number(split.place_gender),splitPlaceOverall:number(split.split_place_overall),splitSeconds:number(split.split_seconds),splitSpeedKmh:number(split.split_speed_kmh),splitPaceMinKm:number(split.split_pace_min_per_km),cumulativeSpeedKmh:number(split.cumulative_speed_kmh),cumulativePaceMinKm:number(split.cumulative_pace_min_per_km),source:split,kind:split.checkpoint===raceValue.checkpoints.at(-1)?.key?'finish':'checkpoint'});
       }
       const makeSegment=(from,to,index,analytical)=>{const distance=to.distance-from.distance,time=to.elapsedSeconds-from.elapsedSeconds;if(distance<=0||time<=0)return null;const checkpointSpan=raceValue.checkpointMap.get(to.checkpoint).index-raceValue.checkpointMap.get(from.checkpoint).index;return{index,from,to,name:`${from.name}–${to.name}`,distance,time,paceSecondsKm:time/distance,speedKmh:distance/(time/3600),placeGain:finite(from.placeOverall)&&finite(to.placeOverall)?Number(from.placeOverall)-Number(to.placeOverall):null,splitPlaceOverall:checkpointSpan===1?to.splitPlaceOverall:null,analytical,combinedTimingPassages:Math.max(0,checkpointSpan-1)}};
       const timingSegments=[];for(let index=1;index<anchors.length;index++){const segment=makeSegment(anchors[index-1],anchors[index],index-1,false);if(segment)timingSegments.push(segment)}
@@ -116,12 +125,14 @@
     function timeAtDistance(profileValue,distance){
       const anchors=profileValue.anchors,target=Math.max(profileValue.race.startDistanceKm,Math.min(Number(distance)||0,profileValue.maxDistance));if(target>=anchors.at(-1).distance)return anchors.at(-1).elapsedSeconds;let index=1;while(index<anchors.length&&anchors[index].distance<target)index++;const from=anchors[index-1],to=anchors[index],share=(target-from.distance)/(to.distance-from.distance||1);return from.elapsedSeconds+(to.elapsedSeconds-from.elapsedSeconds)*share;
     }
-    function elevationAtDistance(distance){
+    function elevationAtDistance(distance,raceValue){
+      const elevationPoints=raceValue?(course(raceValue).elevation?.profile||course(raceValue).elevation?.points||[]):(elevation?.profile||elevation?.points||[]);
       if(!elevationPoints.length)return null;const target=Number(distance)||0;let low=0,high=elevationPoints.length-1;while(low<high){const middle=(low+high)>>1;if(Number(elevationPoints[middle].route_distance_km)<target)low=middle+1;else high=middle}const current=elevationPoints[low],previous=elevationPoints[Math.max(0,low-1)],span=Number(current.route_distance_km)-Number(previous.route_distance_km),share=span>0?(target-Number(previous.route_distance_km))/span:0;return Number(previous.elevation_m)+(Number(current.elevation_m)-Number(previous.elevation_m))*share;
     }
-    function elevationRangeStats(fromDistance,toDistance){
+    function elevationRangeStats(fromDistance,toDistance,raceValue){
+      const elevationPoints=raceValue?(course(raceValue).elevation?.profile||course(raceValue).elevation?.points||[]):(elevation?.profile||elevation?.points||[]);
       if(!elevationPoints.length)return{ascentM:null,descentM:null,netElevationM:null,startElevationM:null,endElevationM:null};
-      const from=Math.min(Number(fromDistance),Number(toDistance)),to=Math.max(Number(fromDistance),Number(toDistance)),startElevationM=elevationAtDistance(from),endElevationM=elevationAtDistance(to),range=[{route_distance_km:from,elevation_m:startElevationM},...elevationPoints.filter(point=>Number(point.route_distance_km)>from&&Number(point.route_distance_km)<to),{route_distance_km:to,elevation_m:endElevationM}];let ascentM=0,descentM=0;
+      const from=Math.min(Number(fromDistance),Number(toDistance)),to=Math.max(Number(fromDistance),Number(toDistance)),startElevationM=elevationAtDistance(from,raceValue),endElevationM=elevationAtDistance(to,raceValue),range=[{route_distance_km:from,elevation_m:startElevationM},...elevationPoints.filter(point=>Number(point.route_distance_km)>from&&Number(point.route_distance_km)<to),{route_distance_km:to,elevation_m:endElevationM}];let ascentM=0,descentM=0;
       for(let index=1;index<range.length;index++){const difference=Number(range[index].elevation_m)-Number(range[index-1].elevation_m);if(difference>0)ascentM+=difference;else descentM+=Math.abs(difference)}
       return{ascentM,descentM,netElevationM:endElevationM-startElevationM,startElevationM,endElevationM};
     }
@@ -148,7 +159,7 @@
       return{race:item,cohort:cohort.map(candidate=>candidate.record),count:cohort.length,segments:segmentDistributionProfile(item,cohort)};
     }
     function courseDifficultyProfile(raceValue){
-      const item=typeof raceValue==='string'?race(raceValue):raceValue,cohort=journeyCompleteProfiles(item),distance=Number(item.distanceKm),baselinePace=median(cohort.map(candidate=>Number(candidate.record.finish_seconds)/distance)),segments=segmentDistributionProfile(item,cohort).map(segment=>{const elevationStats=elevationRangeStats(segment.fromDistance,segment.toDistance),movements=segment.index===0?[]:cohort.map(candidate=>{const sample=candidate.segments[segment.index];return finite(sample?.from.placeOverall)&&finite(sample?.to.placeOverall)?Math.abs(Number(sample.from.placeOverall)-Number(sample.to.placeOverall)):null}).filter(finite),paceIqrSeconds=segment.pace.bandAvailable?segment.pace.q75-segment.pace.q25:null,paceIqrPercent=finite(paceIqrSeconds)&&segment.pace.median?paceIqrSeconds/segment.pace.median*100:null,paceIndex=segment.pace.median&&baselinePace?baselinePace/segment.pace.median*100:null,slowdownPercent=segment.pace.median&&baselinePace?(segment.pace.median/baselinePace-1)*100:null;return{...segment,...elevationStats,climbIntensity:segment.distanceKm?elevationStats.ascentM/segment.distanceKm:null,paceIndex,slowdownPercent,paceIqrSeconds,paceIqrPercent,placementMovementMedian:median(movements),placementN:movements.length}}),rank=(key,eligible=()=>true)=>segments.filter(segment=>finite(segment[key])&&eligible(segment)).sort((a,b)=>Number(b[key])-Number(a[key]))[0]||null;
+      const item=typeof raceValue==='string'?race(raceValue):raceValue,cohort=journeyCompleteProfiles(item),distance=Number(item.distanceKm),baselinePace=median(cohort.map(candidate=>Number(candidate.record.finish_seconds)/distance)),segments=segmentDistributionProfile(item,cohort).map(segment=>{const elevationStats=elevationRangeStats(segment.fromDistance,segment.toDistance,item),movements=segment.index===0?[]:cohort.map(candidate=>{const sample=candidate.segments[segment.index];return finite(sample?.from.placeOverall)&&finite(sample?.to.placeOverall)?Math.abs(Number(sample.from.placeOverall)-Number(sample.to.placeOverall)):null}).filter(finite),paceIqrSeconds=segment.pace.bandAvailable?segment.pace.q75-segment.pace.q25:null,paceIqrPercent=finite(paceIqrSeconds)&&segment.pace.median?paceIqrSeconds/segment.pace.median*100:null,paceIndex=segment.pace.median&&baselinePace?baselinePace/segment.pace.median*100:null,slowdownPercent=segment.pace.median&&baselinePace?(segment.pace.median/baselinePace-1)*100:null;return{...segment,...elevationStats,climbIntensity:segment.distanceKm?elevationStats.ascentM/segment.distanceKm:null,paceIndex,slowdownPercent,paceIqrSeconds,paceIqrPercent,placementMovementMedian:median(movements),placementN:movements.length}}),rank=(key,eligible=()=>true)=>segments.filter(segment=>finite(segment[key])&&eligible(segment)).sort((a,b)=>Number(b[key])-Number(a[key]))[0]||null;
       return{race:item,cohortCount:cohort.length,baselinePace,segments,standouts:{mostClimbing:rank('ascentM'),biggestSlowdown:rank('slowdownPercent'),biggestSpread:rank('paceIqrPercent',segment=>segment.pace.bandAvailable),mostPlacementMovement:rank('placementMovementMedian',segment=>segment.placementN>0)},geometrySource:'official-gpx',elevationSource:elevation?.meta?.source||'normalized-elevation-profile',paceSource:'official-passages-derived',placementSource:'official-passages-derived'};
     }
     function journeyReference(id,label,color,profiles,raceValue){
@@ -184,7 +195,7 @@
         // The established first segment uses the official race-start baseline; no start gap is added.
         const sample=p=>p.record.status==='DNS'||!observation(p,to)?null:p.segments.find(s=>s.from.checkpoint===from.key&&s.to.checkpoint===to.key&&(index===0||observation(p,from)))||null;
         const a=sample(aProfile),b=sample(bProfile),referenceMedianPace=fieldReference.checkpoints[index].medianPace,delta=a&&b?journeyGap(b.time,a.time):null;
-        return{index,name:`${from.name}–${to.name==='Mål'?'Alingsås':to.name}`,from:from.key,to:to.key,fromDistance,toDistance,distanceKm:toDistance-fromDistance,...elevationRangeStats(fromDistance,toDistance),timeA:a?.time??null,timeB:b?.time??null,paceA:a?.paceSecondsKm??null,paceB:b?.paceSecondsKm??null,segmentDeltaSeconds:delta,winner:delta===null?null:delta>0?'a':delta<0?'b':'equal',gapSeconds:checkpoints[index].gapSeconds,referenceMedianPace,performanceA:journeyRelativePerformance(referenceMedianPace,a?.paceSecondsKm),performanceB:journeyRelativePerformance(referenceMedianPace,b?.paceSecondsKm)};
+        return{index,name:`${from.segment_label||from.name}–${to.segment_label||to.name}`,from:from.key,to:to.key,fromDistance,toDistance,distanceKm:toDistance-fromDistance,...elevationRangeStats(fromDistance,toDistance,raceValue),timeA:a?.time??null,timeB:b?.time??null,paceA:a?.paceSecondsKm??null,paceB:b?.paceSecondsKm??null,segmentDeltaSeconds:delta,winner:delta===null?null:delta>0?'a':delta<0?'b':'equal',gapSeconds:checkpoints[index].gapSeconds,referenceMedianPace,performanceA:journeyRelativePerformance(referenceMedianPace,a?.paceSecondsKm),performanceB:journeyRelativePerformance(referenceMedianPace,b?.paceSecondsKm)};
       });
       const sharedCheckpoints=checkpoints.filter(cp=>finite(cp.gapSeconds)),leaders={a:0,b:0,equal:0};let previousSign=0,leadChanges=0;
       for(const cp of sharedCheckpoints){const sign=Math.sign(cp.gapSeconds);leaders[sign>0?'a':sign<0?'b':'equal']++;if(sign){if(previousSign&&previousSign!==sign)leadChanges++;previousSign=sign}}
@@ -260,7 +271,7 @@
       const referenceLabel=raceValue?.isRelay?'egen stafettklass':'hela fältet';let story=[];if(dns)story=['Ingen registrerad start eller splitberättelse finns.'];else if(finish){story.push(`${item.name} gick i mål på ${Math.floor(item.finish_seconds/3600)}:${String(Math.floor(item.finish_seconds%3600/60)).padStart(2,'0')}:${String(Math.round(item.finish_seconds%60)).padStart(2,'0')}.`);if(relative.strongest)story.push(`${relative.strongest.name} var loppets bästa segment relativt ${referenceLabel}.`);if(gain?.placeGain>0)story.push(`Den största officiella placeringsvinsten var ${gain.placeGain} platser på ${gain.name}.`)}else{story.push(last?`Senaste verkliga analyskontroll var ${last.name} efter ${Math.round(last.elapsedSeconds/60)} minuter.`:'Inga verkliga analyskontroller finns registrerade.');story.push(`Täckning ${coverage.observed} av ${coverage.total} analyskontroller.`)}
       return{record:item,race:raceValue,profile:profileValue,status,finish,place:finish&&finite(item.overall_place)?Number(item.overall_place):null,fieldPercentile,classPercentile,rankedRelay,relativeBest:relative.strongest||null,relativeWeak:relative.weakest||null,largestPlacementGain:gain?.placeGain>0?gain:null,largestPlacementLoss:loss?.placeGain<0?loss:null,lastAnalysisCheckpoint:last,coverage,complete:coverage.complete,referenceLabel,story:story.slice(0,3).join(' ')};
     }
-    return{headToHeadAnalysis,data,route,elevation,races,raceCatalog,records,race,record,resultSplits,team,profile,distanceAtTime,timeAtDistance,stateAtTime,analysisIntervalAtDistance,elevationAtDistance,elevationRangeStats,completeProfiles,referenceProfiles,referenceGap,journeyCompleteProfiles,journeyReferences,journeyGap,journeyRelativePerformance,journeyPacingCategory,journeyAnalysis,routePoint,routeSlice,elevationSlice,filtered,segmentStats,segmentDistributionProfile,segmentGroupDistribution,courseDifficultyProfile,wholeRacePaceProfile,relayClassMeta,relayClassRecords,relayClassGroups,relayClassPercentile,relayClassAdvancements,percentile,relativeProfile,personalRaceSummary,advancements,segmentRanking,normalizeClubName,clubKey,clubDisplayName,clubRecords,clubNames,clubStats,fieldFlow,dnfByLastAnalysisCheckpoint,median,quantile,average,distributionSummary,statusFinished,statusStarter,MIN_REFERENCE_SIZE};
+    return{headToHeadAnalysis,data,route,elevation,races,raceCatalog,records,courseAssets,registerCourse,course,courseVersion,courseAsset,courseComparability,segmentComparability,race,record,resultSplits,team,profile,distanceAtTime,timeAtDistance,stateAtTime,analysisIntervalAtDistance,elevationAtDistance,elevationRangeStats,completeProfiles,referenceProfiles,referenceGap,journeyCompleteProfiles,journeyReferences,journeyGap,journeyRelativePerformance,journeyPacingCategory,journeyAnalysis,routePoint,routeSlice,elevationSlice,filtered,segmentStats,segmentDistributionProfile,segmentGroupDistribution,courseDifficultyProfile,wholeRacePaceProfile,relayClassMeta,relayClassRecords,relayClassGroups,relayClassPercentile,relayClassAdvancements,percentile,relativeProfile,personalRaceSummary,advancements,segmentRanking,normalizeClubName,clubKey,clubDisplayName,clubRecords,clubNames,clubStats,fieldFlow,dnfByLastAnalysisCheckpoint,median,quantile,average,distributionSummary,statusFinished,statusStarter,MIN_REFERENCE_SIZE};
   }
   window.GDataAdapter={create,median,quantile,average,distributionSummary,statusFinished,statusStarter,normalizeClubName,clubKey,normalizeRelayClassName,relayClassMeta,RELAY_CLASS_DEFINITIONS,MIN_REFERENCE_SIZE};
 })();

@@ -33,14 +33,19 @@ monotont rimlig progression längs officiell GPX. Off-route-sektioner ignoreras.
 aggregeras var 50:e meter och jämnas försiktigt; saknas eller underkänns referensfilen används den
 officiella GPX-filens elevation utan fabricerad ersättning.
 
+CourseVersion `course-v1` deklarerar GPX-källor, checkpointkatalog, segment och explicita route-ankare
+i `config/races.json`. Bygget snappar koordinatankare till GPX, verifierar monoton geometri och gör
+styckvis linjär mapping mellan valfritt antal ankare. Ingen generell kod tolkar ortnamn eller distans.
+
 Checkpoints exporterar tre skilda avstånd:
 
 - `nominal_cumulative_km` från loppets källmodell;
 - `race_distance_km` relativt respektive start;
 - `route_distance_km` absolut längs officiell GPX från Göteborg.
 
-Mappingen är proportionell i två segment med den geografiskt verifierade Floda-punkten som ankare.
-Mål är alltid exakt GPX-ruttens slutpunkt.
+Gotaledens nuvarande konfiguration har ett geografiskt verifierat ankare vid kortloppets start samt
+explicita start-/slutankare. Editionernas `route_range` väljer neutralt vilken del av CourseVersion
+som används.
 
 ## Bygg och uppdatera
 
@@ -62,7 +67,16 @@ race edition med oförändrat `race_key`, `year`, `race_date` och `course_versio
 är ett stabilt, event-lokalt id för den banmodell som editionen använder; nuvarande modell heter
 `course-v1`. Fälten är explicita och får inte härledas från race key, distans eller ortnamn.
 
-Samma metadata följer oförändrad genom SQLite-tabellen `races` och webbexportens race-poster.
+Samma metadata följer oförändrad genom SQLite-tabellerna `course_versions`/`races` och webbexportens
+course-katalog/race-poster. Fingerprinten täcker routekällans bytes, checkpointkatalog, ankare och
+segment. Samma versions-id är immutable: materiell geometriändring kräver en ny `course_version`.
+Samma family och version är `exact`; olika versioner är endast `compatible` via en explicit gemensam
+whole-course comparison group. Segment över versioner kräver motsvarande explicit comparison key.
+
+Kanoniska browserassets ligger i `docs/data/courses/<course-version>/route.json` och
+`elevation.json`. Frontend laddar och cachear bara vald editions CourseVersion. `route.json` och
+`route-elevation-2026.json` finns kvar som kompatibilitetsalias men är inte generisk source of truth.
+
 `GDataAdapter.race()` exponerar den som `key`, `eventKey`, `family`, `year`, `raceDate`,
 `courseVersion` och `type`. Eventets toppnivå beskriver eventet; editionens år och datum kommer
 alltid från respektive race-post.
@@ -70,8 +84,14 @@ alltid från respektive race-post.
 Varje edition har dessutom explicit `data_status`: `available` kräver en provider-neutral
 `source_binding`, medan `planned` får finnas i katalogen utan källa och exponeras då som icke
 analyserbar. Bygget grupperar tillgängliga editions per `(provider, source_event)` och kör varje
-source-event exakt en gång via sin adapter. Source- och resultatidentiteter är event-skopade, så
-samma provider-id kan förekomma i olika års source-events utan kollision.
+source-event exakt en gång via sin adapter.
+
+Ett resultat är en edition-bunden appearance och skiljs från canonical person. `person_key` är
+deterministisk och skapas från en uttryckligt namespacad external identity. External IDs deklarerar
+scope (`race_edition`, `source_event` eller `provider`) och evidens; namn eller demografi auto-mergar
+aldrig personer. Utan verifierat ID blir identiteten edition-lokal. Motstridiga verifierade IDs failar
+i stället för att tyst mergeas. Nuvarande EQ Timing contestant UID är konservativt `source_event`-
+scopat eftersom stabilitet mellan event inte är verifierad. Lag med samma namn hålls edition-lokala.
 
 ## Analyswebb
 

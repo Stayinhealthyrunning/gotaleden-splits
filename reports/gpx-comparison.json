@@ -5,10 +5,10 @@
   },
   "personal_reference": {
     "file": "Suunto 9 baro Gotaleden 75.gpx",
-    "device": "Suunto 9 Baro",
+    "device": "reference measurement",
     "official": false,
     "role": "start/finish verification, elevation reference and quality control",
-    "known_geometry_issue": "The runner is known to have left the official route at least once; reference geometry never replaces the master route."
+    "known_geometry_issue": "Reference geometry never replaces the configured route master."
   },
   "official": {
     "file": "Gotaleden_Ultra_75km-30april.gpx",
