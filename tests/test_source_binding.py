@@ -15,6 +15,7 @@ from eqtiming_official_import import (  # noqa: E402
     bind_primary_results,
     eqtiming_source_context,
     load_primary_results,
+    person_identity_evidence,
 )
 from source_bindings import SourceBindingError, resolve_source_bindings  # noqa: E402
 
@@ -48,6 +49,13 @@ class SourceBindingTests(unittest.TestCase):
                 self.assertIn("start_number", relay)
             else:
                 self.assertIsNone(relay, race_key)
+
+    def test_adapter_emits_explicit_source_scoped_identity_evidence(self):
+        evidence = person_identity_evidence({"UID": 1234}, self.source_event)
+        self.assertEqual(evidence[0]["provider"], "eqtiming")
+        self.assertEqual(evidence[0]["id_type"], "contestant_uid")
+        self.assertEqual(evidence[0]["scope"], "source_event")
+        self.assertEqual(evidence[0]["external_id"], 1234)
 
     def test_invalid_source_config_fails_clearly(self):
         unknown = copy.deepcopy(self.config)

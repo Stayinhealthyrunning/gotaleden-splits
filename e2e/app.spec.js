@@ -52,6 +52,14 @@ test('Head-to-head opens for two valid runners',async({page})=>{
   await expect(page.locator('#open-head-to-head')).toBeEnabled();await page.locator('#open-head-to-head').click();await expect(page.locator('#head-to-head-dialog')).toBeVisible();await expect(page.locator('#head-to-head-dialog')).toContainText('Anton Gustafsson');await expect(page.locator('#head-to-head-dialog')).toContainText('Anton Aro');
 });
 
+test('Runner Replay, Kartduell and a direct map link use the selected course bundle',async({page})=>{
+  const errors=watchRelevantErrors(page);await openSite(page);
+  await page.locator('#runner-search').fill('Anton Gustafsson');const runner=page.locator('#runner-suggestions [data-record-id]').filter({hasText:'Anton Gustafsson'});const runnerId=await runner.getAttribute('data-record-id');await runner.click();await expect(page.locator('#detail-replay [data-map-engine]')).toBeVisible();await page.locator('#detail-dialog .dialog-close').click();
+  await page.locator('[data-target="map-duel"]').click();await chooseDuelRunner(page,'Anton Gustafsson');await chooseDuelRunner(page,'Anton Aro');await page.locator('#open-map-duel').click();await expect(page.locator('#duel-dialog [data-duel-map] .leaflet-container')).toBeVisible();
+  const secondId=await page.locator('#duel-selected [data-remove-duel]').nth(1).getAttribute('data-remove-duel');await page.goto(`/karta.html?race=individual-75-2026&entries=${runnerId.split(':')[1]},${secondId.split(':')[1]}`);await expect(page.locator('#map-page-root')).toHaveAttribute('aria-busy','false');await expect(page.locator('#map-page-root [data-duel-map] .leaflet-container')).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
 test('relay fallback hides target pace and browser navigation remains usable',async({page})=>{
   await openSite(page,'/?race=individual-35-2026&section=goal-pace');await page.goto('/?race=relay-75-2026&section=goal-pace');await expect(page).toHaveURL(/race=relay-75-2026&section=runner-lookup/);await expect(page.locator('[data-target="goal-pace"]')).toBeHidden();
   await page.goBack();await expect(page).toHaveURL(/race=individual-35-2026&section=goal-pace/);await expect(page.locator('#goal-pace')).toBeVisible();await page.goForward();await expect(page).toHaveURL(/race=relay-75-2026&section=runner-lookup/);await expect(page.locator('#runner-search')).toBeVisible();

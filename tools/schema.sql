@@ -12,12 +12,24 @@ CREATE TABLE IF NOT EXISTS sources (
   UNIQUE(provider, source_event_key, code)
 );
 
+CREATE TABLE IF NOT EXISTS course_versions (
+  course_version TEXT PRIMARY KEY,
+  event_key TEXT NOT NULL,
+  fingerprint TEXT NOT NULL,
+  route_source TEXT NOT NULL,
+  elevation_reference_source TEXT,
+  whole_course_comparison_group TEXT,
+  route_asset TEXT NOT NULL,
+  elevation_asset TEXT NOT NULL,
+  raw_json TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS races (
   id INTEGER PRIMARY KEY,
   race_key TEXT NOT NULL UNIQUE,
   event_key TEXT NOT NULL,
   race_family TEXT NOT NULL,
-  course_version TEXT,
+  course_version TEXT NOT NULL REFERENCES course_versions(course_version),
   data_status TEXT NOT NULL CHECK(data_status IN ('available','planned')),
   is_analyzable INTEGER NOT NULL DEFAULT 0,
   source_event_key TEXT,
@@ -28,6 +40,8 @@ CREATE TABLE IF NOT EXISTS races (
   race_date TEXT,
   nominal_distance_km REAL,
   gpx_distance_km REAL,
+  route_start_distance_km REAL,
+  route_end_distance_km REAL,
   official_url TEXT,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -47,6 +61,8 @@ CREATE TABLE IF NOT EXISTS checkpoints (
   analysis_boundary INTEGER NOT NULL DEFAULT 1,
   replay_anchor INTEGER NOT NULL DEFAULT 1,
   speaker_checkpoint INTEGER NOT NULL DEFAULT 0,
+  segment_key_to_next TEXT,
+  segment_comparison_key_to_next TEXT,
   source_station_uid TEXT,
   UNIQUE(race_id, checkpoint_key),
   UNIQUE(race_id, sequence_no)
@@ -54,7 +70,10 @@ CREATE TABLE IF NOT EXISTS checkpoints (
 
 CREATE TABLE IF NOT EXISTS athletes (
   id INTEGER PRIMARY KEY,
-  source_external_id TEXT UNIQUE,
+  person_key TEXT NOT NULL UNIQUE,
+  identity_status TEXT NOT NULL CHECK(identity_status IN ('verified','local','conflict')),
+  identity_scope TEXT NOT NULL CHECK(identity_scope IN ('provider','source_event','race_edition')),
+  source_external_id TEXT,
   public_contestant_uid INTEGER,
   canonical_name TEXT NOT NULL,
   normalized_name TEXT NOT NULL,
@@ -65,6 +84,20 @@ CREATE TABLE IF NOT EXISTS athletes (
   age INTEGER,
   birth_year INTEGER,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS athlete_external_ids (
+  id INTEGER PRIMARY KEY,
+  athlete_id INTEGER NOT NULL REFERENCES athletes(id) ON DELETE CASCADE,
+  provider TEXT NOT NULL,
+  id_type TEXT NOT NULL,
+  identity_scope TEXT NOT NULL CHECK(identity_scope IN ('provider','source_event','race_edition')),
+  scope_key TEXT NOT NULL,
+  external_id TEXT NOT NULL,
+  confidence TEXT NOT NULL,
+  evidence TEXT,
+  identity_namespace TEXT NOT NULL UNIQUE,
+  UNIQUE(athlete_id, identity_namespace)
 );
 
 CREATE TABLE IF NOT EXISTS teams (

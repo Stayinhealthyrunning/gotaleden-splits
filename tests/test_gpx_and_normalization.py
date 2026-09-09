@@ -65,7 +65,8 @@ class GpxAndNormalizationTests(unittest.TestCase):
         short = {item["key"]: item for item in self.data["checkpoints"]["individual-35-2026"]}
         self.assertEqual(long["gothenburg"]["route_distance_km"], 0)
         self.assertAlmostEqual(long["alingsas"]["route_distance_km"], self.route["full_distance_km"], places=4)
-        self.assertAlmostEqual(short["floda"]["route_distance_km"], self.route["floda_start"]["cumulative_km_from_gothenburg"], places=4)
+        short_anchor = next(item for item in self.route["anchors"] if item["key"] == "short-course-start")
+        self.assertAlmostEqual(short["floda"]["route_distance_km"], short_anchor["route_distance_km"], places=4)
         self.assertEqual(short["floda"]["race_distance_km"], 0)
         self.assertEqual(short["floda"]["route_distance_km"], long["floda"]["route_distance_km"])
         self.assertLess(long["nolhaga"]["route_distance_km"], long["alingsas"]["route_distance_km"])

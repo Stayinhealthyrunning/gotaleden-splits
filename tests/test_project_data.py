@@ -166,24 +166,33 @@ class ProjectDataTests(unittest.TestCase):
             actual = hashlib.sha256((source_dir / file_name).read_bytes()).hexdigest()
             self.assertEqual(actual, expected, file_name)
 
-    def test_route_and_floda_slice(self):
+    def test_route_and_short_course_slice(self):
         self.assertGreater(self.route["full_distance_km"], 76.0)
         self.assertLess(self.route["full_distance_km"], 79.0)
-        self.assertLess(self.route["floda_start"]["distance_from_requested_m"], 10.0)
-        self.assertGreater(self.route["floda_start"]["remaining_distance_km"], 34.0)
-        self.assertLess(self.route["floda_start"]["remaining_distance_km"], 38.0)
+        anchor = next(item for item in self.route["anchors"] if item["key"] == "short-course-start")
+        self.assertLess(anchor["snap_distance_m"], 10.0)
+        remaining = self.route["full_distance_km"] - anchor["route_distance_km"]
+        self.assertGreater(remaining, 34.0)
+        self.assertLess(remaining, 38.0)
 
     def test_rebuild_is_idempotent(self):
         command = [sys.executable, str(ROOT / "tools/build_project_data.py")]
-        subprocess.run(command, cwd=ROOT, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+        def rebuild():
+            completed = subprocess.run(command, cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+
+        rebuild()
         with self.connect() as conn:
             first = tuple(conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0] for table in
                           ("results", "teams", "team_members", "relay_leg_assignments"))
-        subprocess.run(command, cwd=ROOT, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+            first_person_keys = conn.execute("SELECT person_key FROM athletes ORDER BY person_key").fetchall()
+        rebuild()
         with self.connect() as conn:
             second = tuple(conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0] for table in
                            ("results", "teams", "team_members", "relay_leg_assignments"))
+            second_person_keys = conn.execute("SELECT person_key FROM athletes ORDER BY person_key").fetchall()
         self.assertEqual(first, second)
+        self.assertEqual(first_person_keys, second_person_keys)
 
 
 if __name__ == "__main__":

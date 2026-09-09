@@ -71,7 +71,8 @@ if(!window.GMapPage.selectionFrom('?race=individual-75-2026&entries=1,2,3,4,5,6'
 """
         self.run_node(script)
         self.assertIn('assets/map-duel.js?v=20260903-standalone-map2', self.map_html)
-        self.assertIn('assets/map-page.js?v=20260908-multiyear1', self.map_html)
+        self.assertIn('assets/map-page.js?v=20260909-course1', self.map_html)
+        self.assertIn('assets/course-data.js?v=20260909-course1', self.map_html)
         self.assertIn('assets/map-page.css?v=20260903-standalone-map2', self.map_html)
 
     def test_standalone_clock_is_wired_to_every_runtime_time_change(self):
