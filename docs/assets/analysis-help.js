@@ -47,7 +47,12 @@
     ['journey-pacing','#detail-content .journey-pacing','.journey-pacing','h4'],
     ['map-duel','.duel-dialog-header, .map-page-topbar',null,'.duel-dialog-heading strong, .map-page-heading strong'],
     ['results-database','#results','#results','h2'],
-    ['data-principles','.data-note','.data-note',null]
+    ['data-principles','.data-note','.data-note',null],
+    ['history-overview','#history-content [data-analysis-help="history-overview"]','#history-content .history-intro','h2'],
+    ['history-participation','#history-content [data-analysis-help="history-participation"]','#history-content .panel','h3'],
+    ['history-performance','#history-content [data-analysis-help="history-performance"]','#history-content .panel','h3'],
+    ['history-segments','#history-content [data-analysis-help="history-segments"]','#history-content .panel','h3'],
+    ['history-people','#history-content [data-analysis-help="history-people"]','#history-content .panel','h3']
   ];
   const registry=()=>window.GAnalysisHelpContent||{};
   const esc=value=>String(value??'').replace(/[&<>"]/g,character=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[character]));

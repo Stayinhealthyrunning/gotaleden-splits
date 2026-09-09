@@ -70,6 +70,15 @@ test('390px viewport keeps critical controls usable without horizontal overflow'
   await expect(page.locator('[data-goal-create]')).toBeVisible();await expect(page.locator('[data-goal-hours]')).toBeEditable();const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>document.documentElement.clientWidth);expect(overflow).toBe(false);
 });
 
+test('catalog-driven family and year controls keep single-year history intentional',async({page})=>{
+  const errors=watchRelevantErrors(page);await openSite(page,'/?race=individual-75-2026&section=history');
+  await expect(page.locator('#race-switch [role="tab"]')).toHaveCount(4);await expect(page.locator('#race-year')).toHaveValue('individual-75-2026');await expect(page).toHaveURL(/race=individual-75-2026&section=history/);
+  await expect(page.locator('#history-content')).toContainText('Flerårsjämförelser aktiveras när ytterligare analyserbara editions finns.');await expect(page.locator('[data-history-edition]')).toHaveCount(1);await expect(page.locator('[data-history-reference]')).toHaveCount(0);
+  await page.getByRole('tab',{name:/Individuellt 35/}).click();await expect(page).toHaveURL(/race=individual-35-2026/);await expect(page.locator('#race-year')).toHaveValue('individual-35-2026');await expect(page.locator('#history-content h2')).toContainText('Individuellt 35');
+  for(const race of ['relay-75-2026','relay-35-2026']){await openSite(page,`/?race=${race}&section=history`);await expect(page.locator('#race-year')).toHaveValue(race);await expect(page.locator('#history-content [data-history-edition]')).toHaveCount(1);await expect(page.locator('#history-content')).toContainText('Inga verifierade återkommande deltagare')}
+  await page.setViewportSize({width:390,height:844});await openSite(page,'/?race=individual-75-2026&section=history');expect(await page.evaluate(()=>document.documentElement.scrollWidth>document.documentElement.clientWidth)).toBe(false);expect(errors).toEqual([]);
+});
+
 test('course difficulty keeps map, elevation, distribution, KPI and table on one selected segment',async({page})=>{
   const errors=watchRelevantErrors(page);await openSite(page,'/?race=individual-75-2026&section=segments');const course=page.locator('#course-difficulty');await course.scrollIntoViewIfNeeded();
   const nameAt=async index=>(await course.locator(`[data-course-row="${index}"] .course-segment-name strong`).textContent()).trim();

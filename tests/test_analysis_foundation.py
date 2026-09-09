@@ -58,8 +58,10 @@ class AnalysisFoundationTests(unittest.TestCase):
         for asset in ("data-index.js", "charts.js", "replay.js", "app.js", "style.css"):
             self.assertIn(asset, html)
             self.assertTrue((ROOT / "docs/assets" / asset).is_file())
-        self.assertIn("individual-75-2026", html)
-        self.assertIn("relay-35-2026", html)
+        self.assertIn('id="race-switch"', html)
+        self.assertIn('id="race-year"', html)
+        self.assertIn("history-engine.js", html)
+        self.assertIn("history-ui.js", html)
         self.assertTrue((ROOT / "docs/data/route-elevation-2026.json").is_file())
 
 
