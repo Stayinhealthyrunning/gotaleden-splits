@@ -38,22 +38,26 @@ def synthetic_config():
         "races": [
             {
                 "race_key": "edition-a", "race_family": "family-long", "year": 2031,
-                "section": "Long A", "type": "individual", "data_status": "available",
+                "section": "Long A", "type": "individual", "data_status": "available", "course_version": "course-a",
+                "route_range": {"from": "start", "to": "finish"}, "checkpoint_keys": ["start", "finish"],
                 "source_binding": {"source_event": "source-alpha", "race": "long"},
             },
             {
                 "race_key": "edition-b", "race_family": "family-long", "year": 2032,
-                "section": "Long B", "type": "individual", "data_status": "available",
+                "section": "Long B", "type": "individual", "data_status": "available", "course_version": "course-a",
+                "route_range": {"from": "start", "to": "finish"}, "checkpoint_keys": ["start", "finish"],
                 "source_binding": {"source_event": "source-beta", "race": "long"},
             },
             {
                 "race_key": "edition-c", "race_family": "family-short", "year": 2032,
-                "section": "Short", "type": "relay", "data_status": "available",
+                "section": "Short", "type": "relay", "data_status": "available", "course_version": "course-b",
+                "route_range": {"from": "mid", "to": "finish"}, "checkpoint_keys": ["mid", "finish"],
                 "source_binding": {"source_event": "source-beta", "race": "short"},
             },
             {
                 "race_key": "edition-planned", "race_family": "future-format", "year": 2033,
-                "section": "Future", "type": "individual", "data_status": "planned",
+                "section": "Future", "type": "individual", "data_status": "planned", "course_version": "course-c",
+                "route_range": {"from": "start", "to": "finish"}, "checkpoint_keys": ["start", "finish"],
             },
         ],
     }
@@ -102,14 +106,20 @@ class MultiyearRebuildTests(unittest.TestCase):
         connection = sqlite3.connect(":memory:")
         connection.executescript((TOOLS / "schema.sql").read_text(encoding="utf-8"))
         for offset, event_key in enumerate(("source-alpha", "source-beta")):
+            course_version = f"course-{offset}"
+            connection.execute(
+                """INSERT INTO course_versions(course_version,event_key,fingerprint,route_source,
+                   route_asset,elevation_asset,raw_json) VALUES(?,?,?,?,?,?,?)""",
+                (course_version, "portable-event", f"fingerprint-{offset}", "route.gpx", "route.json", "elevation.json", "{}"),
+            )
             connection.execute(
                 "INSERT INTO sources(code,provider,source_event_key,name,source_type) VALUES(?,?,?,?,?)",
                 ("official_resultlist", "eqtiming", event_key, event_key, "csv"),
             )
             connection.execute(
-                """INSERT INTO races(race_key,event_key,race_family,data_status,is_analyzable,
-                   source_event_key,section_name,race_type,year) VALUES(?,?,?,?,?,?,?,?,?)""",
-                (f"race-{event_key}", "portable-event", "family-long", "available", 1,
+                """INSERT INTO races(race_key,event_key,race_family,course_version,data_status,is_analyzable,
+                   source_event_key,section_name,race_type,year) VALUES(?,?,?,?,?,?,?,?,?,?)""",
+                (f"race-{event_key}", "portable-event", "family-long", course_version, "available", 1,
                  event_key, event_key, "individual", 2031 + offset),
             )
             source_id = connection.execute(

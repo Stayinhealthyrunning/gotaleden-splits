@@ -7,6 +7,12 @@
   "source_events": {
     "eqtiming-gotaleden-2026": {
       "provider": "eqtiming",
+      "person_identity": {
+        "id_type": "contestant_uid",
+        "scope": "source_event",
+        "confidence": "verified",
+        "evidence": "EQ Timing public contestant UID; stability is only established within this source event"
+      },
       "event_id": 77906,
       "results_url": "https://live.eqtiming.com/77906",
       "contestant_endpoint": "https://live.eqtiming.com/api/Result/Contestant/77906",
@@ -106,15 +112,49 @@
       ]
     }
   },
-  "route": {
-    "source_gpx": "data/source/gpx/Gotaleden_Ultra_75km-30april.gpx",
-    "reference_elevation_gpx": "data/source/gpx/Suunto 9 baro Gotaleden 75.gpx",
-    "floda_start": {
-      "lat": 57.80629,
-      "lon": 12.35532
-    },
-    "official_elevation_gain_m": 1403,
-    "official_elevation_loss_m": 1343
+  "course_versions": {
+    "course-v1": {
+      "event_key": "gotaleden-stafett-ultra",
+      "route_source": "data/source/gpx/Gotaleden_Ultra_75km-30april.gpx",
+      "elevation_reference_source": "data/source/gpx/Suunto 9 baro Gotaleden 75.gpx",
+      "checkpoint_catalog": "gotaleden-course-v1",
+      "anchors": [
+        {
+          "key": "course-start",
+          "checkpoint": "gothenburg",
+          "route_position": "start"
+        },
+        {
+          "key": "short-course-start",
+          "checkpoint": "floda",
+          "coordinate": {
+            "lat": 57.80629,
+            "lon": 12.35532
+          },
+          "max_snap_distance_m": 10
+        },
+        {
+          "key": "course-finish",
+          "checkpoint": "alingsas",
+          "route_position": "end"
+        }
+      ],
+      "segments": [
+        {"key": "gothenburg-skatas", "from": "gothenburg", "to": "skatas"},
+        {"key": "skatas-kasjon", "from": "skatas", "to": "kasjon"},
+        {"key": "kasjon-jonsered", "from": "kasjon", "to": "jonsered"},
+        {"key": "jonsered-lerum", "from": "jonsered", "to": "lerum"},
+        {"key": "lerum-floda", "from": "lerum", "to": "floda"},
+        {"key": "floda-tollered", "from": "floda", "to": "tollered"},
+        {"key": "tollered-norsesund", "from": "tollered", "to": "norsesund"},
+        {"key": "norsesund-vastra-bodarna", "from": "norsesund", "to": "vastra_bodarna"},
+        {"key": "vastra-bodarna-alingsas", "from": "vastra_bodarna", "to": "alingsas"}
+      ],
+      "whole_course_comparison_group": null,
+      "official_elevation_gain_m": 1403,
+      "official_elevation_loss_m": 1343,
+      "expected_fingerprint": "ba79f364dc99c9ef939c4325a10682e562324a5a1e40ae66aec3bfea6a7fc668"
+    }
   },
   "races": [
     {
@@ -131,8 +171,8 @@
       "section": "Individuellt 75",
       "type": "individual",
       "nominal_distance_km": 78.0,
-      "route_start": "gothenburg",
-      "checkpoints": [
+      "route_range": {"from": "gothenburg", "to": "alingsas"},
+      "checkpoint_keys": [
         "gothenburg",
         "skatas",
         "kasjon",
@@ -160,8 +200,8 @@
       "section": "Individuellt 35",
       "type": "individual",
       "nominal_distance_km": 36.5,
-      "route_start": "floda",
-      "checkpoints": [
+      "route_range": {"from": "floda", "to": "alingsas"},
+      "checkpoint_keys": [
         "floda",
         "tollered",
         "norsesund",
@@ -184,8 +224,8 @@
       "section": "Stafett 75",
       "type": "relay",
       "nominal_distance_km": 78.0,
-      "route_start": "gothenburg",
-      "checkpoints": [
+      "route_range": {"from": "gothenburg", "to": "alingsas"},
+      "checkpoint_keys": [
         "gothenburg",
         "skatas",
         "kasjon",
@@ -213,8 +253,8 @@
       "section": "Stafett 35",
       "type": "relay",
       "nominal_distance_km": 36.5,
-      "route_start": "floda",
-      "checkpoints": [
+      "route_range": {"from": "floda", "to": "alingsas"},
+      "checkpoint_keys": [
         "floda",
         "tollered",
         "norsesund",
@@ -224,11 +264,12 @@
       ]
     }
   ],
-  "checkpoints": [
+  "checkpoint_catalogs": {
+    "gotaleden-course-v1": [
     {
       "key": "gothenburg",
       "name": "Göteborg",
-      "nominal_cumulative_km_75": 0.0,
+      "nominal_distance_km": 0.0,
       "is_timing_point": false,
       "is_relay_exchange": false,
       "timing_only": false,
@@ -239,7 +280,7 @@
     {
       "key": "skatas",
       "name": "Skatås",
-      "nominal_cumulative_km_75": 4.5,
+      "nominal_distance_km": 4.5,
       "is_timing_point": true,
       "is_relay_exchange": true,
       "timing_only": false,
@@ -250,7 +291,7 @@
     {
       "key": "kasjon",
       "name": "Kåsjön",
-      "nominal_cumulative_km_75": 15.0,
+      "nominal_distance_km": 15.0,
       "is_timing_point": true,
       "is_relay_exchange": true,
       "timing_only": false,
@@ -261,7 +302,7 @@
     {
       "key": "jonsered",
       "name": "Jonsered",
-      "nominal_cumulative_km_75": 22.5,
+      "nominal_distance_km": 22.5,
       "is_timing_point": true,
       "is_relay_exchange": true,
       "timing_only": false,
@@ -272,7 +313,7 @@
     {
       "key": "lerum",
       "name": "Lerum",
-      "nominal_cumulative_km_75": 32.5,
+      "nominal_distance_km": 32.5,
       "is_timing_point": true,
       "is_relay_exchange": true,
       "timing_only": false,
@@ -283,7 +324,7 @@
     {
       "key": "floda",
       "name": "Floda",
-      "nominal_cumulative_km_75": 41.5,
+      "nominal_distance_km": 41.5,
       "is_timing_point": true,
       "is_relay_exchange": true,
       "timing_only": false,
@@ -296,7 +337,7 @@
     {
       "key": "tollered",
       "name": "Tollered",
-      "nominal_cumulative_km_75": 49.5,
+      "nominal_distance_km": 49.5,
       "is_timing_point": true,
       "is_relay_exchange": true,
       "timing_only": false,
@@ -307,7 +348,7 @@
     {
       "key": "norsesund",
       "name": "Norsesund",
-      "nominal_cumulative_km_75": 61.5,
+      "nominal_distance_km": 61.5,
       "is_timing_point": true,
       "is_relay_exchange": true,
       "timing_only": false,
@@ -318,7 +359,7 @@
     {
       "key": "vastra_bodarna",
       "name": "Västra Bodarna",
-      "nominal_cumulative_km_75": 68.0,
+      "nominal_distance_km": 68.0,
       "is_timing_point": true,
       "is_relay_exchange": true,
       "timing_only": false,
@@ -329,7 +370,7 @@
     {
       "key": "nolhaga",
       "name": "Nolhaga",
-      "nominal_cumulative_km_75": 77.8,
+      "nominal_distance_km": 77.8,
       "is_timing_point": true,
       "is_relay_exchange": false,
       "timing_only": true,
@@ -340,7 +381,8 @@
     {
       "key": "alingsas",
       "name": "Mål",
-      "nominal_cumulative_km_75": 78.0,
+      "segment_label": "Alingsås",
+      "nominal_distance_km": 78.0,
       "is_timing_point": true,
       "is_relay_exchange": true,
       "timing_only": false,
@@ -348,5 +390,6 @@
       "replay_anchor": true,
       "speaker_checkpoint": false
     }
-  ]
+    ]
+  }
 }

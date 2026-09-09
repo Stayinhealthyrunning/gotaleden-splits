@@ -125,6 +125,7 @@ class FrontendPortTests(unittest.TestCase):
 
     def test_elevation_and_adapter_assets_are_wired(self):
         for asset in (
+            "assets/course-data.js",
             "assets/data-adapter.js",
             "assets/map-engine.js",
             "assets/runner-replay.js",
@@ -132,7 +133,8 @@ class FrontendPortTests(unittest.TestCase):
         ):
             self.assertIn(asset, self.index)
             self.assertTrue((DOCS / asset).exists())
-        self.assertIn("route-elevation-2026.json", self.app)
+        self.assertNotIn("route-elevation-2026.json", self.app)
+        self.assertIn("GCourseData.create", self.app)
         self.assertIn("GDataAdapter.create", self.app)
         self.assertIn("elevationSlice", self.adapter)
 
