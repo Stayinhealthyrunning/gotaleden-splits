@@ -28,7 +28,10 @@ class FrontendPortTests(unittest.TestCase):
             "relay-35-2026",
         }
         self.assertEqual(set(self.results["races"]), race_keys)
-        self.assertEqual(set(re.findall(r'data-race="([^"]+)"', self.index)), race_keys)
+        self.assertIn('id="race-switch"', self.index)
+        self.assertIn('id="race-year"', self.index)
+        self.assertIn("state.history.families()", self.app)
+        self.assertIn("state.history.editions(active.family)", self.app)
         self.assertIn("history.replaceState", self.app)
         self.assertIn("gotaleden-race", self.app)
 
@@ -103,7 +106,7 @@ class FrontendPortTests(unittest.TestCase):
         self.assertIn("startDistanceKm", self.adapter)
         self.assertIn("routeSlice", self.adapter)
 
-    def test_single_year_ui_has_no_history_or_gapminder_sections(self):
+    def test_history_ui_avoids_legacy_or_fabricated_history_copy(self):
         public_text = "\n".join(
             path.read_text(encoding="utf-8", errors="ignore")
             for path in [DOCS / "index.html", *sorted((DOCS / "assets").glob("*.js"))]
@@ -116,6 +119,8 @@ class FrontendPortTests(unittest.TestCase):
             "ultravasans utveckling genom åren",
         ):
             self.assertNotIn(forbidden, public_text)
+        self.assertIn('id="history"', self.index)
+        self.assertIn("history-engine.js", self.index)
 
     def test_public_relay_ui_has_no_runner_to_leg_claim(self):
         public_text = f"{self.index}\n{self.app}".casefold()

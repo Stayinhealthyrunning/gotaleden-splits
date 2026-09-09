@@ -29,12 +29,7 @@
   </header>
 
   <main>
-    <nav class="race-switch" aria-label="Välj lopp" role="tablist">
-      <button class="active" data-race="individual-75-2026" role="tab" aria-selected="true"><span>Individuellt</span><strong>75</strong><small>Göteborg–Alingsås</small></button>
-      <button data-race="individual-35-2026" role="tab" aria-selected="false"><span>Individuellt</span><strong>35</strong><small>Floda–Alingsås</small></button>
-      <button data-race="relay-75-2026" role="tab" aria-selected="false"><span>Stafett</span><strong>75</strong><small>Göteborg–Alingsås</small></button>
-      <button data-race="relay-35-2026" role="tab" aria-selected="false"><span>Stafett</span><strong>35</strong><small>Floda–Alingsås</small></button>
-    </nav>
+    <div class="race-selection"><nav class="race-switch" id="race-switch" aria-label="Välj loppfamilj" role="tablist"></nav><label class="race-year-select" for="race-year">År / edition<select id="race-year" aria-label="Välj år eller edition"></select></label></div>
 
     <nav class="analysis-nav" aria-label="Analysnavigation">
       <div class="analysis-nav__scroll">
@@ -46,6 +41,7 @@
         <button data-target="gender">Genusperspektiv</button>
         <button data-target="age-analysis">Klass &amp; ålder</button>
         <button data-target="segments">Delsträckor</button>
+        <button data-target="history">Historik</button>
         <button data-target="clubs">Klubb & ort</button>
         <button data-target="results">Resultat</button>
       </div>
@@ -160,6 +156,8 @@
       <section class="panel standout-world" id="standouts"><div class="panel-head"><div><p class="eyebrow ink">PRESTATIONER SOM STICKER UT · 2026</p><h3>Fem sätt att hitta ovanliga lopp</h3></div></div><div class="standout-tabs" id="standout-tabs"></div><div class="ranking" id="standout-ranking"></div></section>
     </section>
 
+    <section class="audience-world" id="history" aria-label="Historik"><div id="history-content"></div></section>
+
     <section class="audience-world" id="clubs">
       <div class="section-intro"><p class="eyebrow ink">KLUBB- OCH ORTSARENAN</p><h2>Gemenskap i siffror</h2><p>Sök en klubb eller välj upp till fyra för att jämföra deltagare, målgång och fart i det valda loppet.</p><span class="pill">Valt lopp</span></div>
       <article class="panel club-arena">
@@ -196,7 +194,9 @@
   <script src="assets/data-index.js?v=20260720-parity3"></script>
   <script src="assets/course-data.js?v=20260909-course1"></script>
   <script src="assets/data-adapter.js?v=20260909-course1"></script>
+  <script src="assets/history-engine.js?v=20260909-history1"></script>
   <script src="assets/charts.js?v=20260908-course-segments1"></script>
+  <script src="assets/history-ui.js?v=20260909-history1"></script>
   <script src="assets/map-engine.js?v=20260909-course1"></script>
   <script src="assets/analysis-help-content.js?v=20260908-goal-pace1"></script>
   <script src="assets/analysis-help.js?v=20260908-goal-pace1"></script>

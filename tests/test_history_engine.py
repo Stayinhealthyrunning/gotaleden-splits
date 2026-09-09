@@ -150,7 +150,7 @@ assert(engine.repeatParticipants().length===0,'false cross-year repeats');
             self.assertNotIn(forbidden, source)
         self.assertIsNone(re.search(r"\b(?:2026|35|75)\b", source))
         index = (ROOT / "docs/index.html").read_text(encoding="utf-8")
-        self.assertNotIn("history-engine.js", index)
+        self.assertIn("history-engine.js", index)
 
 
 if __name__ == "__main__":
