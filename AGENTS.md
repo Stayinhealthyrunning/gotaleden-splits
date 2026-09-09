@@ -99,6 +99,11 @@ eller härledas i publikt UI.
   IDs måste ha explicit scope; namn/demografi får aldrig ensamma mergea personer, lokal identity får
   inte tolkas cross-year och konflikter får inte tyst mergeas. Lagidentitet får inte skapas över år
   enbart från lagnamn.
+- Historik arbetar på RaceFamily/RaceEdition utan kalenderantaganden; saknat år är aldrig noll.
+  Deltagandemått får visas över course changes, men performance och segmenthistorik kräver explicit
+  CourseVersion-/segmentjämförbarhet. Personhistorik grupperar endast samma canonical `person_key`;
+  identity match innebär inte automatiskt jämförbar performance och namn får aldrig mergea personer
+  eller lag över editions.
 - Bygg import och validering reproducerbart i Python och GitHub Actions.
 - Bevara källspårning och importdiagnostik.
 - GitHub Pages publiceras från `docs/`.
