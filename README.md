@@ -68,8 +68,9 @@ race edition med oförändrat `race_key`, `year`, `race_date` och `course_versio
 `course-v1`. Fälten är explicita och får inte härledas från race key, distans eller ortnamn.
 
 Samma metadata följer oförändrad genom SQLite-tabellerna `course_versions`/`races` och webbexportens
-course-katalog/race-poster. Fingerprinten täcker routekällans bytes, checkpointkatalog, ankare och
-segment. Samma versions-id är immutable: materiell geometriändring kräver en ny `course_version`.
+course-katalog/race-poster. Fingerprinten täcker materiell route-/höjdgeometri, checkpointkatalog,
+ankare och segment. Samma versions-id är immutable: materiell geometriändring kräver en ny
+`course_version`.
 Samma family och version är `exact`; olika versioner är endast `compatible` via en explicit gemensam
 whole-course comparison group. Segment över versioner kräver motsvarande explicit comparison key.
 
@@ -92,6 +93,11 @@ scope (`race_edition`, `source_event` eller `provider`) och evidens; namn eller 
 aldrig personer. Utan verifierat ID blir identiteten edition-lokal. Motstridiga verifierade IDs failar
 i stället för att tyst mergeas. Nuvarande EQ Timing contestant UID är konservativt `source_event`-
 scopat eftersom stabilitet mellan event inte är verifierad. Lag med samma namn hålls edition-lokala.
+
+`GHistoryEngine` bygger kronologiska RaceFamily-serier direkt ovanpå `GDataAdapter`. Saknade år får
+ingen syntetisk datapunkt. Deltagande/status kan sammanfattas över banbyten, medan sluttids- och
+segmentjämförelser kräver explicit CourseVersion-/segmentjämförbarhet. Personhistorik använder endast
+exakt canonical `person_key`; identity match och tillåten performancejämförelse är separata beslut.
 
 ## Analyswebb
 
