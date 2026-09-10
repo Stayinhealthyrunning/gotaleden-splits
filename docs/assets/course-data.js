@@ -1,6 +1,6 @@
 (function(){
   'use strict';
-  function create(catalog,{version='20260909-course1',fetchJson=null}={}){
+  function create(catalog,{version='course-assets-v1',fetchJson=null}={}){
     const entries=catalog||{},cache=new Map(),loadJson=fetchJson||((path)=>fetch(`${path}?v=${version}`,{cache:'no-store'}).then(response=>{if(!response.ok)throw new Error(`${path}: HTTP ${response.status}`);return response.json()}));
     async function load(courseVersion){
       const entry=entries[courseVersion];
