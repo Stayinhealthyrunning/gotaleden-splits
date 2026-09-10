@@ -97,6 +97,9 @@ eller härledas i publikt UI.
 - Team structure anger explicit om loppet har sequential legs, antal legs och om member assignment är
   verifierad eller okänd. En medlemslista får aldrig i sig koppla en medlem till en leg. Persistent
   state och app-events är eventnamespacade; klasser och unknown-fallback är config-/kontraktsdrivna.
+- Runtime-media, initiala UI-platshållare och synlig datakällcopy är event-/racekonfigurerade.
+  Deploy-entrypointens sociala metadata får vara event-specifik eftersom den inte återanvänds av
+  runtime; produkt- eller platsnamn får inte läcka från den generella UI-kärnan.
 - Varje RaceEdition refererar explicit en CourseVersion och neutral `route_range`. Course geometry,
   checkpoints, ankare och segment definieras i course-config utan ort-, distans- eller årsheuristik.
   Samma course-version-id är immutable och skyddas av fingerprint; geometriändring kräver nytt id.

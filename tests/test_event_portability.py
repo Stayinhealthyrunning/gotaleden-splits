@@ -27,8 +27,8 @@ class EventPortabilityTests(unittest.TestCase):
         if not self.node:
             self.skipTest("Node.js is required")
         script = """
-const fs=require('fs'),vm=require('vm');global.window={};
-for(const file of ['tests/fixtures/alternate-event.js','docs/assets/race-ui.js','docs/assets/data-adapter.js','docs/assets/goal-pace.js','docs/assets/favorites.js'])vm.runInThisContext(fs.readFileSync(file,'utf8'));
+const fs=require('fs'),vm=require('vm'),values=new Map();global.window={};global.localStorage={getItem:key=>values.get(key)??null,setItem:(key,value)=>values.set(key,String(value))};
+for(const file of ['tests/fixtures/alternate-event.js','docs/assets/race-ui.js','docs/assets/data-adapter.js','docs/assets/goal-pace.js','docs/assets/favorites.js','docs/assets/race-media.js'])vm.runInThisContext(fs.readFileSync(file,'utf8'));
 const fixture=window.GAlternateEventFixture.create(),bundles={};
 for(const [key,entry] of Object.entries(fixture.data.courses))bundles[key]={route:fixture.assets[entry.assets.route],elevation:fixture.assets[entry.assets.elevation]};
 const adapter=window.GDataAdapter.create(fixture.data,bundles),eventUi=window.GRaceUI.event(fixture.data);
@@ -111,12 +111,18 @@ const duoUi=window.GRaceUI.race(duo,eventUi);console.log(JSON.stringify({isTeam:
         self.assertEqual(contract["competition"]["format"], "duo")
         self.assertEqual(contract["competition"]["team_structure"], {"kind": "sequential", "leg_count": 2, "member_assignment": "unknown"})
 
+    def test_event_media_contract_rejects_malformed_values(self):
+        config = copy.deepcopy(self.config)
+        config["event"]["media"] = {"default_volume": 2}
+        with self.assertRaisesRegex(ValueError, "default_volume"):
+            event_contract(config)
+
     def test_storage_is_event_scoped_and_legacy_favorites_migrate(self):
         result = self.run_node(r"""
-const values=new Map([['legacy-favorites','["same-race:1"]']]),storage={getItem:key=>values.has(key)?values.get(key):null,setItem:(key,value)=>values.set(key,value)};
+const storedValues=new Map([['legacy-favorites','["same-race:1"]']]),storage={getItem:key=>storedValues.has(key)?storedValues.get(key):null,setItem:(key,value)=>storedValues.set(key,value)};
 const migrated=window.GFavorites.create({storage,key:'event-a:favorites',legacyKeys:['legacy-favorites']});
 const isolated=window.GFavorites.create({storage,key:'event-b:favorites'});isolated.add('same-race:1');migrated.remove('same-race:1');
-console.log(JSON.stringify({a:migrated.all(),b:isolated.all(),saved:values.get('event-a:favorites'),race:eventUi.storageKey('race'),goal:eventUi.storageKey('goal-pace'),event:eventUi.eventName('goal-pace')}));
+console.log(JSON.stringify({a:migrated.all(),b:isolated.all(),saved:storedValues.get('event-a:favorites'),race:eventUi.storageKey('race'),goal:eventUi.storageKey('goal-pace'),event:eventUi.eventName('goal-pace')}));
 """)
         self.assertEqual(result["a"], [])
         self.assertEqual(result["b"], ["same-race:1"])
@@ -125,21 +131,37 @@ console.log(JSON.stringify({a:migrated.all(),b:isolated.all(),saved:values.get('
         self.assertTrue(result["goal"].startswith("coast-lab:"))
         self.assertTrue(result["event"].startswith("coast-lab:"))
 
+    def test_media_is_event_scoped_without_a_product_default(self):
+        result = self.run_node(r"""
+const media=window.GRaceMedia.configure(eventUi);media.setEnabled(false);media.setVolume(.2);
+console.log(JSON.stringify({audio:media.audioSource,enabledKey:media.enabledStorageKey,volumeKey:media.volumeStorageKey,enabled:media.audioEnabled,volume:media.volume}));
+""")
+        self.assertEqual(result["audio"], "")
+        self.assertEqual(result["enabledKey"], "coast-lab:music-enabled")
+        self.assertEqual(result["volumeKey"], "coast-lab:music-volume")
+        self.assertFalse(result["enabled"])
+        self.assertEqual(result["volume"], 0.2)
+
     def test_generic_runtime_hardcoding_and_is_relay_gate(self):
         core = [
             "race-ui.js", "app.js", "data-adapter.js", "favorites.js", "goal-pace.js",
             "personal-summary.js", "charts.js", "course-difficulty.js", "head-to-head.js",
             "history-engine.js", "history-ui.js", "map-engine.js", "map-page.js", "map-duel.js",
-            "runner-replay.js", "profile-journey.js", "interactive-analysis.js",
+            "runner-replay.js", "profile-journey.js", "interactive-analysis.js", "race-media.js",
         ]
         source = "\n".join((ROOT / "docs/assets" / name).read_text(encoding="utf-8") for name in core)
-        for value in ("Gotaleden", "Göteborg", "Floda", "Alingsås", "Nolhaga", "Skatås", "Tollered", "EQ Timing", "route-35", "Coast Trail Lab", "long-solo-a", "62 km", "alingsas", "floda", "gothenburg", "skatas", "nolhaga", "tollered", "Publicerad lagtid", "Lagklass", "Lagmedlemmar", "stafettfältet", "stafettens officiella", "OFFICIELLA STAFETTKLASSER", "Mixed tävling", "Mixed fri", "deltagare/lag", "deltagare eller lag"):
+        for value in ("Gotaleden", "Göteborg", "Floda", "Alingsås", "Nolhaga", "Skatås", "Tollered", "EQ Timing", "route-35", "Coast Trail Lab", "long-solo-a", "62 km", "alingsas", "floda", "gothenburg", "skatas", "nolhaga", "tollered", "gotaleden-ultra", "gotaleden-music", "Publicerad lagtid", "Lagklass", "Lagmedlemmar", "stafettfältet", "stafettens officiella", "OFFICIELLA STAFETTKLASSER", "Mixed tävling", "Mixed fri", "deltagare/lag", "deltagare eller lag"):
             self.assertNotIn(value.casefold(), source.casefold())
         self.assertNotRegex(source, r"(?:race|key|distance).{0,30}(?:includes|===).{0,12}(?:2026|35|75)")
         central_ui = "\n".join((ROOT / "docs/assets" / name).read_text(encoding="utf-8") for name in ("race-ui.js", "app.js", "favorites.js", "goal-pace.js", "personal-summary.js", "map-page.js"))
         self.assertNotIn("isRelay", central_ui)
         html = (ROOT / "docs/index.html").read_text(encoding="utf-8")
         self.assertNotIn("live.eqtiming.com", html)
+        html_body = html.split("<body>", 1)[1]
+        for value in ("Gotaleden", "Göteborg", "Floda", "Alingsås", "EQ Timing", "stafett"):
+            self.assertNotIn(value.casefold(), html_body.casefold())
+        map_body = (ROOT / "docs/karta.html").read_text(encoding="utf-8").split("<body", 1)[1]
+        self.assertNotIn("Gotaleden", map_body)
 
 
 if __name__ == "__main__":
