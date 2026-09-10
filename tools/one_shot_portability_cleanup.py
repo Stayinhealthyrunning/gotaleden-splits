@@ -42,6 +42,34 @@ rep("docs/assets/app.js", "<th>${race.isTeam&&!relayMeta.ranked?'Analytisk ordni
 rep("docs/assets/data-adapter.js", "label:raceValue.isTeam?'Lagklass':'Klass'", "label:raceValue.isTeam?(raceValue.uiLabels.class||'Klass'):'Klass'")
 rep("docs/assets/data-adapter.js", "message:raceValue.isTeam?'Könsplacering används inte för lag':'Placering saknas'", "message:raceValue.isTeam?`Könsplacering används inte för ${raceValue.participant.plural}`:'Placering saknas'")
 
+# Interactive analysis: remove the last semantic team=relay/Gotaleden-class assumptions.
+rep("docs/assets/interactive-analysis.js",
+    "$('#age-analysis-eyebrow').textContent=race.isTeam?'OFFICIELLA STAFETTKLASSER':'KLASS & ÅLDER';",
+    "$('#age-analysis-eyebrow').textContent=race.isTeam?(race.uiLabels?.class_analysis_eyebrow||'OFFICIELLA KLASSER'):'KLASS & ÅLDER';")
+rep("docs/assets/interactive-analysis.js",
+    "$('#age-analysis-title').textContent=race.isTeam?'Klasslabbet':'Ålderslabbet';",
+    "$('#age-analysis-title').textContent=race.isTeam?(race.uiLabels?.age_analysis||'Klassanalys'):'Ålderslabbet';")
+rep("docs/assets/interactive-analysis.js",
+    "$('#age-analysis-copy').innerHTML=race.isTeam?'Jämförelsen använder lagens <strong>officiella klassnamn</strong>. Inga lagmedlemmar kopplas till en specifik etapp. Mixed fri är <strong>Ej tävling</strong> men visas för analys.':'<strong>Analytiska åldersgrupper – inte officiella tävlingsklasser.</strong> Grupper med för litet underlag döljs.';",
+    "$('#age-analysis-copy').textContent=race.isTeam?(race.uiLabels?.class_analysis_copy||'Jämförelsen använder deltagarnas officiella klassnamn.'):'Analytiska åldersgrupper – inte officiella tävlingsklasser. Grupper med för litet underlag döljs.';")
+rep("docs/assets/interactive-analysis.js",
+    "title:'Mixed tävling närmast annan rankad klass'",
+    "title:`${mixed.shortLabel} närmast annan rankad klass`")
+rep("docs/assets/interactive-analysis.js",
+    "value:`${close} deltagare/lag`",
+    "value:`${close} ${race.participant?.plural||'deltagare'}`")
+rep("docs/assets/interactive-analysis.js",
+    "'<div class=\"empty\">Minst två klasser med fem fullföljande lag krävs.</div>'",
+    "`<div class=\"empty\">Minst två klasser med fem fullföljande ${race.participant?.plural||'deltagare'} krävs.</div>`")
+rep("docs/assets/interactive-analysis.js",
+    "referenceLabel=raceValue?.isTeam?'egen lagklass':'hela fältet'",
+    "referenceLabel=raceValue?.isTeam?(raceValue.uiLabels?.class_reference||'egen klass').toLocaleLowerCase('sv'):'hela fältet'")
+
+# Standalone map copy is participant-neutral before the race contract is resolved.
+rep("docs/assets/map-page.js",
+    "Högst fem deltagare eller lag kan visas samtidigt.",
+    "Högst fem deltagare kan visas samtidigt.")
+
 # Preserve Gotaleden-specific wording in event configuration, not generic runtime.
 rep("config/races.json",
     '"ui_labels": {"navigation": "Löpare", "saved": "Sparade löpare",',
@@ -67,7 +95,7 @@ rep("e2e/app.spec.js",
 # Regression gates: these leaks must not return to generic runtime/static shell.
 rep("tests/test_event_portability.py",
     '"62 km", "alingsas", "floda", "gothenburg", "skatas", "nolhaga", "tollered"):',
-    '"62 km", "alingsas", "floda", "gothenburg", "skatas", "nolhaga", "tollered", "Publicerad lagtid", "Lagklass", "Lagmedlemmar", "stafettfältet", "stafettens officiella"):')
+    '"62 km", "alingsas", "floda", "gothenburg", "skatas", "nolhaga", "tollered", "Publicerad lagtid", "Lagklass", "Lagmedlemmar", "stafettfältet", "stafettens officiella", "OFFICIELLA STAFETTKLASSER", "Mixed tävling", "Mixed fri", "deltagare/lag", "deltagare eller lag"):')
 rep("tests/test_event_portability.py",
     '        self.assertNotIn("isRelay", central_ui)\n',
     '        self.assertNotIn("isRelay", central_ui)\n        html = (ROOT / "docs/index.html").read_text(encoding="utf-8")\n        self.assertNotIn("live.eqtiming.com", html)\n')
