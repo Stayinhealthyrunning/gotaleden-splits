@@ -48,7 +48,7 @@
 
     <section class="panel runner-lookup" id="runner-lookup">
       <div>
-        <p class="eyebrow ink">INDIVIDUELL LOPPANALYS</p>
+        <p class="eyebrow ink" id="lookup-eyebrow">DELTAGARANALYS</p>
         <h2 id="lookup-title">Analysera en löpares lopp</h2>
         <p id="lookup-copy">Sök på namn eller startnummer och öppna en komplett profil med mellantider, placering, tempo, jämförelser och replay.</p>
       </div>
@@ -65,13 +65,13 @@
     </section>
 
     <section class="panel duel-picker-panel duel-quick-builder" id="map-duel">
-      <div><p class="eyebrow ink">KARTA &amp; KARTDUELL</p><h2>Jämför loppet på kartan</h2><p>Kartduell jämför två till fem löpare eller lag på banan. För analys av en enda deltagare använder du Löpare/Lag-analysen och Runner Replay.</p></div>
+      <div><p class="eyebrow ink">KARTA &amp; KARTDUELL</p><h2>Jämför loppet på kartan</h2><p>Kartduell jämför två till fem deltagare på banan. För analys av en enda deltagare använder du deltagaranalysen och Replay.</p></div>
       <div><div class="picker"><label>Välj 2–5 <span data-entity-plural>deltagare</span><input id="duel-search" type="search" autocomplete="off" placeholder="Namn eller startnummer"></label><div class="suggestions" id="duel-suggestions" hidden></div></div><div class="selected-chips" id="duel-selected"></div><div class="duel-launchers"><button class="button secondary" id="open-head-to-head" type="button" disabled>Välj två deltagare</button><button class="button" id="open-map-duel" type="button" disabled>Välj minst två deltagare</button></div></div>
     </section>
 
     <section class="scope panel" id="overview">
       <div><p class="eyebrow ink">LOPP- OCH FÄLTSTATISTIK</p><h2 id="race-title">Individuellt 75</h2><p id="race-subtitle">Premiäråret 2026 · officiella resultat och publicerade passeringar.</p></div>
-      <a class="source-link" id="source-link" href="https://live.eqtiming.com/77906" target="_blank" rel="noopener">Officiella resultat ↗</a>
+      <a class="source-link" id="source-link" href="#" target="_blank" rel="noopener" hidden>Officiella resultat ↗</a>
     </section>
 
     <section class="toolbar panel" aria-label="Filter">

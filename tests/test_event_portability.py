@@ -72,7 +72,7 @@ console.log(JSON.stringify({event:eventUi.productTitle,families:new Set([...adap
     def test_alternate_duo_is_a_team_without_relay_or_finish_key_assumptions(self):
         result = self.run_node(r"""
 const duo=adapter.race('duo-long-a'),first=adapter.record('duo-long-a:1'),second=adapter.record('duo-long-a:2'),head=adapter.headToHeadAnalysis(duo,first,second);
-console.log(JSON.stringify({isTeam:duo.isTeam,isRelay:duo.isRelay,format:duo.competitionFormat,field:adapter.referenceProfiles(first).field.label,classReference:adapter.referenceProfiles(first).class.label,finish:head.checkpoints.at(-1).checkpoint,finishName:head.checkpoints.at(-1).name,place:head.checkpoints.at(-1).placeA}));
+const duoUi=window.GRaceUI.race(duo,eventUi);console.log(JSON.stringify({isTeam:duo.isTeam,isRelay:duo.isRelay,format:duo.competitionFormat,field:adapter.referenceProfiles(first).field.label,classReference:adapter.referenceProfiles(first).class.label,finish:head.checkpoints.at(-1).checkpoint,finishName:head.checkpoints.at(-1).name,place:head.checkpoints.at(-1).placeA,sourceUrl:duoUi.sourceUrl}));
 """)
         self.assertTrue(result["isTeam"])
         self.assertFalse(result["isRelay"])
@@ -81,6 +81,7 @@ console.log(JSON.stringify({isTeam:duo.isTeam,isRelay:duo.isRelay,format:duo.com
         self.assertEqual(result["classReference"], "My division")
         self.assertEqual(result["finishName"], "Harbor Light")
         self.assertEqual(result["place"], 1)
+        self.assertEqual(result["sourceUrl"], "https://example.test/coast/results")
 
     def test_production_contract_accepts_another_event_with_four_families_and_duo(self):
         config = copy.deepcopy(self.config)
@@ -128,11 +129,13 @@ console.log(JSON.stringify({a:migrated.all(),b:isolated.all(),saved:values.get('
             "runner-replay.js", "profile-journey.js", "interactive-analysis.js",
         ]
         source = "\n".join((ROOT / "docs/assets" / name).read_text(encoding="utf-8") for name in core)
-        for value in ("Gotaleden", "Göteborg", "Floda", "Alingsås", "Nolhaga", "Skatås", "Tollered", "EQ Timing", "route-35", "Coast Trail Lab", "long-solo-a", "62 km", "alingsas", "floda", "gothenburg", "skatas", "nolhaga", "tollered"):
+        for value in ("Gotaleden", "Göteborg", "Floda", "Alingsås", "Nolhaga", "Skatås", "Tollered", "EQ Timing", "route-35", "Coast Trail Lab", "long-solo-a", "62 km", "alingsas", "floda", "gothenburg", "skatas", "nolhaga", "tollered", "Publicerad lagtid", "Lagklass", "Lagmedlemmar", "stafettfältet", "stafettens officiella", "OFFICIELLA STAFETTKLASSER", "Mixed tävling", "Mixed fri", "deltagare/lag", "deltagare eller lag"):
             self.assertNotIn(value.casefold(), source.casefold())
         self.assertNotRegex(source, r"(?:race|key|distance).{0,30}(?:includes|===).{0,12}(?:2026|35|75)")
         central_ui = "\n".join((ROOT / "docs/assets" / name).read_text(encoding="utf-8") for name in ("race-ui.js", "app.js", "favorites.js", "goal-pace.js", "personal-summary.js", "map-page.js"))
         self.assertNotIn("isRelay", central_ui)
+        html = (ROOT / "docs/index.html").read_text(encoding="utf-8")
+        self.assertNotIn("live.eqtiming.com", html)
 
 
 if __name__ == "__main__":
