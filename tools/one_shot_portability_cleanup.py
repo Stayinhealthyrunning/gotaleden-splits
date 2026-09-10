@@ -20,20 +20,12 @@ def rep_optional(path_name, old, new):
 
 
 # Static shell: no event/provider/participant-format assumptions.
-rep("docs/index.html",
-    '<p class="eyebrow ink">INDIVIDUELL LOPPANALYS</p>',
-    '<p class="eyebrow ink" id="lookup-eyebrow">DELTAGARANALYS</p>')
-rep("docs/index.html",
-    'Kartduell jämför två till fem löpare eller lag på banan. För analys av en enda deltagare använder du Löpare/Lag-analysen och Runner Replay.',
-    'Kartduell jämför två till fem deltagare på banan. För analys av en enda deltagare använder du deltagaranalysen och Replay.')
-rep("docs/index.html",
-    '<a class="source-link" id="source-link" href="https://live.eqtiming.com/77906" target="_blank" rel="noopener">Officiella resultat ↗</a>',
-    '<a class="source-link" id="source-link" href="#" target="_blank" rel="noopener" hidden>Officiella resultat ↗</a>')
+rep("docs/index.html", '<p class="eyebrow ink">INDIVIDUELL LOPPANALYS</p>', '<p class="eyebrow ink" id="lookup-eyebrow">DELTAGARANALYS</p>')
+rep("docs/index.html", 'Kartduell jämför två till fem löpare eller lag på banan. För analys av en enda deltagare använder du Löpare/Lag-analysen och Runner Replay.', 'Kartduell jämför två till fem deltagare på banan. För analys av en enda deltagare använder du deltagaranalysen och Replay.')
+rep("docs/index.html", '<a class="source-link" id="source-link" href="https://live.eqtiming.com/77906" target="_blank" rel="noopener">Officiella resultat ↗</a>', '<a class="source-link" id="source-link" href="#" target="_blank" rel="noopener" hidden>Officiella resultat ↗</a>')
 
 # App: team is an entity model, not a synonym for relay/stafett.
-rep("docs/assets/app.js",
-    "$('#lookup-title').textContent=ui.uiLabels.lookup_title||`Analysera ${ui.labels.singular}`;",
-    "$('#lookup-eyebrow').textContent=ui.uiLabels.lookup_eyebrow||ui.labels.profile;$('#lookup-title').textContent=ui.uiLabels.lookup_title||`Analysera ${ui.labels.singular}`;")
+rep("docs/assets/app.js", "$('#lookup-title').textContent=ui.uiLabels.lookup_title||`Analysera ${ui.labels.singular}`;", "$('#lookup-eyebrow').textContent=ui.uiLabels.lookup_eyebrow||ui.labels.profile;$('#lookup-title').textContent=ui.uiLabels.lookup_title||`Analysera ${ui.labels.singular}`;")
 rep("docs/assets/app.js", ",relayFacts=`", ",teamFacts=`")
 rep("docs/assets/app.js", "${race.isTeam?relayFacts:individualFacts}", "${race.isTeam?teamFacts:individualFacts}")
 rep("docs/assets/app.js", "<small>Publicerad lagtid</small>", "<small>${esc(teamLabel(race,'finish_time_copy','Publicerad sluttid'))}</small>")
@@ -48,21 +40,15 @@ rep("docs/assets/app.js", "<th>${race.isTeam&&!relayMeta.ranked?'Analytisk ordni
 # Adapter: presentation labels are config-driven for arbitrary team formats.
 rep("docs/assets/data-adapter.js", "label:raceValue.isTeam?'Lagklass':'Klass'", "label:raceValue.isTeam?(raceValue.uiLabels.class||'Klass'):'Klass'")
 rep("docs/assets/data-adapter.js", "message:raceValue.isTeam?'Könsplacering används inte för lag':'Placering saknas'", "message:raceValue.isTeam?`Könsplacering används inte för ${raceValue.participant.plural}`:'Placering saknas'")
+rep_optional("docs/assets/data-adapter.js", "const referenceLabel=raceValue?.isTeam?'egen lagklass':'hela fältet';", "const referenceLabel=raceValue?.isTeam?(raceValue.uiLabels?.class_reference||'egen klass').toLocaleLowerCase('sv'):'hela fältet';")
 
 # Interactive analysis: remove the last semantic team=relay/Gotaleden-class assumptions.
-rep("docs/assets/interactive-analysis.js",
-    "$('#age-analysis-eyebrow').textContent=race.isTeam?'OFFICIELLA STAFETTKLASSER':'KLASS & ÅLDER';",
-    "$('#age-analysis-eyebrow').textContent=race.isTeam?(race.uiLabels?.class_analysis_eyebrow||'OFFICIELLA KLASSER'):'KLASS & ÅLDER';")
-rep("docs/assets/interactive-analysis.js",
-    "$('#age-analysis-title').textContent=race.isTeam?'Klasslabbet':'Ålderslabbet';",
-    "$('#age-analysis-title').textContent=race.isTeam?(race.uiLabels?.age_analysis||'Klassanalys'):'Ålderslabbet';")
-rep("docs/assets/interactive-analysis.js",
-    "$('#age-analysis-copy').innerHTML=race.isTeam?'Jämförelsen använder lagens <strong>officiella klassnamn</strong>. Inga lagmedlemmar kopplas till en specifik etapp. Mixed fri är <strong>Ej tävling</strong> men visas för analys.':'<strong>Analytiska åldersgrupper – inte officiella tävlingsklasser.</strong> Grupper med för litet underlag döljs.';",
-    "$('#age-analysis-copy').textContent=race.isTeam?(race.uiLabels?.class_analysis_copy||'Jämförelsen använder deltagarnas officiella klassnamn.'):'Analytiska åldersgrupper – inte officiella tävlingsklasser. Grupper med för litet underlag döljs.';")
+rep("docs/assets/interactive-analysis.js", "$('#age-analysis-eyebrow').textContent=race.isTeam?'OFFICIELLA STAFETTKLASSER':'KLASS & ÅLDER';", "$('#age-analysis-eyebrow').textContent=race.isTeam?(race.uiLabels?.class_analysis_eyebrow||'OFFICIELLA KLASSER'):'KLASS & ÅLDER';")
+rep("docs/assets/interactive-analysis.js", "$('#age-analysis-title').textContent=race.isTeam?'Klasslabbet':'Ålderslabbet';", "$('#age-analysis-title').textContent=race.isTeam?(race.uiLabels?.age_analysis||'Klassanalys'):'Ålderslabbet';")
+rep("docs/assets/interactive-analysis.js", "$('#age-analysis-copy').innerHTML=race.isTeam?'Jämförelsen använder lagens <strong>officiella klassnamn</strong>. Inga lagmedlemmar kopplas till en specifik etapp. Mixed fri är <strong>Ej tävling</strong> men visas för analys.':'<strong>Analytiska åldersgrupper – inte officiella tävlingsklasser.</strong> Grupper med för litet underlag döljs.';", "$('#age-analysis-copy').textContent=race.isTeam?(race.uiLabels?.class_analysis_copy||'Jämförelsen använder deltagarnas officiella klassnamn.'):'Analytiska åldersgrupper – inte officiella tävlingsklasser. Grupper med för litet underlag döljs.';")
 rep("docs/assets/interactive-analysis.js", "title:'Mixed tävling närmast annan rankad klass'", "title:`${mixed.shortLabel} närmast annan rankad klass`")
 rep("docs/assets/interactive-analysis.js", "value:`${close} deltagare/lag`", "value:`${close} ${race.participant?.plural||'deltagare'}`")
 rep("docs/assets/interactive-analysis.js", "'<div class=\"empty\">Minst två klasser med fem fullföljande lag krävs.</div>'", "`<div class=\"empty\">Minst två klasser med fem fullföljande ${race.participant?.plural||'deltagare'} krävs.</div>`")
-rep_optional("docs/assets/interactive-analysis.js", "referenceLabel=raceValue?.isTeam?'egen lagklass':'hela fältet'", "referenceLabel=raceValue?.isTeam?(raceValue.uiLabels?.class_reference||'egen klass').toLocaleLowerCase('sv'):'hela fältet'")
 
 # Standalone map copy is participant-neutral before the race contract is resolved.
 rep("docs/assets/map-page.js", "Högst fem deltagare eller lag kan visas samtidigt.", "Högst fem deltagare kan visas samtidigt.")
