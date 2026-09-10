@@ -33,11 +33,12 @@ class FrontendPortTests(unittest.TestCase):
         self.assertIn("state.history.families()", self.app)
         self.assertIn("state.history.editions(active.family)", self.app)
         self.assertIn("history.replaceState", self.app)
-        self.assertIn("gotaleden-race", self.app)
+        self.assertIn("state.eventUi.storageKey('race')", self.app)
 
     def test_runner_and_relay_team_detail_are_ported(self):
-        self.assertIn("LÖPARANALYS", self.app)
-        self.assertIn("LAGANALYS", self.app)
+        self.assertIn("race.participant?.profile_label", self.app)
+        self.assertEqual(self.results["races"]["individual-75-2026"]["participant"]["profile_label"], "LÖPARANALYS")
+        self.assertEqual(self.results["races"]["relay-75-2026"]["participant"]["profile_label"], "LAGANALYS")
         self.assertIn("MELLANTIDER", self.app)
         self.assertIn("PACINGPROFIL", self.app)
         self.assertIn("Medlemslistan anger inte vem som sprang en viss etapp.", self.app)

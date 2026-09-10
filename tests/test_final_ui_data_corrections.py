@@ -114,7 +114,7 @@ for(const race of adapter.races.values()){
   if(grouped.some(record=>record.status!=='DNF'))throw new Error(race.key+': non-DNF');
   if(groups.some(group=>group.key==='nolhaga'))throw new Error(race.key+': Nolhaga');
   if(new Set(grouped.map(record=>record.id)).size!==expected.length)throw new Error(race.key+': duplicate');
-  if(!race.isRelay)for(const sex of ['F','M']){
+  if(!race.isTeam)for(const sex of ['F','M']){
     const sexRecords=race.records.filter(record=>record.sex===sex);
     const sexGrouped=adapter.dnfByLastAnalysisCheckpoint(sexRecords).flatMap(group=>group.records);
     const sexExpected=sexRecords.filter(record=>record.status==='DNF');
@@ -151,14 +151,15 @@ console.log(JSON.stringify(summary));
 
     def test_relay_modes_hide_all_club_ui_and_individual_modes_restore_it(self):
         for token in (
-            "$('[data-target=\"clubs\"]').hidden=race.isRelay",
-            "$('#clubs').hidden=race.isRelay",
-            "$('#club-filter-field').hidden=race.isRelay",
-            "$('.toolbar').classList.toggle('relay-toolbar',race.isRelay)",
-            "club:race?.isRelay?'':$('#club-filter').value",
+            "const ui=state.raceUi,goalPace=ui.can('goal_pace'),sex=ui.can('sex_filter'),clubs=ui.can('club_analysis')",
+            "$('[data-target=\"clubs\"]').hidden=!clubs",
+            "$('#clubs').hidden=!clubs",
+            "$('#club-filter-field').hidden=!clubs",
+            "$('.toolbar').classList.toggle('relay-toolbar',ui.isTeam)",
+            "club:state.raceUi?.can('club_analysis')?$('#club-filter').value:''",
         ):
             self.assertIn(token, self.app)
-        self.assertIn("if(!race||race.isRelay||query.length<1)", self.app)
+        self.assertIn("if(!race||!state.raceUi?.can('club_analysis')||query.length<1)", self.app)
         self.assertIn(".toolbar.relay-toolbar{grid-template-columns:", self.style)
 
 

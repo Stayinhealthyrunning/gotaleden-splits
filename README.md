@@ -147,6 +147,15 @@ analysdjup, profilflöde och kartkomponenter följer systerproduktens etablerade
 data, rutt och den ljusa västkustidentiteten är Gotaledens egna. Flerårssektioner är avsiktligt
 inaktiva under premiäråret 2026.
 
+## Adding another event
+
+Den generella kärnan är eventneutral. Ett nytt running-event definierar eventmetadata och branding,
+RaceFamilies/RaceEditions, CourseVersions, participant-/competition-/class-kontrakt samt capabilities
+i config/data. Tillgängliga editions kopplas till en provider-neutral source binding och befintlig
+provideradapter, eller en ny avgränsad adapter. Kör sedan build/validering och lägg kontrakts- samt
+browserfall för eventets labels, course, individer/team, features och eventnamespacad lagring. Varken
+eventnamn, race keys, distanser eller ortnamn ska läggas som routingregler i frontendkärnan.
+
 ## Tester
 
 ```bash

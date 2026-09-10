@@ -2,7 +2,44 @@
   "event": {
     "event_key": "gotaleden-stafett-ultra",
     "name": "Gotaleden Stafett & Ultra",
-    "official_site_url": "https://www.gotaledenstafettultra.se/"
+    "product_title": "Gotaleden Splits",
+    "short_name": "Gotaleden",
+    "official_site_url": "https://www.gotaledenstafettultra.se/",
+    "storage_namespace": "gotaleden",
+    "legacy_storage_namespaces": ["gotaleden"],
+    "custom_event_namespace": "gotaleden",
+    "presentation": {
+      "title_lead": "Gotaleden",
+      "title_accent": "Splits",
+      "hero_lead": "Följ loppet kontroll för kontroll. Upptäck tempot, placeringarna och berättelsen längs leden.",
+      "loading_text": "Bygger Gotaleden-analysen…",
+      "footer_text": "Gotaleden Splits · Premiäråret 2026 · Officiell rutt från Göteborg till Alingsås"
+    },
+    "help_content": {"override_asset": "assets/analysis-help-content.js"}
+  },
+  "competition_profiles": {
+    "individual": {
+      "participant": {"entity": "person", "singular": "löpare", "plural": "deltagare", "profile_label": "LÖPARANALYS", "possessive": "Löparens"},
+      "ui_labels": {"lookup_eyebrow": "INDIVIDUELL LOPPANALYS", "navigation": "Löpare", "saved": "Sparade löpare", "empty_saved": "löpare", "lookup_title": "Analysera en löpares lopp", "lookup_copy": "Sök på namn eller startnummer och öppna en komplett profil med mellantider, placering, tempo, jämförelser och replay.", "class": "Klass", "group_analysis": "Genusperspektiv", "age_analysis": "Klass & ålder", "map_single": "INDIVIDUELL KARTA"},
+      "competition": {"format": "individual", "team_structure": {"kind": "none", "member_assignment": "unknown"}},
+      "capabilities": {"goal_pace": true, "sex_filter": true, "age_analysis": true, "club_analysis": true, "person_history": true, "team_members": false, "class_analysis": true, "segment_analysis": true, "replay": true, "head_to_head": true}
+    },
+    "relay": {
+      "participant": {"entity": "team", "singular": "lag", "plural": "lag", "profile_label": "LAGANALYS", "possessive": "Lagets"},
+      "ui_labels": {"navigation": "Lag", "saved": "Sparade lag", "empty_saved": "lag", "lookup_title": "Analysera ett lags lopp", "lookup_copy": "Sök fram ett lag och öppna lagprofilen med passeringar, placering, tempo, jämförelser och replay. Medlemslistan kopplas aldrig till specifika etapper.", "class": "Lagklass", "group_analysis": "Stafettklasser", "age_analysis": "Klasslabbet", "map_single": "LAGKARTA", "field": "Alla lag", "field_analysis": "Hela stafettfältet", "field_pace_eyebrow": "LAGENS", "class_reference": "Min lagklass", "class_place": "Klassplats", "class_places": "klassplatser", "class_analysis_eyebrow": "OFFICIELLA STAFETTKLASSER", "class_analysis_title": "Fältet klass för klass", "class_analysis_copy": "Jämför deltagande, målgång, fart och pacing mellan stafettens officiella lagklasser.", "class_analysis_retention": "100 = respektive klass medianfart över hela loppet", "members": "Lagmedlemmar", "finish_time_copy": "Publicerad lagtid", "class_percentile_copy": "av fullföljande lag i samma klass", "field_percentile_copy": "av fullföljande lag", "member_count_copy": "ingen koppling till etapper", "member_assignment_copy": "Medlemslistan anger inte vem som sprang en viss etapp.", "entity_heading": "LAG"},
+      "competition": {"format": "relay", "team_structure": {"kind": "sequential", "member_assignment": "unknown"}},
+      "capabilities": {"goal_pace": false, "sex_filter": false, "age_analysis": false, "club_analysis": false, "person_history": false, "team_members": true, "class_analysis": true, "segment_analysis": true, "replay": true, "head_to_head": true}
+    }
+  },
+  "class_schemes": {
+    "relay-classes": {
+      "classes": [
+        {"id": "men", "family": "men", "source_name": "Män", "short_label": "Män", "ranked": true, "competition_type": "competitive", "color": "#2563eb", "soft_color": "#dbeafe"},
+        {"id": "women", "family": "women", "source_name": "Kvinnor", "short_label": "Kvinnor", "ranked": true, "competition_type": "competitive", "color": "#db2777", "soft_color": "#fce7f3"},
+        {"id": "mixed-ranked", "family": "mixed", "source_name": "Mixed tävling - Minst hälften kvinnor", "short_label": "Mixed tävling", "ranked": true, "competition_type": "competitive", "color": "#7c3aed", "soft_color": "#ede9fe"},
+        {"id": "mixed-free", "family": "mixed", "source_name": "Mixed ej tävling - Fri fördelning", "short_label": "Mixed fri", "ranked": false, "competition_type": "non_competitive", "comparison_focus": true, "color": "#c56a16", "soft_color": "#fff1d6"}
+      ]
+    }
   },
   "source_events": {
     "eqtiming-gotaleden-2026": {
@@ -170,6 +207,9 @@
       },
       "section": "Individuellt 75",
       "type": "individual",
+      "competition_profile": "individual",
+      "goal_pace": {"minimum_seconds": 14400, "maximum_seconds": 72000, "default_seconds": 36000},
+      "presentation": {"distance_label": "75 km", "finish_label": "Alingsås", "course_difficulty_title": "Var förändrar Gotaleden loppet?", "course_difficulty_copy": "Kombinerar banans höjdprofil med verkliga 2026-resultat. Profilen visar klättring, farttapp, spridning och placeringsrörelse – men mäter inte teknisk stigsvårighet.", "insight_focus_checkpoint": "floda", "hero_eyebrow": "GÖTEBORG · FLODA · ALINGSÅS", "route_stops": [{"label":"Göteborg","role":"start"},{"label":"Skatås"},{"label":"Kåsjön"},{"label":"Jonsered"},{"label":"Lerum"},{"label":"Floda"},{"label":"Tollered"},{"label":"Norsesund"},{"label":"Västra Bodarna"},{"label":"Alingsås","role":"finish"}]},
       "nominal_distance_km": 78.0,
       "route_range": {"from": "gothenburg", "to": "alingsas"},
       "checkpoint_keys": [
@@ -199,6 +239,9 @@
       },
       "section": "Individuellt 35",
       "type": "individual",
+      "competition_profile": "individual",
+      "goal_pace": {"minimum_seconds": 7200, "maximum_seconds": 43200, "default_seconds": 14400},
+      "presentation": {"distance_label": "35 km", "finish_label": "Alingsås", "course_difficulty_title": "Var förändrar Gotaleden loppet?", "course_difficulty_copy": "Kombinerar banans höjdprofil med verkliga 2026-resultat. Profilen visar klättring, farttapp, spridning och placeringsrörelse – men mäter inte teknisk stigsvårighet.", "insight_focus_checkpoint": "floda", "hero_eyebrow": "FLODA · ALINGSÅS", "route_stops": [{"label":"Göteborg","role":"context"},{"label":"Skatås","role":"context"},{"label":"Kåsjön","role":"context"},{"label":"Jonsered","role":"context"},{"label":"Lerum","role":"context"},{"label":"Floda","role":"start"},{"label":"Tollered"},{"label":"Norsesund"},{"label":"Västra Bodarna"},{"label":"Alingsås","role":"finish"}]},
       "nominal_distance_km": 36.5,
       "route_range": {"from": "floda", "to": "alingsas"},
       "checkpoint_keys": [
@@ -223,6 +266,10 @@
       },
       "section": "Stafett 75",
       "type": "relay",
+      "competition_profile": "relay",
+      "class_scheme": "relay-classes",
+      "team_structure": {"kind": "sequential", "leg_count": 9, "member_assignment": "unknown"},
+      "presentation": {"distance_label": "75 km", "finish_label": "Alingsås", "course_difficulty_title": "Var förändrar Gotaleden loppet?", "course_difficulty_copy": "Kombinerar banans höjdprofil med verkliga 2026-resultat. Profilen visar klättring, farttapp, spridning och placeringsrörelse – men mäter inte teknisk stigsvårighet.", "insight_focus_checkpoint": "floda", "hero_eyebrow": "GÖTEBORG · FLODA · ALINGSÅS", "route_stops": [{"label":"Göteborg","role":"start"},{"label":"Skatås"},{"label":"Kåsjön"},{"label":"Jonsered"},{"label":"Lerum"},{"label":"Floda"},{"label":"Tollered"},{"label":"Norsesund"},{"label":"Västra Bodarna"},{"label":"Alingsås","role":"finish"}]},
       "nominal_distance_km": 78.0,
       "route_range": {"from": "gothenburg", "to": "alingsas"},
       "checkpoint_keys": [
@@ -252,6 +299,10 @@
       },
       "section": "Stafett 35",
       "type": "relay",
+      "competition_profile": "relay",
+      "class_scheme": "relay-classes",
+      "team_structure": {"kind": "sequential", "leg_count": 4, "member_assignment": "unknown"},
+      "presentation": {"distance_label": "35 km", "finish_label": "Alingsås", "course_difficulty_title": "Var förändrar Gotaleden loppet?", "course_difficulty_copy": "Kombinerar banans höjdprofil med verkliga 2026-resultat. Profilen visar klättring, farttapp, spridning och placeringsrörelse – men mäter inte teknisk stigsvårighet.", "insight_focus_checkpoint": "floda", "hero_eyebrow": "FLODA · ALINGSÅS", "route_stops": [{"label":"Göteborg","role":"context"},{"label":"Skatås","role":"context"},{"label":"Kåsjön","role":"context"},{"label":"Jonsered","role":"context"},{"label":"Lerum","role":"context"},{"label":"Floda","role":"start"},{"label":"Tollered"},{"label":"Norsesund"},{"label":"Västra Bodarna"},{"label":"Alingsås","role":"finish"}]},
       "nominal_distance_km": 36.5,
       "route_range": {"from": "floda", "to": "alingsas"},
       "checkpoint_keys": [

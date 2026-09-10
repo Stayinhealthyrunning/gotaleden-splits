@@ -14,17 +14,17 @@ class RelaySexMetadataTests(unittest.TestCase):
 
     def test_sex_filter_is_kept_for_individual_and_hidden_ignored_for_relay(self):
         self.assertIn('id="sex-filter-field">Kön<select id="sex-filter"', self.html)
-        self.assertIn("$('#sex-filter-field').hidden=race.isRelay", self.app)
-        self.assertIn("sex:race?.isRelay?'':$('#sex-filter').value", self.app)
+        self.assertIn("$('#sex-filter-field').hidden=!sex", self.app)
+        self.assertIn("sex:state.raceUi?.can('sex_filter')?$('#sex-filter').value:''", self.app)
         self.assertIn("$('#sex-filter').onchange=filtersChanged", self.app)
 
     def test_placement_scatter_uses_neutral_relay_and_sex_colors_for_individual(self):
-        self.assertIn("race.isRelay?{color:meta.color}", self.app)
+        self.assertIn("race.isTeam?{color:meta.color}", self.app)
         self.assertIn("{sex:record.sex,color:window.GCharts.SEX_COLORS[record.sex]", self.app)
 
     def test_replay_omits_sex_reference_only_for_relay(self):
         self.assertIn("sex:{label:'Mitt kön'", self.replay)
-        self.assertIn("!(record.isRelay&&key==='sex')", self.replay)
+        self.assertIn("!(record.isTeam&&key==='sex')", self.replay)
         self.assertIn("runner-replay.js?v=20260907-product-completion1", self.html)
         self.assertIn("app.js?v=20260909-course1", self.html)
 

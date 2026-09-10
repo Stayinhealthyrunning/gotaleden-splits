@@ -50,7 +50,7 @@ from course_versions import (
 )
 from gpx_analysis import build_gpx_artifacts
 from identity import IdentityConflictError, external_identity_row, resolve_person_identity
-from source_bindings import dispatch_source_groups, group_source_bindings, race_catalog, resolve_source_bindings, web_race_catalog
+from source_bindings import dispatch_source_groups, group_source_bindings, race_catalog, race_contract, resolve_source_bindings, web_race_catalog
 
 def _load_public_contestants(source_event: dict[str, Any]) -> dict[str, dict[str, Any]]:
     snapshot = ROOT / source_event["public_snapshot"]
@@ -171,6 +171,7 @@ def _insert_catalog(
     for race in race_catalog(config):
         resolved = bindings.get(race["race_key"])
         binding = resolved["source_race"] if resolved else None
+        contract = race_contract(config, race)
         course = courses.get(race.get("course_version"))
         if course is None:
             raise CourseConfigError(f"Race {race['race_key']!r} references unknown CourseVersion {race.get('course_version')!r}")
@@ -180,12 +181,16 @@ def _insert_catalog(
         with conn:
             conn.execute(
                 """INSERT INTO races(race_key,event_key,race_family,course_version,data_status,is_analyzable,source_event_key,
-                   section_name,source_race_name,race_type,year,race_date,nominal_distance_km,gpx_distance_km,
+                   section_name,source_race_name,race_type,participant_entity,competition_format,team_structure_json,
+                   capabilities_json,presentation_json,class_scheme,year,race_date,nominal_distance_km,gpx_distance_km,
                    route_start_distance_km,route_end_distance_km,official_url)
-                   VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                   VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 (race["race_key"], config["event"]["event_key"], race["race_family"], race.get("course_version"),
                  race["data_status"], 0, resolved["source_event_key"] if resolved else None, race["section"],
-                 binding["source_race_name"] if binding else None, race["type"], race["year"], race.get("race_date"),
+                 binding["source_race_name"] if binding else None, race["type"], contract["participant"]["entity"],
+                 contract["competition"]["format"], json.dumps(contract["competition"]["team_structure"], ensure_ascii=False),
+                 json.dumps(contract["capabilities"], ensure_ascii=False), json.dumps(contract["presentation"], ensure_ascii=False),
+                 contract["class_scheme"], race["year"], race.get("race_date"),
                  race.get("nominal_distance_km"), gpx_distance, geometry["start_route_distance_km"],
                  geometry["end_route_distance_km"],
                  resolved["source_event"].get("results_url") if resolved else None),
@@ -256,6 +261,8 @@ def _insert_results(
     web_splits: list[dict[str, Any]] = []
     for resolved in bindings.values():
         race = resolved["race"]
+        contract = race_contract(config, race)
+        class_definitions = {item["source_name"]: item for item in contract["class_metadata"]["classes"]}
         race_key = race["race_key"]
         binding = bindings[race_key]["source_race"]
         race_id, finish_id, gpx_distance = catalog[race_key]
@@ -278,9 +285,10 @@ def _insert_results(
             status = primary_status if primary_status in {"DNF", "DNS", "DSQ"} else status_code(legacy.get("Status"))
             statuses[status] += 1
             class_name = official_clean(primary.get("Class")) or clean(legacy.get("ClassName"))
+            class_definition = class_definitions.get(class_name, {})
             if class_name:
                 classes[class_name] += 1
-            entity_type = "athlete" if race["type"] == "individual" else "team"
+            entity_type = "athlete" if contract["participant"]["entity"] == "person" else "team"
             first_name = official_clean(primary.get("Firstname")) if entity_type == "athlete" else None
             last_name = official_clean(primary.get("Surname")) if entity_type == "athlete" else None
             if entity_type == "athlete":
@@ -447,7 +455,7 @@ def _insert_results(
                 "nation": official_clean(primary.get("Nat")), "club": club,
                 "public_contestant_uid": public_uid, "age": age, "birth_year": birth_year,
                 "class_is_ranked": None if class_is_ranked is None else bool(class_is_ranked),
-                "class_competition_type": "non_competitive" if "ej tävling" in (class_name or "").lower() else "competitive",
+                "class_competition_type": class_definition.get("competition_type", "competitive"),
                 "status": status, "finish_seconds": finish_seconds,
                 "finish_time_formatted": official_clean(primary.get("Total Time")),
                 "overall_place": to_int(primary.get("Rank Total")), "gender_place": to_int(primary.get("Rank Gender")),
@@ -461,6 +469,7 @@ def _insert_results(
             "year": race["year"], "race_date": race.get("race_date"), "course_version": race.get("course_version"),
             "data_status": race["data_status"], "source_event_key": resolved["source_event_key"], "analyzable": True,
             "type": race["type"], "nominal_distance_km": race["nominal_distance_km"],
+            **contract,
             "gpx_distance_km": gpx_distance, "route_start_distance_km": route_start_distance,
             "route_end_distance_km": route_end_distance, "records": records,
         }
