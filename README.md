@@ -147,6 +147,19 @@ analysdjup, profilflöde och kartkomponenter följer systerproduktens etablerade
 data, rutt och den ljusa västkustidentiteten är Gotaledens egna. Flerårssektioner är avsiktligt
 inaktiva under premiäråret 2026.
 
+### Historisk källinventering
+
+En dokumenterad källrevision visar att 2026 var eventets första upplaga. Det finns därför ingen äldre
+RaceEdition att importera. Nästa officiellt annonserade upplaga är 8 maj 2027; eftersom den ännu inte
+har genomförts och saknar resultatkälla importeras den inte som tillgänglig data. Den maskinläsbara
+inventeringen, källorna och de uttryckliga non-import-besluten finns i
+`reports/gotaleden-history-source-inventory.json` med en läsbar sammanfattning i
+`reports/gotaleden-history-source-inventory.md`.
+
+Produktionskatalogen förblir avsiktligt en edition per RaceFamily tills en ny verklig, spårbar
+resultatkälla finns. Det generella flerårskontraktet verifieras fortsatt med syntetiska fixtures för
+saknade år, finish-only-data, CourseVersion-jämförbarhet och konservativ personidentitet.
+
 ## Adding another event
 
 Den generella kärnan är eventneutral. Ett nytt running-event definierar eventmetadata och branding,
