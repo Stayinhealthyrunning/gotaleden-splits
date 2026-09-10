@@ -29,7 +29,8 @@ class ProductCompletionTests(unittest.TestCase):
         self.assertIn("requestAnimationFrame", app)
         self.assertIn("setTimeout(filtersChanged,150)", app)
         self.assertIn("aMissing?1:-1", app)
-        self.assertIn("profile.finish&&last.to?.checkpoint==='alingsas'", replay)
+        self.assertIn("finishKey=profile.race.analysisCheckpoints.at(-1)?.key", replay)
+        self.assertIn("profile.finish&&last.to?.checkpoint===finishKey", replay)
         self.assertIn("previous.to?.checkpoint!==current.from?.checkpoint", replay)
 
     def test_personal_summary_contract(self):

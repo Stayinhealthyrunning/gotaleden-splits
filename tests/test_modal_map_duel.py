@@ -21,10 +21,10 @@ class ModalMapDuelTests(unittest.TestCase):
         self.assertIn("state.duelIds.length>=5", self.app)
         self.assertIn("button.disabled=count<2", self.app)
         for copy in (
-            "Välj minst två deltagare",
-            "Välj minst två lag",
-            "Välj en deltagare till",
-            "Välj ett lag till",
+            "race.participant?.singular||'deltagare'",
+            "race.participant?.plural||'deltagare'",
+            "Välj minst två ${plural}",
+            "Välj en ${entity} till",
             "Öppna Kartduell · ${count}",
         ):
             self.assertIn(copy, self.app)
