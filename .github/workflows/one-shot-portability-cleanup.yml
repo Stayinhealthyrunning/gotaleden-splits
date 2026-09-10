@@ -1,0 +1,45 @@
+name: One-shot portability cleanup
+
+on:
+  push:
+    branches:
+      - feature/event-portability-core
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Apply portability cleanup
+        run: python tools/one_shot_portability_cleanup.py
+      - name: Targeted Python verification
+        run: python -m unittest tests.test_event_portability tests.test_race_journey_analytics -v
+      - name: JavaScript syntax verification
+        run: |
+          node --check docs/assets/race-ui.js
+          node --check docs/assets/app.js
+          node --check docs/assets/data-adapter.js
+          node --check tests/fixtures/alternate-event.js
+          node --check e2e/app.spec.js
+      - name: Diff check
+        run: git diff --check
+      - name: Commit cleanup
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet && exit 0
+          git commit -m "Finish portability cleanup"
+          git push origin HEAD:feature/event-portability-core
