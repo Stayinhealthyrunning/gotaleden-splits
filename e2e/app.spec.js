@@ -1,4 +1,5 @@
 const {test,expect}=require('@playwright/test');
+const {create: createFutureEditionFixture}=require('../tests/fixtures/future-edition.js');
 
 function watchRelevantErrors(page){
   const errors=[];
@@ -10,6 +11,16 @@ function watchRelevantErrors(page){
 
 async function openSite(page,url='/?race=individual-75-2026&section=runner-lookup'){
   await page.goto(url);await expect(page.locator('#loading')).toHaveClass(/hidden/);await expect(page.getByRole('heading',{name:'Gotaleden Splits'})).toBeVisible();
+}
+
+async function installFutureEditionFixture(page){
+  const fixture=createFutureEditionFixture(),requests=[];
+  await page.route('**/data/results.json**',route=>route.fulfill({contentType:'application/json',body:JSON.stringify(fixture.data)}));
+  await page.route('**/data/test-courses/**',route=>{
+    const path=new URL(route.request().url()).pathname.replace(/^\//,'');requests.push(path);
+    const asset=fixture.assets[path];return asset?route.fulfill({contentType:'application/json',body:JSON.stringify(asset)}):route.continue();
+  });
+  return{fixture,requests};
 }
 
 async function chooseDuelRunner(page,name){
@@ -77,6 +88,23 @@ test('catalog-driven family and year controls keep single-year history intention
   await page.getByRole('tab',{name:/Individuellt 35/}).click();await expect(page).toHaveURL(/race=individual-35-2026/);await expect(page.locator('#race-year')).toHaveValue('individual-35-2026');await expect(page.locator('#history-content h2')).toContainText('Individuellt 35');
   for(const race of ['relay-75-2026','relay-35-2026']){await openSite(page,`/?race=${race}&section=history`);await expect(page.locator('#race-year')).toHaveValue(race);await expect(page.locator('#history-content [data-history-edition]')).toHaveCount(1);await expect(page.locator('#history-content')).toContainText('Inga verifierade återkommande deltagare')}
   await page.setViewportSize({width:390,height:844});await openSite(page,'/?race=individual-75-2026&section=history');expect(await page.evaluate(()=>document.documentElement.scrollWidth>document.documentElement.clientWidth)).toBe(false);expect(errors).toEqual([]);
+});
+
+test('a declarative future edition activates through the real catalog, course loader and history UI',async({page})=>{
+  await page.setViewportSize({width:390,height:844});const errors=watchRelevantErrors(page),fixture=await installFutureEditionFixture(page);
+  await openSite(page,'/?race=solo-future&section=history');
+  await expect(page).toHaveURL(/race=solo-future&section=history/);await expect(page.locator('#race-switch [role="tab"]')).toHaveCount(2);await expect(page.locator('#race-year')).toHaveValue('solo-future');await expect(page.locator('#race-year option')).toHaveCount(4);await expect(page.locator('#history-content [data-history-edition]')).toHaveCount(4);
+  await expect(page.locator('[data-history-relation="compatible"]')).toContainText('2031');await expect(page.locator('[data-history-relation="incomparable"]')).toContainText('2034');await expect(page.locator('[data-history-segment-relation="compatible"]')).toContainText('2031');await expect(page.locator('#race-year option[value="solo-planned"]')).toHaveAttribute('disabled','');await expect(page.locator('#history-content')).not.toContainText('2032');
+  await expect(page.locator('#course-difficulty [data-course-map] .leaflet-container')).toBeVisible();
+  expect(fixture.requests.filter(path=>path.includes('route-beta')).length).toBe(2);expect(fixture.requests.some(path=>path.includes('route-alpha')||path.includes('route-gamma'))).toBe(false);
+  await page.locator('[data-target="goal-pace"]').click();await page.locator('[data-goal-hours]').fill('5');await page.locator('[data-goal-minutes]').fill('20');await page.locator('[data-goal-create]').click();await expect(page.locator('[data-goal-output] tbody tr')).toHaveCount(2);
+  await page.locator('#race-year').selectOption('solo-before');await expect(page).toHaveURL(/race=solo-before/);expect(fixture.requests.filter(path=>path.includes('route-alpha')).length).toBe(2);
+  await expect(page.locator('[data-goal-hours]')).not.toHaveValue('5');await page.locator('#race-year').selectOption('solo-future');await expect(page.locator('[data-goal-hours]')).toHaveValue('5');expect(fixture.requests.filter(path=>path.includes('route-beta')).length).toBe(2);
+  await page.locator('[data-target="results"]').click();await page.locator('#results-body [data-favorite-id]').first().click();await expect(page.locator('#favorites-list')).toContainText('Verified Global');
+  await page.locator('#runner-search').fill('Verified Global');await page.locator('#runner-suggestions [data-record-id]').click();await expect(page.locator('.profile-history')).toContainText('Verifierad personhistorik');await expect(page.locator('.profile-history')).toContainText('Inte jämförbar');await page.locator('#detail-dialog .dialog-close').click();
+  await chooseDuelRunner(page,'Verified Global');await chooseDuelRunner(page,'Runner 5');await expect(page.locator('#open-head-to-head')).toBeEnabled();await page.locator('#race-year').selectOption('solo-before');await expect(page.locator('#duel-selected')).toContainText('Inga valda');await expect(page.locator('#favorites-list')).toContainText('Inga sparade');
+  await page.getByRole('tab',{name:/Team/}).click();await expect(page).toHaveURL(/race=team-before/);await expect(page.locator('#race-year option')).toHaveCount(2);await expect(page.locator('#race-year')).not.toContainText('2032');await expect(page.locator('[data-target="goal-pace"]')).toBeHidden();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth>document.documentElement.clientWidth)).toBe(false);expect(errors).toEqual([]);
 });
 
 test('course difficulty keeps map, elevation, distribution, KPI and table on one selected segment',async({page})=>{
