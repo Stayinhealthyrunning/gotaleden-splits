@@ -68,7 +68,10 @@ const race=adapter.race('relay-75-2026'),field=adapter.segmentRanking(race.recor
             "Snabbare än i fältet",
         ):
             self.assertIn(token, self.app)
-        self.assertIn("<span>Snabbare än</span><strong>${relative.percentile?relative.percentile+' %'", self.app)
+        self.assertIn(
+            "<span>Snabbare än</span><strong>${finite(relative.percentile)?relative.percentile+' %':'–'}",
+            self.app,
+        )
         self.assertNotIn("<span>Percentil</span>", self.app)
         self.assertIn("race.isTeam?'':record.club", self.app)
         self.assertIn("heading('overall_place','Total','result-place')", self.app)
