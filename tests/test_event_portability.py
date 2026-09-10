@@ -14,7 +14,7 @@ TOOLS = ROOT / "tools"
 if str(TOOLS) not in sys.path:
     sys.path.insert(0, str(TOOLS))
 
-from source_bindings import race_catalog, race_contract  # noqa: E402
+from source_bindings import event_contract, race_catalog, race_contract  # noqa: E402
 
 
 class EventPortabilityTests(unittest.TestCase):
@@ -38,7 +38,7 @@ const adapter=window.GDataAdapter.create(fixture.data,bundles),eventUi=window.GR
         return json.loads(result.stdout)
 
     def test_real_catalog_has_explicit_event_entity_competition_and_capabilities(self):
-        event = self.config["event"]
+        event = event_contract(self.config)
         self.assertEqual(event["storage_namespace"], "gotaleden")
         self.assertTrue(event["product_title"])
         races = race_catalog(self.config)
@@ -85,7 +85,7 @@ const duoUi=window.GRaceUI.race(duo,eventUi);console.log(JSON.stringify({isTeam:
 
     def test_production_contract_accepts_another_event_with_four_families_and_duo(self):
         config = copy.deepcopy(self.config)
-        config["event"].update({"event_key": "coast-trail-lab", "name": "Coast Trail Lab", "product_title": "Coast Trail Explorer", "storage_namespace": "coast-lab"})
+        config["event"].update({"event_key": "coast-trail-lab", "name": "Coast Trail Lab", "product_title": "Coast Trail Explorer", "official_site_url": "https://example.test/coast", "storage_namespace": "coast-lab"})
         config["competition_profiles"]["duo"] = {
             "participant": {"entity": "team", "singular": "duo", "plural": "duos", "profile_label": "DUO ANALYSIS", "possessive": "Duo's"},
             "ui_labels": {"navigation": "Duos", "saved": "Saved duos", "lookup_title": "Open a duo", "lookup_copy": "Search duos.", "class": "Division", "group_analysis": "Divisions", "age_analysis": "Division analysis", "map_single": "DUO MAP", "field": "All duos", "field_analysis": "Entire duo field", "class_reference": "My division", "class_place": "Division place", "class_places": "division places", "class_analysis_eyebrow": "DUO DIVISIONS", "class_analysis_title": "Duos by division", "class_analysis_copy": "Compare divisions.", "class_analysis_retention": "100 = division pace", "members": "Duo members", "entity_heading": "DUO"},
@@ -99,6 +99,10 @@ const duoUi=window.GRaceUI.race(duo,eventUi);console.log(JSON.stringify({isTeam:
             race.update({"race_key": key, "race_family": family, "competition_profile": profile, "type": "team" if profile == "duo" else "individual", "section": key, "year": 2032})
             races.append(race)
         config["races"] = races
+        alternate_event = event_contract(config)
+        self.assertEqual(alternate_event["event_key"], "coast-trail-lab")
+        self.assertEqual(alternate_event["official_site_url"], "https://example.test/coast")
+        self.assertEqual(alternate_event["storage_namespace"], "coast-lab")
         catalog = race_catalog(config)
         self.assertEqual({race["race_family"] for race in catalog}, {"long-solo", "mid-solo", "short-solo", "duo-long"})
         duo = next(race for race in catalog if race["race_key"] == "coast-duo")
