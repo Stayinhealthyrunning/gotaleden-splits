@@ -31,7 +31,7 @@
     return{person_key:`runner-${raceKey}-${index}`,identity_status:'verified',identity_scope:'provider',name:`Runner ${index}`};
   }
   function catalogEntry([raceKey,family,year,raceDate,courseVersion,type,sourceEvent,section],status='available'){
-    return{race_key:raceKey,event_key:'portable-fixture-event',race_family:family,year,race_date:raceDate,course_version:courseVersion,type,section,data_status:status,source_available:status==='available',analyzable:status==='available',source_event_key:sourceEvent};
+    const team=type==='relay';return{race_key:raceKey,event_key:'portable-fixture-event',race_family:family,year,race_date:raceDate,course_version:courseVersion,type,section,data_status:status,source_available:status==='available',analyzable:status==='available',source_event_key:sourceEvent,participant:{entity:team?'team':'person',singular:team?'lag':'löpare',plural:team?'lag':'deltagare',profile_label:team?'LAGANALYS':'LÖPARANALYS',possessive:team?'Lagets':'Löparens'},competition:{format:team?'stage-team':'solo',team_structure:{kind:team?'sequential':'none',leg_count:team?2:undefined,member_assignment:'unknown'}},capabilities:{goal_pace:!team,sex_filter:!team,age_analysis:!team,club_analysis:!team,person_history:!team,team_members:team,class_analysis:true,segment_analysis:true,replay:true,head_to_head:true},goal_pace:team?null:{minimum_seconds:3600,maximum_seconds:21600,default_seconds:7200},ui_labels:{navigation:team?'Lag':'Löpare',saved:team?'Sparade lag':'Sparade löpare',class:team?'Lagklass':'Klass'},presentation:{distance_label:'2 km',finish_label:'Finish',hero_eyebrow:'START · FINISH',route_stops:[{label:'Start',role:'start'},{label:'Middle'},{label:'Finish',role:'finish'}]}};
   }
   function raceData(edition,offset){
     const [raceKey,family,year,raceDate,courseVersion,type,sourceEvent,section]=edition,relay=type==='relay',keys=keysFor(courseVersion),records=[],splits=[];
@@ -45,7 +45,7 @@
   }
   function routeAsset(version,index){return{course_version:version,points:[[57.70+index*.01,12.20,20,0],[57.705+index*.01,12.21,25,1],[57.71+index*.01,12.22,30,2]],full_distance_km:2}}
   function create(){
-    const data={meta:{project:'Future edition test fixture'},courses:courseVersions,race_catalog:{},races:{},checkpoints:{},splits:[],teams:[],team_members:[]},assets={};
+    const data={meta:{project:'Future edition test fixture',event:{event_key:'portable-fixture-event',name:'Portable Fixture',product_title:'Portable Analysis',short_name:'Portable',official_site_url:'https://example.test',storage_namespace:'portable-fixture',custom_event_namespace:'portable-fixture',presentation:{title_lead:'Portable',title_accent:'Analysis',hero_lead:'A generic history fixture.'}}},courses:courseVersions,race_catalog:{},races:{},checkpoints:{},splits:[],teams:[],team_members:[]},assets={};
     editions.forEach((edition,index)=>{const built=raceData(edition,index);data.race_catalog[edition[0]]=catalogEntry(edition);data.races[edition[0]]=built.race;data.checkpoints[edition[0]]=built.checkpoints;data.splits.push(...built.splits)});
     data.race_catalog[planned[0]]=catalogEntry(planned,'planned');
     Object.keys(courseVersions).forEach((version,index)=>{const entry=courseVersions[version],route=routeAsset(version,index),elevation={course_version:version,points:[{route_distance_km:0,elevation_m:20},{route_distance_km:1,elevation_m:25},{route_distance_km:2,elevation_m:30}]};assets[entry.assets.route]=route;assets[entry.assets.elevation]=elevation});

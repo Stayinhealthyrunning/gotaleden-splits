@@ -1,5 +1,6 @@
 const {test,expect}=require('@playwright/test');
 const {create: createFutureEditionFixture}=require('../tests/fixtures/future-edition.js');
+const {create: createAlternateEventFixture}=require('../tests/fixtures/alternate-event.js');
 
 function watchRelevantErrors(page){
   const errors=[];
@@ -10,7 +11,7 @@ function watchRelevantErrors(page){
 }
 
 async function openSite(page,url='/?race=individual-75-2026&section=runner-lookup'){
-  await page.goto(url);await expect(page.locator('#loading')).toHaveClass(/hidden/);await expect(page.getByRole('heading',{name:'Gotaleden Splits'})).toBeVisible();
+  await page.goto(url);await expect(page.locator('#loading')).toHaveClass(/hidden/);await expect(page.locator('h1')).toBeVisible();
 }
 
 async function installFutureEditionFixture(page){
@@ -21,6 +22,13 @@ async function installFutureEditionFixture(page){
     const asset=fixture.assets[path];return asset?route.fulfill({contentType:'application/json',body:JSON.stringify(asset)}):route.continue();
   });
   return{fixture,requests};
+}
+
+async function installAlternateEventFixture(page){
+  const fixture=createAlternateEventFixture();
+  await page.route('**/data/results.json**',route=>route.fulfill({contentType:'application/json',body:JSON.stringify(fixture.data)}));
+  await page.route('**/data/alternate/**',route=>{const path=new URL(route.request().url()).pathname.replace(/^\//,'').split('?')[0],asset=fixture.assets[path];return asset?route.fulfill({contentType:'application/json',body:JSON.stringify(asset)}):route.continue()});
+  return fixture;
 }
 
 async function chooseDuelRunner(page,name){
@@ -105,6 +113,17 @@ test('a declarative future edition activates through the real catalog, course lo
   await chooseDuelRunner(page,'Verified Global');await chooseDuelRunner(page,'Runner 5');await expect(page.locator('#open-head-to-head')).toBeEnabled();await page.locator('#race-year').selectOption('solo-before');await expect(page.locator('#duel-selected')).toContainText('Inga valda');await expect(page.locator('#favorites-list')).toContainText('Inga sparade');
   await page.getByRole('tab',{name:/Team/}).click();await expect(page).toHaveURL(/race=team-before/);await expect(page.locator('#race-year option')).toHaveCount(2);await expect(page.locator('#race-year')).not.toContainText('2032');await expect(page.locator('[data-target="goal-pace"]')).toBeHidden();
   expect(await page.evaluate(()=>document.documentElement.scrollWidth>document.documentElement.clientWidth)).toBe(false);expect(errors).toEqual([]);
+});
+
+test('an alternate four-family event and two-person Duo use the same generic runtime',async({page})=>{
+  await page.setViewportSize({width:390,height:844});const errors=watchRelevantErrors(page);await installAlternateEventFixture(page);await openSite(page,'/?race=long-solo-b&section=history');
+  await expect(page.getByRole('heading',{name:'Coast Trail Explorer'})).toBeVisible();await expect(page.locator('#source-link')).toHaveAttribute('href','https://example.test/coast/results');await expect(page.locator('#race-switch [role="tab"]')).toHaveCount(4);await expect(page.locator('#race-subtitle')).toContainText('62 km');await expect(page.locator('.hero__route')).toContainText('Salt Marsh');await expect(page.locator('.hero__route')).toContainText('Harbor Light');await expect(page.locator('[data-target="goal-pace"]')).toBeVisible();await expect(page.locator('#sex-filter-field')).toBeVisible();
+  await page.locator('[data-target="results"]').click();await page.locator('#results-body [data-favorite-id]').first().click();expect(await page.evaluate(()=>localStorage.getItem('coast-lab:favorites-v1'))).toContain('long-solo-b');expect(await page.evaluate(()=>localStorage.getItem('gotaleden-favorites-v1'))).toBeNull();
+  await page.getByRole('tab',{name:/Duo Long/}).click();await expect(page.locator('[data-target="runner-lookup"]')).toHaveText('Duos');await expect(page.locator('[data-target="goal-pace"]')).toBeHidden();await expect(page.locator('#sex-filter-field')).toBeHidden();await expect(page.locator('#club-filter-field')).toBeHidden();await expect(page.locator('#results-head')).toContainText('duo');await expect(page.locator('#results-head')).toContainText('Division');
+  await page.locator('[data-target="gender"]').click();await expect(page.locator('#group-analysis-eyebrow')).toHaveText('DUO DIVISIONS');await expect(page.locator('#group-analysis-title')).toHaveText('Duos by division');await page.locator('[data-target="age-analysis"]').click();await expect(page.locator('#age-analysis-eyebrow')).toHaveText('DUO DIVISIONS');await expect(page.locator('#age-analysis')).toContainText('Compare official duo divisions');
+  await page.locator('#runner-search').fill('Sea Duo 1');await page.locator('#runner-suggestions [data-record-id]').first().click();await expect(page.locator('#detail-dialog')).toBeVisible();await expect(page.locator('.detail-members span')).toHaveCount(2);await expect(page.locator('.detail-members .eyebrow')).toHaveText('DUO MEMBERS');await expect(page.locator('#detail-replay [data-map-engine]')).toBeVisible();await expect(page.locator('#detail-dialog')).toContainText('DUO ANALYSIS');const duoDetailText=await page.locator('#detail-dialog').innerText();for(const forbidden of ['lagtid','Lagklass','Lagmedlemmar','stafett','Stafett'])expect(duoDetailText).not.toContain(forbidden);await page.locator('#detail-dialog .dialog-close').click();
+  await page.locator('#duel-search').fill('Sea Duo 1');await page.locator('#duel-suggestions [data-record-id]').first().click();await page.locator('#duel-search').fill('Sea Duo 2');await page.locator('#duel-suggestions [data-record-id]').first().click();await expect(page.locator('#open-head-to-head')).toBeEnabled();await page.locator('#open-head-to-head').click();await expect(page.locator('#head-to-head-dialog')).toContainText('Sea Duo 1');await page.locator('#head-to-head-dialog .head-to-head-close').click();
+  const visibleText=await page.locator('body').innerText();for(const forbidden of ['Gotaleden','Göteborg','Floda','Alingsås','stafett','Stafett'])expect(visibleText).not.toContain(forbidden);expect(await page.evaluate(()=>document.documentElement.scrollWidth>document.documentElement.clientWidth)).toBe(false);expect(errors).toEqual([]);
 });
 
 test('course difficulty keeps map, elevation, distribution, KPI and table on one selected segment',async({page})=>{

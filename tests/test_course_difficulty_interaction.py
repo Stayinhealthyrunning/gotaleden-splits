@@ -72,9 +72,9 @@ if((html.match(/class="elevation-segment-hit"/g)||[]).length!==2||!html.includes
         self.assertNotIn('element.click()',self.course)
 
     def test_relay_course_copy_uses_teams(self):
-        self.assertIn("race.isRelay?'Alla lag':'Hela fältet'",self.course)
-        self.assertIn("race.isRelay?'Hela loppets kompletta lag i mål':'Hela loppets kompletta målgångare'",self.course)
-        self.assertIn("race.isRelay?'LAGENS':'FÄLTETS'",self.course)
+        self.assertIn("const teamLabel=(key,fallback)=>race.uiLabels?.[key]||fallback",self.course)
+        self.assertIn("race.participant.plural",self.course)
+        self.assertIn("teamLabel('field_pace_eyebrow'",self.course)
 
     def test_statistical_copy_and_runner_gap_words(self):
         for label in ('Topp 10 %-gräns','Topp 25 %-gräns','75 % i mål inom','90 % i mål inom','90 % inom tiden'):

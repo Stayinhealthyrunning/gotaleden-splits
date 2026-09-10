@@ -1,0 +1,24 @@
+(function(){
+  'use strict';
+  const eventCache=new WeakMap(),raceCache=new WeakMap();
+  const clean=value=>String(value||'').trim();
+  const namespace=value=>clean(value).toLocaleLowerCase().replace(/[^a-z0-9_-]+/g,'-').replace(/^-|-$/g,'')||'race-analysis';
+  function event(data){
+    const source=data?.meta?.event||data?.event||{},sourceEvents=data?.meta?.source_events||data?.source_events||{};if(eventCache.has(source))return eventCache.get(source);
+    const key=clean(source.event_key)||'event',storageNamespace=namespace(source.storage_namespace||key),customNamespace=namespace(source.custom_event_namespace||storageNamespace),presentation=source.presentation||{},model={key,displayName:clean(source.name)||'Running event',productTitle:clean(source.product_title)||clean(source.name)||'Race analysis',shortName:clean(source.short_name)||clean(source.name)||'Event',officialUrl:source.official_site_url||'',storageNamespace,legacyStorageNamespaces:(source.legacy_storage_namespaces||[]).map(namespace).filter(value=>value!==storageNamespace),customNamespace,presentation,helpContent:source.help_content||{},sourceEvents,storageKey:suffix=>`${storageNamespace}:${suffix}`,legacyStorageKeys:suffix=>(source.legacy_storage_namespaces||[]).map(value=>`${namespace(value)}-${suffix}`),eventName:name=>`${customNamespace}:${name}`};
+    eventCache.set(source,model);return model;
+  }
+  function race(source,eventModel){
+    if(!source)return null;if(raceCache.has(source))return raceCache.get(source);
+    const participant=source.participant||{},competition=source.competition||{},capabilities=source.capabilities||{},presentation=source.presentation||{},uiLabels=source.uiLabels||source.ui_labels||{},entity=participant.entity||'person',labels={singular:clean(participant.singular)||'deltagare',plural:clean(participant.plural)||'deltagare',profile:clean(participant.profile_label)||'DELTAGARANALYS',possessive:clean(participant.possessive)||'Deltagarens'},sourceEventKey=source.sourceEventKey||source.source_event_key||null,sourceEvent=eventModel?.sourceEvents?.[sourceEventKey]||{},sourceUrl=clean(source.officialUrl||source.official_url||sourceEvent.results_url||''),model={event:eventModel,race:source,entity,isTeam:entity==='team',labels,uiLabels,sourceEventKey,sourceUrl,competition:{format:clean(competition.format)||'race',teamStructure:competition.team_structure||{kind:'none',member_assignment:'unknown'}},capabilities,presentation,can:key=>capabilities[key]===true,distanceLabel:clean(presentation.distance_label)||`${Number(source.distanceKm||source.gpx_distance_km||0).toLocaleString('sv-SE')} km`,finishLabel:clean(presentation.finish_label)||source.analysisCheckpoints?.at(-1)?.name||source.checkpoints?.at(-1)?.name||'Mål'};
+    raceCache.set(source,model);return model;
+  }
+  function applyBranding(document,eventModel){
+    const lead=document.getElementById('product-title-main'),accent=document.getElementById('product-title-accent'),heroLead=document.getElementById('hero-lead'),loading=document.getElementById('loading-text'),footer=document.getElementById('footer-text');if(lead)lead.textContent=eventModel.presentation.title_lead||eventModel.productTitle;if(accent)accent.textContent=eventModel.presentation.title_accent||'';if(heroLead)heroLead.textContent=eventModel.presentation.hero_lead||'';if(loading)loading.textContent=eventModel.presentation.loading_text||'Bygger analysen…';if(footer)footer.textContent=eventModel.presentation.footer_text||eventModel.productTitle;const mapBrand=document.getElementById('map-race');if(mapBrand)mapBrand.textContent=eventModel.productTitle;document.title=eventModel.productTitle;
+  }
+  function applyRacePresentation(document,model){
+    const eyebrow=document.getElementById('hero-eyebrow'),route=document.querySelector('.hero__route'),retention=document.getElementById('group-retention-copy'),sourceLink=document.getElementById('source-link');if(eyebrow)eyebrow.textContent=model.presentation.hero_eyebrow||'';if(route){const stops=model.presentation.route_stops||[];route.setAttribute('aria-label',model.presentation.route_aria_label||'Banans platser');route.innerHTML=stops.map((stop,index)=>`${index?'<i aria-hidden="true"></i>':''}<span class="route-stop-${stop.role||'course'}">${escapeHtml(stop.label)}</span>`).join('')}if(retention){retention.style.whiteSpace='normal';retention.style.maxWidth='100%';retention.style.overflowWrap='anywhere'}if(sourceLink){sourceLink.hidden=!model.sourceUrl;if(model.sourceUrl){sourceLink.href=model.sourceUrl;sourceLink.textContent=model.uiLabels?.source_results||'Officiella resultat ↗'}else sourceLink.removeAttribute('href')}
+  }
+  function escapeHtml(value){return String(value??'').replace(/[&<>"']/g,character=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]))}
+  window.GRaceUI={event,race,applyBranding,applyRacePresentation,escapeHtml};
+})();

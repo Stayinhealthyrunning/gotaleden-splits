@@ -34,9 +34,9 @@ class StandaloneMapDuelTests(unittest.TestCase):
         self.assertIn('id="open-map-duel" type="button" disabled', self.index)
         self.assertIn('id="duel-dialog"', self.index)
         self.assertIn('id="duel-dialog-content"', self.index)
-        self.assertIn("Välj minst två deltagare", self.app)
-        self.assertIn("Välj ett lag till", self.app)
-        self.assertIn("Öppna Kartduell ·", self.app)
+        self.assertIn("`Välj minst två ${plural}`", self.app)
+        self.assertIn("`Välj en ${entity} till`", self.app)
+        self.assertIn("`Öppna Kartduell · ${count} ${plural}`", self.app)
         self.assertIn("state.duelIds.length>=5", self.app)
         self.assertNotIn("window.open", self.app)
         self.assertNotIn("location.href=", self.app)
@@ -61,9 +61,9 @@ for(const key of ['individual-75-2026','individual-35-2026','relay-75-2026','rel
   const url=window.GMapDuel.buildUrl(key,[record.bib],123);
   if(!url.includes('race='+key)||!url.includes('entries='+encodeURIComponent(record.bib))||!url.includes('t=123'))throw new Error('url '+key);
 }
-if(window.GMapPage.modeFor({isRelay:false},1)!=='INDIVIDUELL KARTA')throw new Error('individual mode');
-if(window.GMapPage.modeFor({isRelay:true},1)!=='LAGKARTA')throw new Error('relay mode');
-if(window.GMapPage.modeFor({isRelay:false},2)!=='KARTDUELL')throw new Error('duel mode');
+if(window.GMapPage.modeFor({participant:{singular:'deltagare'},uiLabels:{map_single:'INDIVIDUELL KARTA'}},1)!=='INDIVIDUELL KARTA')throw new Error('individual mode');
+if(window.GMapPage.modeFor({participant:{singular:'lag'},uiLabels:{map_single:'LAGKARTA'}},1)!=='LAGKARTA')throw new Error('relay mode');
+if(window.GMapPage.modeFor({participant:{singular:'deltagare'}},2)!=='KARTDUELL')throw new Error('duel mode');
 if(window.GMapPage.fmtTime(0)!=='0:00:00'||window.GMapPage.fmtTime(15272)!=='4:14:32')throw new Error('clock format');
 const timed=window.GMapPage.selectionFrom('?race=individual-75-2026&entries='+encodeURIComponent(adapter.race('individual-75-2026').records[0].bib)+'&t=15272',adapter);
 if(timed.time!==15272)throw new Error('initial clock time');

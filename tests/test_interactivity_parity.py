@@ -23,6 +23,7 @@ class InteractivityParityTests(unittest.TestCase):
             encoding="utf-8"
         )
         cls.results = json.loads((DOCS / "data" / "results-2026.json").read_text(encoding="utf-8"))
+        cls.config = json.loads((ROOT / "config" / "races.json").read_text(encoding="utf-8"))
 
     def test_source_counts_are_unchanged(self):
         self.assertEqual(
@@ -123,9 +124,14 @@ class InteractivityParityTests(unittest.TestCase):
 
     def test_relay_class_analysis_preserves_team_level_semantics(self):
         self.assertIn("classGroups", self.interactive)
-        self.assertIn("OFFICIELLA STAFETTKLASSER", self.interactive)
-        self.assertIn("Inga lagmedlemmar kopplas till en specifik etapp", self.interactive)
-        self.assertIn("if(race.isRelay){$$('[data-sex-toggles]')", self.interactive)
+        self.assertIn("race.uiLabels?.class_analysis_eyebrow", self.interactive)
+        self.assertIn("race.uiLabels?.class_analysis_copy", self.interactive)
+        self.assertNotIn("OFFICIELLA STAFETTKLASSER", self.interactive)
+        self.assertNotIn("Inga lagmedlemmar kopplas till en specifik etapp", self.interactive)
+        relay_labels = self.config["competition_profiles"]["relay"]["ui_labels"]
+        self.assertEqual(relay_labels["class_analysis_eyebrow"], "OFFICIELLA STAFETTKLASSER")
+        self.assertIn("stafettens officiella lagklasser", relay_labels["class_analysis_copy"])
+        self.assertIn("if(race.isTeam){$$('[data-sex-toggles]')", self.interactive)
         self.assertIn("node.hidden=true", self.interactive)
         self.assertNotIn("relay_leg_assignments", self.index + self.app + self.interactive)
 

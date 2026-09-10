@@ -2,7 +2,24 @@
   "event": {
     "event_key": "gotaleden-stafett-ultra",
     "name": "Gotaleden Stafett & Ultra",
-    "official_site_url": "https://www.gotaledenstafettultra.se/"
+    "product_title": "Gotaleden Splits",
+    "short_name": "Gotaleden",
+    "official_site_url": "https://www.gotaledenstafettultra.se/",
+    "storage_namespace": "gotaleden",
+    "legacy_storage_namespaces": [
+      "gotaleden"
+    ],
+    "custom_event_namespace": "gotaleden",
+    "presentation": {
+      "title_lead": "Gotaleden",
+      "title_accent": "Splits",
+      "hero_lead": "Följ loppet kontroll för kontroll. Upptäck tempot, placeringarna och berättelsen längs leden.",
+      "loading_text": "Bygger Gotaleden-analysen…",
+      "footer_text": "Gotaleden Splits · Premiäråret 2026 · Officiell rutt från Göteborg till Alingsås"
+    },
+    "help_content": {
+      "override_asset": "assets/analysis-help-content.js"
+    }
   },
   "course_versions": {
     "course-v1": {

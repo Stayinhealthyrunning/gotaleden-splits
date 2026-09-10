@@ -83,7 +83,7 @@ for(const token of ['data-edge-padding="8"','cx="64" cy="28"','cx="892" cy="264"
         for label in ("<30", "30–39", "40–49", "50–59", "60+"):
             self.assertIn(f"label:'{label}'", self.interactive)
         self.assertIn("Analytiska åldersgrupper – inte officiella tävlingsklasser", self.interactive)
-        self.assertIn("race.isRelay?classGroups", self.interactive)
+        self.assertIn("race.isTeam?classGroups", self.interactive)
         self.assertIn("officiella klassnamn", self.interactive)
         self.assertNotIn("relay_leg_assignments", self.html + self.interactive)
 

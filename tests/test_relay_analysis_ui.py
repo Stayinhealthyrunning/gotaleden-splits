@@ -21,6 +21,7 @@ class RelayAnalysisUiTests(unittest.TestCase):
         cls.duel = (DOCS / "assets/map-duel.js").read_text(encoding="utf-8")
         cls.css = (DOCS / "assets/style.css").read_text(encoding="utf-8")
         cls.data = json.loads((DOCS / "data/results-2026.json").read_text(encoding="utf-8"))
+        cls.config = json.loads((ROOT / "config/races.json").read_text(encoding="utf-8"))
 
     def run_node(self, body):
         node = os.environ.get("GOTALEDEN_NODE") or shutil.which("node")
@@ -32,7 +33,7 @@ class RelayAnalysisUiTests(unittest.TestCase):
     def test_conflicting_person_sex_never_controls_relay_class(self):
         self.run_node(r"""
 global.window={};require('vm').runInThisContext(require('fs').readFileSync('docs/assets/data-adapter.js','utf8'));
-const race={section:'x',type:'relay',gpx_distance_km:1,nominal_distance_km:1,records:[
+const race={section:'x',type:'relay',gpx_distance_km:1,nominal_distance_km:1,participant:{entity:'team'},class_metadata:{classes:[{id:'women',family:'women',source_name:'Kvinnor',ranked:true,color:'#db2777'},{id:'men',family:'men',source_name:'Män',ranked:true,color:'#2563eb'}]},records:[
  {bib:'A',name:'Lag A',sex:'M',class_name:'Kvinnor ',class_is_ranked:true,status:'FINISHED',finish_seconds:100},
  {bib:'B',name:'Lag B',sex:'F',class_name:'Män',class_is_ranked:true,status:'FINISHED',finish_seconds:90}]};
 const adapter=window.GDataAdapter.create({races:{r:race},checkpoints:{r:[{key:'s',name:'S',route_distance_km:0},{key:'m',name:'Mål',route_distance_km:1}]},splits:[]},{full_distance_km:1,points:[[0,0,0,0],[0,0,0,1]]},{points:[]});
@@ -51,24 +52,41 @@ const race=adapter.race('relay-75-2026'),field=adapter.segmentRanking(race.recor
 """)
 
     def test_relay_results_profile_replay_and_duel_contracts(self):
-        for text in ("Lagklass", "Klassplats", "Tävlingsstatus", "Snabbare än i klassen", "Snabbare än i fältet", "Relativt egen klass"):
-            self.assertIn(text, self.app)
+        relay_labels = self.config["competition_profiles"]["relay"]["ui_labels"]
+        self.assertEqual(relay_labels["class"], "Lagklass")
+        self.assertEqual(relay_labels["members"], "Lagmedlemmar")
+        self.assertEqual(relay_labels["class_reference"], "Min lagklass")
+        self.assertNotIn("Lagklass", self.app)
+        self.assertNotIn("Lagmedlemmar", self.app)
+        for token in (
+            "teamLabel(race,'class','Klass')",
+            "teamLabel(race,'class_place','Klassplats')",
+            "teamLabel(race,'class_reference','min klass')",
+            "teamLabel(race,'members','Medlemmar')",
+            "Tävlingsstatus",
+            "Snabbare än i klassen",
+            "Snabbare än i fältet",
+        ):
+            self.assertIn(token, self.app)
         self.assertIn("<span>Snabbare än</span><strong>${relative.percentile?relative.percentile+' %'", self.app)
         self.assertNotIn("<span>Percentil</span>", self.app)
-        self.assertIn("race.isRelay?'':record.club", self.app)
+        self.assertIn("race.isTeam?'':record.club", self.app)
         self.assertIn("heading('overall_place','Total','result-place')", self.app)
         self.assertIn('aria-sort=', self.app)
-        self.assertIn("Alla lag", self.replay)
-        self.assertIn("Min stafettklass", self.replay)
-        self.assertIn("record.isRelay&&key==='sex'", self.replay)
+        self.assertIn("race.uiLabels?.field||'Hela deltagarfältet'", self.replay)
+        self.assertIn("race.uiLabels?.class_reference||'Min klass'", self.replay)
+        self.assertIn("record.isTeam&&key==='sex'", self.replay)
         self.assertIn("non-competitive-badge", self.replay)
         self.assertIn("adapter.relayClassMeta(record)", self.duel)
         self.assertIn("color:item.color", self.duel)
         self.assertIn("BASE_PLAYBACK_SECONDS=180", self.duel)
 
     def test_relay_analysis_features_and_mixed_free_rules_are_wired(self):
-        for text in ("renderRelayStatistics", "relayClassAdvancements", "Egen klass", "Hela stafettfältet", "Fartretention per klass"):
+        for text in ("renderRelayStatistics", "relayClassAdvancements", "Egen klass", "Fartretention per klass"):
             self.assertIn(text, self.interactive + self.app + self.html)
+        relay_labels = self.config["competition_profiles"]["relay"]["ui_labels"]
+        self.assertEqual(relay_labels["field_analysis"], "Hela stafettfältet")
+        self.assertEqual(relay_labels["class_analysis_eyebrow"], "OFFICIELLA STAFETTKLASSER")
         self.assertIn("group.ranked", self.interactive)
         self.assertIn("Ej tävling", self.interactive + self.app + self.replay + self.duel)
         self.assertIn("filter(item=>relayClassMeta(item).ranked)", self.adapter)
@@ -76,8 +94,7 @@ const race=adapter.race('relay-75-2026'),field=adapter.segmentRanking(race.recor
         self.assertIn(".analysis-grid>*{min-width:0}", self.css)
 
     def test_relay_simulator_uses_whole_field_despite_class_filter(self):
-        self.assertIn("targetFinishers=race.isRelay?race.records.filter(adapter.statusFinished):finishers", self.app)
-        self.assertIn("finishers=(race.isRelay?race.records:state.filtered).filter(adapter.statusFinished)", self.app)
+        self.assertIn("finishers=(race.isTeam?race.records:state.filtered).filter(adapter.statusFinished)", self.app)
         self.assertIn("classRecords=selected?finishers.filter(record=>record.class_name===selected):[]", self.app)
         self.run_node(r"""
 const fs=require('fs'),vm=require('vm');global.window={};vm.runInThisContext(fs.readFileSync('docs/assets/data-adapter.js','utf8'));
@@ -105,8 +122,9 @@ if(!men.length||whole.length<=men.length)throw new Error(`whole=${whole.length},
         self.assertIn("if(changing){state.duelIds=[];state.clubNames=[];state.selectedRecordId=null;state.sortKey='overall_place';state.sortDir=1}", self.app)
 
     def test_individual_contract_and_data_integrity_remain(self):
-        for text in ("Kön", "Genusperspektiv", "Klass & ålder", "Klubb & ort"):
+        for text in ("Kön", "Genusperspektiv", "Klubb & ort"):
             self.assertIn(text, self.html + self.app)
+        self.assertEqual(self.data["races"]["individual-75-2026"]["ui_labels"]["age_analysis"], "Klass & ålder")
         for text in ("Hela fältet", "Min klass", "Mitt kön"):
             self.assertIn(text, self.replay)
         self.assertEqual(sum(len(r["records"]) for r in self.data["races"].values()), 607)

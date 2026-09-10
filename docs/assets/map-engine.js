@@ -39,14 +39,14 @@
       runners.forEach((runner,index)=>{
         const id=String(runner.id),point=adapter.routePoint(runner.distance,race);if(!validLatLng(point))return;let item=markerMap.get(id);
         if(!item){
-          const kind=runner.kind||'participant',icon=L.divIcon({className:`gotaleden-runner-icon ${kind}`,html:`<div class="runner-marker ${kind}" style="--runner-color:${runner.color};background:${runner.color}"><span>${esc(markerText(runner,index))}</span><b>${runner.badge||index+1}</b></div>`,iconSize:[42,42],iconAnchor:[21,21]});
+          const kind=runner.kind||'participant',icon=L.divIcon({className:`race-runner-icon ${kind}`,html:`<div class="runner-marker ${kind}" style="--runner-color:${runner.color};background:${runner.color}"><span>${esc(markerText(runner,index))}</span><b>${runner.badge||index+1}</b></div>`,iconSize:[42,42],iconAnchor:[21,21]});
           const marker=L.marker([point[0],point[1]],{icon,zIndexOffset:500-index,keyboard:true}).addTo(map).bindTooltip(`${esc(runner.name)} · #${esc(runner.bib||'–')}`,{direction:'top',offset:[0,-20],className:'runner-map-tooltip'}),tail=L.polyline([],{color:runner.color,weight:6,opacity:.72,lineCap:'round'}).addTo(map);item={marker,tail,distance:runner.distance};markerMap.set(id,item)
         }
         item.distance=runner.distance;item.marker.setLatLng([point[0],point[1]]);item.tail.setStyle({color:runner.color,opacity:runner.kind==='reference'?.34:.72,weight:runner.kind==='reference'?4:6});item.tail.setLatLngs(routeSegment(adapter,Math.max(race.startDistanceKm,runner.distance-(runner.kind==='reference'?1.2:2.4)),runner.distance,race));const markerElement=item.marker.getElement()?.querySelector('.runner-marker');markerElement?.classList.toggle('finished',Boolean(runner.finished));markerElement?.classList.toggle('stopped',Boolean(runner.stopped));const badge=markerElement?.querySelector('b');if(badge)badge.textContent=runner.badge||index+1;item.marker.setTooltipContent(runner.tooltip||`${esc(runner.name)} · #${esc(runner.bib||'–')} · ${(runner.distance-race.startDistanceKm).toFixed(1)} km`)
       });
       if(follow&&runners.length){const point=adapter.routePoint(runners[0].distance,race);map.panTo([point[0],point[1]],{animate:false})}
     }
-    function fit(){follow=false;map.invalidateSize(false);if(bounds.isValid())map.fitBounds(bounds,{padding:[42,42],animate:false});elements.root.dispatchEvent(new CustomEvent('gotaleden:map-fit'))}
+    function fit(){follow=false;map.invalidateSize(false);if(bounds.isValid())map.fitBounds(bounds,{padding:[42,42],animate:false});elements.root.dispatchEvent(new CustomEvent('race-analysis:map-fit'))}
     function zoom(factor){factor>1?map.zoomIn():map.zoomOut()}
     function setFollow(value){follow=Boolean(value);return follow}
     function panToDistance(distance,zoomLevel=14){const point=adapter.routePoint(distance,race);if(validLatLng(point))map.setView([point[0],point[1]],zoomLevel,{animate:false})}
