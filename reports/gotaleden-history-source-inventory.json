@@ -1,0 +1,136 @@
+{
+  "audit_version": 1,
+  "audit_date": "2026-09-10",
+  "event_key": "gotaleden-stafett-ultra",
+  "scope": "Publicly documented Gotaleden Stafett & Ultra editions through the audit date",
+  "import_eligibility": "An edition requires an attributable event source and real result records. Announcements and future registrations are not result data.",
+  "conclusion": "No additional historical edition exists for import beyond the already canonical 2026 premiere edition.",
+  "edition_inventory": {
+    "available_data_years": [
+      2026
+    ],
+    "pre_2026_race_editions": [],
+    "future_announcements": [
+      {
+        "year": 2027,
+        "race_date": "2027-05-08",
+        "status": "planned_no_results",
+        "eligible_for_import": false,
+        "reason": "The official site announces the future event, but no race has taken place and no results source exists at the audit date."
+      }
+    ]
+  },
+  "canonical_2026": {
+    "source_event": "eqtiming-gotaleden-2026",
+    "provider_event_id": "77906",
+    "course_version": "course-v1",
+    "course_fingerprint": "ba79f364dc99c9ef939c4325a10682e562324a5a1e40ae66aec3bfea6a7fc668",
+    "result_count": 607,
+    "split_count": 4059,
+    "source_material": {
+      "provider": "eqtiming",
+      "results_url": "https://live.eqtiming.com/77906",
+      "public_snapshot": "data/source/eqtiming/api/event-77906-contestants.json",
+      "snapshot_fetched_at_utc": "2026-07-19T15:07:18.633582+00:00",
+      "raw_source_directory": "data/source/eqtiming",
+      "build_adapter": "tools/eqtiming_official_import.py",
+      "normalization_entrypoint": "tools/build_project_data.py",
+      "data_limitations": "Finish-list files contain one row per participant/team at Mål. Official intermediate observations come only from the preserved public contestant snapshot; zero-valued placeholders are excluded and no split is synthesized."
+    },
+    "race_editions": [
+      {
+        "race_key": "individual-75-2026",
+        "race_date": "2026-05-09",
+        "published_race_name": "Ultra 75 km",
+        "published_distance": "75 km",
+        "participant_entity": "person",
+        "result_count": 274,
+        "status_counts": {"FINISHED": 206, "DNF": 13, "DNS": 55},
+        "split_count": 2121,
+        "published_checkpoint_keys": ["skatas", "kasjon", "jonsered", "lerum", "floda", "tollered", "norsesund", "vastra_bodarna", "nolhaga", "alingsas"]
+      },
+      {
+        "race_key": "individual-35-2026",
+        "race_date": "2026-05-09",
+        "published_race_name": "Sprint 35 km",
+        "published_distance": "35 km",
+        "participant_entity": "person",
+        "result_count": 163,
+        "status_counts": {"FINISHED": 127, "DNF": 2, "DNS": 34},
+        "split_count": 638,
+        "published_checkpoint_keys": ["tollered", "norsesund", "vastra_bodarna", "nolhaga", "alingsas"]
+      },
+      {
+        "race_key": "relay-75-2026",
+        "race_date": "2026-05-09",
+        "published_race_name": "Stafett 75 km",
+        "published_distance": "75 km",
+        "participant_entity": "team",
+        "result_count": 121,
+        "status_counts": {"FINISHED": 109, "DNF": 1, "DNS": 11},
+        "split_count": 1077,
+        "published_checkpoint_keys": ["skatas", "kasjon", "jonsered", "lerum", "floda", "tollered", "norsesund", "vastra_bodarna", "nolhaga", "alingsas"]
+      },
+      {
+        "race_key": "relay-35-2026",
+        "race_date": "2026-05-09",
+        "published_race_name": "Stafett 35 km",
+        "published_distance": "35 km",
+        "participant_entity": "team",
+        "result_count": 49,
+        "status_counts": {"FINISHED": 45, "DNF": 1, "DNS": 3},
+        "split_count": 223,
+        "published_checkpoint_keys": ["tollered", "norsesund", "vastra_bodarna", "nolhaga", "alingsas"]
+      }
+    ]
+  },
+  "comparison_and_identity_boundary": {
+    "course_versions": "Only the verified 2026 course-v1 is assigned. No cross-year course equivalence is asserted.",
+    "person_identity": "No cross-year identity links can be established from a single edition. Existing source-event-scoped identities remain unchanged.",
+    "history_activation": "The generic history engine remains ready for additional real editions, but production history UI correctly stays inactive with one available edition per family."
+  },
+  "sources": [
+    {
+      "kind": "official_event_site",
+      "url": "https://www.gotaledenstafettultra.se/",
+      "evidence": "The event describes 9 May 2026 as the first edition and announces 8 May 2027 as the next event."
+    },
+    {
+      "kind": "official_results_page",
+      "url": "https://www.gotaledenstafettultra.se/resultat-2026/",
+      "evidence": "The official results archive exposes only 2026 and links its four formats to EQ Timing event 77906."
+    },
+    {
+      "kind": "official_timing_results",
+      "url": "https://live.eqtiming.com/77906",
+      "evidence": "EQ Timing event 77906 is the attributable result source for the four 2026 race editions."
+    },
+    {
+      "kind": "project_owner_record",
+      "url": "https://leadergotaalv.se/projekt/gotaleden-stafatt-ultra/",
+      "evidence": "The project record describes a new event with the first event scheduled for 9 May 2026."
+    },
+    {
+      "kind": "contemporary_press_before_premiere",
+      "url": "https://www.lokalpressen.se/nytt-lopp-pa-gotaleden-infor-2026-6.2.2562.f9eec92980",
+      "evidence": "Contemporary reporting states that no race had previously existed on Gotaleden and announces the 2026 premiere."
+    },
+    {
+      "kind": "contemporary_press_after_premiere",
+      "url": "https://www.borjessonsbil.se/nyheter/succe-for-gotaleden-stafett-ultra",
+      "evidence": "Post-event reporting identifies 9 May 2026 as the premiere and 8 May 2027 as the planned next edition."
+    }
+  ],
+  "non_import_decisions": [
+    {
+      "period": "before 2026",
+      "decision": "not_applicable",
+      "reason": "Multiple independent records identify 2026 as the event premiere; no earlier RaceEdition exists."
+    },
+    {
+      "period": "2027",
+      "decision": "not_imported",
+      "reason": "Future announcement only; importing it as available data would fabricate results, provenance and history."
+    }
+  ]
+}
