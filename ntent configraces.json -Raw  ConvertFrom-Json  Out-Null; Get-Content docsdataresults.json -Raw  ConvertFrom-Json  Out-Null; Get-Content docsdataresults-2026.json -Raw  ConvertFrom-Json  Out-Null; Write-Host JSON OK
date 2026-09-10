@@ -1,0 +1,30 @@
+warning: in the working copy of 'config/races.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/assets/app.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/assets/course-difficulty.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/assets/data-adapter.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/assets/head-to-head.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/assets/interactive-analysis.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/assets/runner-replay.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'e2e/app.spec.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests/fixtures/alternate-event.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests/test_course_difficulty_interaction.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests/test_event_portability.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests/test_modal_map_duel.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests/test_product_completion.py', LF will be replaced by CRLF the next time Git touches it
+ config/races.json                           |   4 [32m+[m[31m--[m
+ data/gotaleden.sqlite                       | Bin [31m17334272[m -> [32m17334272[m bytes
+ docs/assets/app.js                          |  28 [32m++++++++++++[m[31m-------[m
+ docs/assets/course-difficulty.js            |   6 [32m++[m[31m---[m
+ docs/assets/data-adapter.js                 |  12 [32m++++[m[31m-----[m
+ docs/assets/head-to-head.js                 |   6 [32m++[m[31m---[m
+ docs/assets/interactive-analysis.js         |   2 [32m+[m[31m-[m
+ docs/assets/runner-replay.js                |   4 [32m+[m[31m--[m
+ docs/data/results-2026.json                 |   2 [32m+[m[31m-[m
+ docs/data/results.json                      |   2 [32m+[m[31m-[m
+ e2e/app.spec.js                             |   7 [32m++[m[31m---[m
+ tests/fixtures/alternate-event.js           |   2 [32m+[m[31m-[m
+ tests/test_course_difficulty_interaction.py |   6 [32m++[m[31m---[m
+ tests/test_event_portability.py             |  40 [32m+++++++++++++++++++++++++++[m[31m-[m
+ tests/test_modal_map_duel.py                |   8 [32m+++[m[31m---[m
+ tests/test_product_completion.py            |   3 [32m++[m[31m-[m
+ 16 files changed, 90 insertions(+), 42 deletions(-)

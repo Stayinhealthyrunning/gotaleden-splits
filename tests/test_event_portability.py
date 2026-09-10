@@ -1,3 +1,4 @@
+import copy
 import json
 import os
 import re
@@ -68,6 +69,43 @@ console.log(JSON.stringify({event:eventUi.productTitle,families:new Set([...adap
         self.assertFalse(result["classes"]["unranked"]["ranked"])
         self.assertTrue(result["classes"]["unknown"]["id"].startswith("other-"))
 
+    def test_alternate_duo_is_a_team_without_relay_or_finish_key_assumptions(self):
+        result = self.run_node(r"""
+const duo=adapter.race('duo-long-a'),first=adapter.record('duo-long-a:1'),second=adapter.record('duo-long-a:2'),head=adapter.headToHeadAnalysis(duo,first,second);
+console.log(JSON.stringify({isTeam:duo.isTeam,isRelay:duo.isRelay,format:duo.competitionFormat,field:adapter.referenceProfiles(first).field.label,classReference:adapter.referenceProfiles(first).class.label,finish:head.checkpoints.at(-1).checkpoint,finishName:head.checkpoints.at(-1).name,place:head.checkpoints.at(-1).placeA}));
+""")
+        self.assertTrue(result["isTeam"])
+        self.assertFalse(result["isRelay"])
+        self.assertEqual(result["format"], "duo")
+        self.assertEqual(result["field"], "All duos")
+        self.assertEqual(result["classReference"], "My division")
+        self.assertEqual(result["finishName"], "Harbor Light")
+        self.assertEqual(result["place"], 1)
+
+    def test_production_contract_accepts_another_event_with_four_families_and_duo(self):
+        config = copy.deepcopy(self.config)
+        config["event"].update({"event_key": "coast-trail-lab", "name": "Coast Trail Lab", "product_title": "Coast Trail Explorer", "storage_namespace": "coast-lab"})
+        config["competition_profiles"]["duo"] = {
+            "participant": {"entity": "team", "singular": "duo", "plural": "duos", "profile_label": "DUO ANALYSIS", "possessive": "Duo's"},
+            "ui_labels": {"navigation": "Duos", "saved": "Saved duos", "lookup_title": "Open a duo", "lookup_copy": "Search duos.", "class": "Division", "group_analysis": "Divisions", "age_analysis": "Division analysis", "map_single": "DUO MAP", "field": "All duos", "field_analysis": "Entire duo field", "class_reference": "My division", "class_place": "Division place", "class_places": "division places", "class_analysis_eyebrow": "DUO DIVISIONS", "class_analysis_title": "Duos by division", "class_analysis_copy": "Compare divisions.", "class_analysis_retention": "100 = division pace", "members": "Duo members", "entity_heading": "DUO"},
+            "competition": {"format": "duo", "team_structure": {"kind": "sequential", "leg_count": 2, "member_assignment": "unknown"}},
+            "capabilities": {"goal_pace": False, "sex_filter": False, "age_analysis": False, "club_analysis": False, "person_history": False, "team_members": True, "class_analysis": True, "segment_analysis": True, "replay": True, "head_to_head": True},
+        }
+        base = copy.deepcopy(config["races"][0])
+        races = []
+        for key, family, profile in (("coast-long", "long-solo", "individual"), ("coast-mid", "mid-solo", "individual"), ("coast-short", "short-solo", "individual"), ("coast-duo", "duo-long", "duo")):
+            race = copy.deepcopy(base)
+            race.update({"race_key": key, "race_family": family, "competition_profile": profile, "type": "team" if profile == "duo" else "individual", "section": key, "year": 2032})
+            races.append(race)
+        config["races"] = races
+        catalog = race_catalog(config)
+        self.assertEqual({race["race_family"] for race in catalog}, {"long-solo", "mid-solo", "short-solo", "duo-long"})
+        duo = next(race for race in catalog if race["race_key"] == "coast-duo")
+        contract = race_contract(config, duo)
+        self.assertEqual(contract["participant"]["entity"], "team")
+        self.assertEqual(contract["competition"]["format"], "duo")
+        self.assertEqual(contract["competition"]["team_structure"], {"kind": "sequential", "leg_count": 2, "member_assignment": "unknown"})
+
     def test_storage_is_event_scoped_and_legacy_favorites_migrate(self):
         result = self.run_node(r"""
 const values=new Map([['legacy-favorites','["same-race:1"]']]),storage={getItem:key=>values.has(key)?values.get(key):null,setItem:(key,value)=>values.set(key,value)};
@@ -90,7 +128,7 @@ console.log(JSON.stringify({a:migrated.all(),b:isolated.all(),saved:values.get('
             "runner-replay.js", "profile-journey.js", "interactive-analysis.js",
         ]
         source = "\n".join((ROOT / "docs/assets" / name).read_text(encoding="utf-8") for name in core)
-        for value in ("Gotaleden", "Göteborg", "Floda", "Alingsås", "Nolhaga", "Skatås", "Tollered", "EQ Timing", "route-35", "Coast Trail Lab", "long-solo-a", "62 km"):
+        for value in ("Gotaleden", "Göteborg", "Floda", "Alingsås", "Nolhaga", "Skatås", "Tollered", "EQ Timing", "route-35", "Coast Trail Lab", "long-solo-a", "62 km", "alingsas", "floda", "gothenburg", "skatas", "nolhaga", "tollered"):
             self.assertNotIn(value.casefold(), source.casefold())
         self.assertNotRegex(source, r"(?:race|key|distance).{0,30}(?:includes|===).{0,12}(?:2026|35|75)")
         central_ui = "\n".join((ROOT / "docs/assets" / name).read_text(encoding="utf-8") for name in ("race-ui.js", "app.js", "favorites.js", "goal-pace.js", "personal-summary.js", "map-page.js"))
