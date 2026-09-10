@@ -2,14 +2,14 @@
   'use strict';
   const COLORS=Object.freeze({a:'#0b6671',b:'#b85b24'});
   const finite=v=>v!==null&&v!==undefined&&v!==''&&Number.isFinite(Number(v));
-  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
   const num=(v,d=0)=>finite(v)?Number(v).toLocaleString('sv-SE',{maximumFractionDigits:d}):'–';
   function duration(value){if(!finite(value))return'Tid saknas';const tenths=Math.round(Math.abs(Number(value))*10),seconds=Math.floor(tenths/10),h=Math.floor(seconds/3600),m=Math.floor(seconds%3600/60),s=String(seconds%60).padStart(2,'0'),fraction=tenths%10?','+tenths%10:'';return(h?`${h}:${String(m).padStart(2,'0')}:`:`${m}:`)+s+fraction}
   const pace=v=>finite(v)&&v>0?duration(Math.round(v))+' /km':'Tid saknas';
   const percent=v=>finite(v)?`${v>0?'+':''}${num(v,1)} %`:'–';
   const gapWords=(v,a,b)=>!finite(v)?'Ingen gemensam passage':v===0?'I nivå':`${v>0?a:b} före med ${duration(v)}`;
   const deltaWords=(v,a,b)=>!finite(v)?'Ingen direkt jämförelse – tid saknas.':v===0?'Jämnt':`${v>0?a:b} vann ${duration(v)}`;
-  const launcherState=(count,raceOrIsTeam)=>{const race=typeof raceOrIsTeam==='object'?raceOrIsTeam:null,isTeam=race?.isTeam??raceOrIsTeam,label=race?.participant?.singular||(isTeam?'lag':'deltagare');return{enabled:count===2,label:count===2?'Jämför två lopp':count===0?`Välj två ${isTeam?race?.participant?.plural||'lag':'deltagare'}`:count===1?`Välj ${isTeam?`en ${label}`:'en deltagare'} till`:'Jämförelse kräver exakt två'}};
+  const launcherState=(count,raceOrIsTeam)=>{const race=typeof raceOrIsTeam==='object'?raceOrIsTeam:null,label=race?.participant?.singular||'deltagare',plural=race?.participant?.plural||'deltagare';return{enabled:count===2,label:count===2?'Jämför två lopp':count===0?`Välj två ${plural}`:count===1?`Välj en ${label} till`:'Jämförelse kräver exakt två'}};
   function shareUrl(base,raceKey,records){const url=new URL(base);url.search='';url.hash='';url.searchParams.set('race',raceKey);url.searchParams.set('compare',records.map(r=>r.id).join(','));return url.href}
   function resolveUrl(search,adapter){const params=new URLSearchParams(search),key=params.get('race'),ids=(params.get('compare')||'').split(',');if(!params.has('compare'))return null;if(ids.length!==2||!adapter.race(key)||ids[0]===ids[1])return null;const records=ids.map(id=>adapter.record(id));return records.every(r=>r?.raceKey===key)?{raceKey:key,records}:null}
   function removeCompare(){const url=new URL(location.href);if(url.searchParams.has('compare')){url.searchParams.delete('compare');history.replaceState(null,'',url)}}
@@ -19,7 +19,8 @@
     if(race.isTeam){rows.push([race.uiLabels?.class||'Klass',s.relayClass.fullLabel],['Tävlingsstatus',s.relayClass.ranked?'Tävlingsklass':'Ej tävling'],[race.uiLabels?.class_place||'Klassplacering',s.relayClass.ranked&&s.classPlace!==null?'#'+s.classPlace:null],[race.uiLabels?.members||'Medlemmar',s.memberCount],['Analytiska passager',`${s.checkpointCount}/${race.analysisCheckpoints.length-1}`])}
     else rows.push(['Snabbare än',s.percentile===null?null:num(s.percentile)+' %'],['Klass',r.class_name],['Klassplacering',s.classPlace===null?null:'#'+s.classPlace],['Könsplacering',finite(r.gender_place)?'#'+r.gender_place:null],['Klubb / ort',r.club],['Ålder',r.age]);
     const relayBadge=race.isTeam?`<span class="${s.relayClass.ranked?'relay-class-badge':'non-competitive-badge'}" style="--relay-color:${esc(s.relayClass.color)};--relay-soft:${esc(s.relayClass.softColor)}">${esc(s.relayClass.fullLabel)}${s.relayClass.ranked?'':' · Ej tävling'}</span>`:'';
-    return`<article class="head-to-head-person" style="--participant:${COLORS[side]}"><div class="head-to-head-identity"><span>${side.toUpperCase()}</span><div><p>${race.isTeam?(race.uiLabels?.entity_heading||race.participant?.singular||'DELTAGARE').toLocaleUpperCase('sv'):'LÖPARE'} · #${esc(r.bib)}</p><h3>${esc(p.displayName)}</h3>${relayBadge}</div></div><dl>${rows.filter(([,v])=>v!==null&&v!==undefined&&v!=='').map(([k,v])=>`<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl></article>`;
+    const entityHeading=(race.uiLabels?.entity_heading||race.participant?.singular||'DELTAGARE').toLocaleUpperCase('sv');
+    return`<article class="head-to-head-person" style="--participant:${COLORS[side]}"><div class="head-to-head-identity"><span>${side.toUpperCase()}</span><div><p>${esc(entityHeading)} · #${esc(r.bib)}</p><h3>${esc(p.displayName)}</h3>${relayBadge}</div></div><dl>${rows.filter(([,v])=>v!==null&&v!==undefined&&v!=='').map(([k,v])=>`<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl></article>`;
   }
   function open({adapter,race,records,trigger,onKartduell,onClose}){
     const analysis=records?.length===2?adapter.headToHeadAnalysis(race,records[0],records[1]):null;if(!analysis)return null;
