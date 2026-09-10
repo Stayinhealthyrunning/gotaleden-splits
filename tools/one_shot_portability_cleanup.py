@@ -12,6 +12,13 @@ def rep(path_name, old, new, count=1):
     path.write_text(text.replace(old, new), encoding="utf-8")
 
 
+def rep_optional(path_name, old, new):
+    path = ROOT / path_name
+    text = path.read_text(encoding="utf-8")
+    if old in text:
+        path.write_text(text.replace(old, new), encoding="utf-8")
+
+
 # Static shell: no event/provider/participant-format assumptions.
 rep("docs/index.html",
     '<p class="eyebrow ink">INDIVIDUELL LOPPANALYS</p>',
@@ -52,59 +59,37 @@ rep("docs/assets/interactive-analysis.js",
 rep("docs/assets/interactive-analysis.js",
     "$('#age-analysis-copy').innerHTML=race.isTeam?'Jämförelsen använder lagens <strong>officiella klassnamn</strong>. Inga lagmedlemmar kopplas till en specifik etapp. Mixed fri är <strong>Ej tävling</strong> men visas för analys.':'<strong>Analytiska åldersgrupper – inte officiella tävlingsklasser.</strong> Grupper med för litet underlag döljs.';",
     "$('#age-analysis-copy').textContent=race.isTeam?(race.uiLabels?.class_analysis_copy||'Jämförelsen använder deltagarnas officiella klassnamn.'):'Analytiska åldersgrupper – inte officiella tävlingsklasser. Grupper med för litet underlag döljs.';")
-rep("docs/assets/interactive-analysis.js",
-    "title:'Mixed tävling närmast annan rankad klass'",
-    "title:`${mixed.shortLabel} närmast annan rankad klass`")
-rep("docs/assets/interactive-analysis.js",
-    "value:`${close} deltagare/lag`",
-    "value:`${close} ${race.participant?.plural||'deltagare'}`")
-rep("docs/assets/interactive-analysis.js",
-    "'<div class=\"empty\">Minst två klasser med fem fullföljande lag krävs.</div>'",
-    "`<div class=\"empty\">Minst två klasser med fem fullföljande ${race.participant?.plural||'deltagare'} krävs.</div>`")
-rep("docs/assets/interactive-analysis.js",
-    "referenceLabel=raceValue?.isTeam?'egen lagklass':'hela fältet'",
-    "referenceLabel=raceValue?.isTeam?(raceValue.uiLabels?.class_reference||'egen klass').toLocaleLowerCase('sv'):'hela fältet'")
+rep("docs/assets/interactive-analysis.js", "title:'Mixed tävling närmast annan rankad klass'", "title:`${mixed.shortLabel} närmast annan rankad klass`")
+rep("docs/assets/interactive-analysis.js", "value:`${close} deltagare/lag`", "value:`${close} ${race.participant?.plural||'deltagare'}`")
+rep("docs/assets/interactive-analysis.js", "'<div class=\"empty\">Minst två klasser med fem fullföljande lag krävs.</div>'", "`<div class=\"empty\">Minst två klasser med fem fullföljande ${race.participant?.plural||'deltagare'} krävs.</div>`")
+rep_optional("docs/assets/interactive-analysis.js", "referenceLabel=raceValue?.isTeam?'egen lagklass':'hela fältet'", "referenceLabel=raceValue?.isTeam?(raceValue.uiLabels?.class_reference||'egen klass').toLocaleLowerCase('sv'):'hela fältet'")
 
 # Standalone map copy is participant-neutral before the race contract is resolved.
-rep("docs/assets/map-page.js",
-    "Högst fem deltagare eller lag kan visas samtidigt.",
-    "Högst fem deltagare kan visas samtidigt.")
+rep("docs/assets/map-page.js", "Högst fem deltagare eller lag kan visas samtidigt.", "Högst fem deltagare kan visas samtidigt.")
 
 # Preserve Gotaleden-specific wording in event configuration, not generic runtime.
-rep("config/races.json",
-    '"ui_labels": {"navigation": "Löpare", "saved": "Sparade löpare",',
-    '"ui_labels": {"lookup_eyebrow": "INDIVIDUELL LOPPANALYS", "navigation": "Löpare", "saved": "Sparade löpare",')
-rep("config/races.json",
-    '"members": "Lagmedlemmar", "member_assignment_copy": "Medlemslistan anger inte vem som sprang en viss etapp."',
-    '"members": "Lagmedlemmar", "finish_time_copy": "Publicerad lagtid", "class_percentile_copy": "av fullföljande lag i samma klass", "field_percentile_copy": "av fullföljande lag", "member_count_copy": "ingen koppling till etapper", "member_assignment_copy": "Medlemslistan anger inte vem som sprang en viss etapp."')
+rep("config/races.json", '"ui_labels": {"navigation": "Löpare", "saved": "Sparade löpare",', '"ui_labels": {"lookup_eyebrow": "INDIVIDUELL LOPPANALYS", "navigation": "Löpare", "saved": "Sparade löpare",')
+rep("config/races.json", '"members": "Lagmedlemmar", "member_assignment_copy": "Medlemslistan anger inte vem som sprang en viss etapp."', '"members": "Lagmedlemmar", "finish_time_copy": "Publicerad lagtid", "class_percentile_copy": "av fullföljande lag i samma klass", "field_percentile_copy": "av fullföljande lag", "member_count_copy": "ingen koppling till etapper", "member_assignment_copy": "Medlemslistan anger inte vem som sprang en viss etapp."')
 
 # Alternate event: prove an unrelated source URL and Duo wording through the real UI path.
-rep("tests/fixtures/alternate-event.js",
-    "const data={meta:{event},courses:{},race_catalog:{},races:{},checkpoints:{},splits:[],teams:[],team_members:[]}",
-    "const data={meta:{event,source_events:{'fixture-source':{provider:'fixture',results_url:'https://example.test/coast/results'}}},courses:{},race_catalog:{},races:{},checkpoints:{},splits:[],teams:[],team_members:[]}")
-rep("tests/fixtures/alternate-event.js",
-    "ui_labels:{navigation:team?'Duos':'Runners'",
-    "ui_labels:{lookup_eyebrow:team?'DUO ANALYSIS':'RUNNER ANALYSIS',navigation:team?'Duos':'Runners'")
-rep("e2e/app.spec.js",
-    "await expect(page.getByRole('heading',{name:'Coast Trail Explorer'})).toBeVisible();await expect(page.locator('#race-switch [role=\"tab\"]')).toHaveCount(4);",
-    "await expect(page.getByRole('heading',{name:'Coast Trail Explorer'})).toBeVisible();await expect(page.locator('#source-link')).toHaveAttribute('href','https://example.test/coast/results');await expect(page.locator('#race-switch [role=\"tab\"]')).toHaveCount(4);")
-rep("e2e/app.spec.js",
-    "await expect(page.locator('#detail-dialog')).toContainText('DUO ANALYSIS');await page.locator('#detail-dialog .dialog-close').click();",
-    "await expect(page.locator('#detail-dialog')).toContainText('DUO ANALYSIS');const duoDetailText=await page.locator('#detail-dialog').innerText();for(const forbidden of ['lagtid','Lagklass','Lagmedlemmar','stafett','Stafett'])expect(duoDetailText).not.toContain(forbidden);await page.locator('#detail-dialog .dialog-close').click();")
+rep("tests/fixtures/alternate-event.js", "const data={meta:{event},courses:{},race_catalog:{},races:{},checkpoints:{},splits:[],teams:[],team_members:[]}", "const data={meta:{event,source_events:{'fixture-source':{provider:'fixture',results_url:'https://example.test/coast/results'}}},courses:{},race_catalog:{},races:{},checkpoints:{},splits:[],teams:[],team_members:[]}")
+rep("tests/fixtures/alternate-event.js", "ui_labels:{navigation:team?'Duos':'Runners'", "ui_labels:{lookup_eyebrow:team?'DUO ANALYSIS':'RUNNER ANALYSIS',navigation:team?'Duos':'Runners'")
+rep("e2e/app.spec.js", "await expect(page.getByRole('heading',{name:'Coast Trail Explorer'})).toBeVisible();await expect(page.locator('#race-switch [role=\"tab\"]')).toHaveCount(4);", "await expect(page.getByRole('heading',{name:'Coast Trail Explorer'})).toBeVisible();await expect(page.locator('#source-link')).toHaveAttribute('href','https://example.test/coast/results');await expect(page.locator('#race-switch [role=\"tab\"]')).toHaveCount(4);")
+rep("e2e/app.spec.js", "await expect(page.locator('#detail-dialog')).toContainText('DUO ANALYSIS');await page.locator('#detail-dialog .dialog-close').click();", "await expect(page.locator('#detail-dialog')).toContainText('DUO ANALYSIS');const duoDetailText=await page.locator('#detail-dialog').innerText();for(const forbidden of ['lagtid','Lagklass','Lagmedlemmar','stafett','Stafett'])expect(duoDetailText).not.toContain(forbidden);await page.locator('#detail-dialog .dialog-close').click();")
 
 # Regression gates: these leaks must not return to generic runtime/static shell.
-rep("tests/test_event_portability.py",
-    '"62 km", "alingsas", "floda", "gothenburg", "skatas", "nolhaga", "tollered"):',
-    '"62 km", "alingsas", "floda", "gothenburg", "skatas", "nolhaga", "tollered", "Publicerad lagtid", "Lagklass", "Lagmedlemmar", "stafettfältet", "stafettens officiella", "OFFICIELLA STAFETTKLASSER", "Mixed tävling", "Mixed fri", "deltagare/lag", "deltagare eller lag"):')
-rep("tests/test_event_portability.py",
-    '        self.assertNotIn("isRelay", central_ui)\n',
-    '        self.assertNotIn("isRelay", central_ui)\n        html = (ROOT / "docs/index.html").read_text(encoding="utf-8")\n        self.assertNotIn("live.eqtiming.com", html)\n')
-rep("tests/test_event_portability.py",
-    "console.log(JSON.stringify({isTeam:duo.isTeam,isRelay:duo.isRelay,format:duo.competitionFormat,field:adapter.referenceProfiles(first).field.label,classReference:adapter.referenceProfiles(first).class.label,finish:head.checkpoints.at(-1).checkpoint,finishName:head.checkpoints.at(-1).name,place:head.checkpoints.at(-1).placeA}));",
-    "const duoUi=window.GRaceUI.race(duo,eventUi);console.log(JSON.stringify({isTeam:duo.isTeam,isRelay:duo.isRelay,format:duo.competitionFormat,field:adapter.referenceProfiles(first).field.label,classReference:adapter.referenceProfiles(first).class.label,finish:head.checkpoints.at(-1).checkpoint,finishName:head.checkpoints.at(-1).name,place:head.checkpoints.at(-1).placeA,sourceUrl:duoUi.sourceUrl}));")
-rep("tests/test_event_portability.py",
-    '        self.assertEqual(result["place"], 1)\n',
-    '        self.assertEqual(result["place"], 1)\n        self.assertEqual(result["sourceUrl"], "https://example.test/coast/results")\n')
+rep("tests/test_event_portability.py", '"62 km", "alingsas", "floda", "gothenburg", "skatas", "nolhaga", "tollered"):', '"62 km", "alingsas", "floda", "gothenburg", "skatas", "nolhaga", "tollered", "Publicerad lagtid", "Lagklass", "Lagmedlemmar", "stafettfältet", "stafettens officiella", "OFFICIELLA STAFETTKLASSER", "Mixed tävling", "Mixed fri", "deltagare/lag", "deltagare eller lag"):')
+rep("tests/test_event_portability.py", '        self.assertNotIn("isRelay", central_ui)\n', '        self.assertNotIn("isRelay", central_ui)\n        html = (ROOT / "docs/index.html").read_text(encoding="utf-8")\n        self.assertNotIn("live.eqtiming.com", html)\n')
+rep("tests/test_event_portability.py", "console.log(JSON.stringify({isTeam:duo.isTeam,isRelay:duo.isRelay,format:duo.competitionFormat,field:adapter.referenceProfiles(first).field.label,classReference:adapter.referenceProfiles(first).class.label,finish:head.checkpoints.at(-1).checkpoint,finishName:head.checkpoints.at(-1).name,place:head.checkpoints.at(-1).placeA}));", "const duoUi=window.GRaceUI.race(duo,eventUi);console.log(JSON.stringify({isTeam:duo.isTeam,isRelay:duo.isRelay,format:duo.competitionFormat,field:adapter.referenceProfiles(first).field.label,classReference:adapter.referenceProfiles(first).class.label,finish:head.checkpoints.at(-1).checkpoint,finishName:head.checkpoints.at(-1).name,place:head.checkpoints.at(-1).placeA,sourceUrl:duoUi.sourceUrl}));")
+rep("tests/test_event_portability.py", '        self.assertEqual(result["place"], 1)\n', '        self.assertEqual(result["place"], 1)\n        self.assertEqual(result["sourceUrl"], "https://example.test/coast/results")\n')
+
+# Give failures actionable file-level diagnostics before the test suite runs.
+core = ["race-ui.js", "app.js", "data-adapter.js", "favorites.js", "goal-pace.js", "personal-summary.js", "charts.js", "course-difficulty.js", "head-to-head.js", "history-engine.js", "history-ui.js", "map-engine.js", "map-page.js", "map-duel.js", "runner-replay.js", "profile-journey.js", "interactive-analysis.js"]
+for term in ("Publicerad lagtid", "Lagklass", "Lagmedlemmar", "stafettfältet", "stafettens officiella", "OFFICIELLA STAFETTKLASSER", "Mixed tävling", "Mixed fri", "deltagare/lag", "deltagare eller lag"):
+    for name in core:
+        text = (ROOT / "docs/assets" / name).read_text(encoding="utf-8")
+        if term.casefold() in text.casefold():
+            raise RuntimeError(f"generic runtime leak {term!r} remains in docs/assets/{name}")
 
 # Do not leave one-shot machinery in the product branch.
 (ROOT / ".github/workflows/one-shot-portability-cleanup.yml").unlink(missing_ok=True)
