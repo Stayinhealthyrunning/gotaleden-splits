@@ -44,7 +44,7 @@ console.log(JSON.stringify({initial,added,removed,valid,wrongType,invalid,key:wi
         self.assertEqual(out["valid"], ["individual-75-2026:785"])
         self.assertEqual(out["wrongType"], [])
         self.assertEqual(out["invalid"], [])
-        self.assertEqual(out["key"], "gotaleden-favorites-v1")
+        self.assertEqual(out["key"], "race-analysis:favorites-v1")
 
     def test_cross_race_filter_persistence_and_prune(self):
         out = self.run_node(r"""
@@ -89,7 +89,7 @@ const favorites=window.GFavorites.create({storage:broken});favorites.add('relay-
     def test_relay_copy_and_help_registry_are_unchanged(self):
         self.assertIn("meta.shortLabel", self.app)
         self.assertIn("Ej tävling", self.app)
-        self.assertIn("race.isRelay?'Sparade lag':'Sparade löpare'", self.app)
+        self.assertIn("race.uiLabels?.saved", self.app)
         self.assertNotIn("record.sex", self.runtime)
         content = (ASSETS / "analysis-help-content.js").read_text(encoding="utf-8")
         self.assertEqual(content.count('"title":'), 51)

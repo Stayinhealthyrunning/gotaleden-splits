@@ -16,14 +16,16 @@ class RelayClassModelTests(unittest.TestCase):
             self.skipTest("Node.js is required")
         script = r"""
 global.window={};require('vm').runInThisContext(require('fs').readFileSync('docs/assets/data-adapter.js','utf8'));
-const meta=window.GDataAdapter.relayClassMeta;
+const data=JSON.parse(require('fs').readFileSync('docs/data/results-2026.json','utf8'));
+const adapter=window.GDataAdapter.create(data,{},{}),meta=adapter.relayClassMeta;
 const cases=[
-  ['Män','men',true],['Kvinnor ','women',true],
+  ['Män','men',true],['Kvinnor','women',true],
   ['Mixed tävling - Minst hälften kvinnor','mixed',true],
   ['Mixed ej tävling - Fri fördelning','mixed',false]
 ];
-for(const [name,family,ranked] of cases){const value=meta(name);if(value.family!==family||value.ranked!==ranked)throw new Error(name)}
-const override=meta({class_name:'Män',class_is_ranked:false,class_competition_type:'non_competitive'});
+const relay=adapter.race('relay-75-2026');
+for(const [name,family,ranked] of cases){const record=relay.records.find(item=>item.class_name===name);const value=meta(record);if(!record||value.family!==family||value.ranked!==ranked)throw new Error(name)}
+const override=meta({...relay.records.find(item=>item.class_name==='Män'),class_is_ranked:false,class_competition_type:'non_competitive'});
 if(override.ranked||override.competitionType!=='non_competitive')throw new Error('record truth not respected');
 """
         completed = subprocess.run([node, "-e", script], cwd=ROOT, text=True, capture_output=True)

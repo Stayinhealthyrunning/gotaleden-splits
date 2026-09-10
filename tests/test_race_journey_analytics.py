@@ -154,7 +154,7 @@ if((rank.match(/data-journey-distance=/g)||[]).length!==2)throw new Error('missi
             ".journey-ribbon{display:grid;grid-auto-columns:158px",
             "LOPPETS UTVECKLING",
             "Så räknas det",
-            "Nolhaga är timing-/replayankare men inte analysgräns",
+            "Timing-/replayankare som inte är analysgränser delar inte upp segment.",
         ):
             self.assertIn(token, self.css if token.startswith(".") or token.startswith("@") else self.journey)
 

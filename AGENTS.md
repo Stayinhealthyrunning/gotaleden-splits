@@ -90,6 +90,13 @@ eller härledas i publikt UI.
 - Race family, race edition och source event är skilda identiteter. En full build inkluderar alla
   editions med tillgänglig data från samtliga source events; kanonisk webbexport är flerårig och
   routing får inte innehålla års- eller race-key-specialfall. Providerlogik hör hemma i adaptern.
+- Den generella frontendkärnan är eventneutral. Eventidentitet, branding, labels, distans-/routecopy,
+  klassystem och metodspecifika fakta kommer från event-/raceconfig. Participant entity är skild från
+  competition format: team är inte synonymt med relay. Features styrs av editionens capabilities,
+  inte namn, key, distans eller formatheuristik.
+- Team structure anger explicit om loppet har sequential legs, antal legs och om member assignment är
+  verifierad eller okänd. En medlemslista får aldrig i sig koppla en medlem till en leg. Persistent
+  state och app-events är eventnamespacade; klasser och unknown-fallback är config-/kontraktsdrivna.
 - Varje RaceEdition refererar explicit en CourseVersion och neutral `route_range`. Course geometry,
   checkpoints, ankare och segment definieras i course-config utan ort-, distans- eller årsheuristik.
   Samma course-version-id är immutable och skyddas av fingerprint; geometriändring kräver nytt id.
