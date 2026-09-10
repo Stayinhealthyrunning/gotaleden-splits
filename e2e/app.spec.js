@@ -98,6 +98,15 @@ test('catalog-driven family and year controls keep single-year history intention
   await page.setViewportSize({width:390,height:844});await openSite(page,'/?race=individual-75-2026&section=history');expect(await page.evaluate(()=>document.documentElement.scrollWidth>document.documentElement.clientWidth)).toBe(false);expect(errors).toEqual([]);
 });
 
+test('empty segment selections show a truthful race-story state in every race mode',async({page})=>{
+  const errors=watchRelevantErrors(page);
+  for(const race of ['individual-75-2026','individual-35-2026','relay-75-2026','relay-35-2026']){
+    await openSite(page,`/?race=${race}&section=statistics`);await page.locator('#status-filter').selectOption('DNS');
+    await expect(page.locator('#race-story .empty')).toHaveText('Inga genomförda segment i urvalet.');
+  }
+  expect(errors).toEqual([]);
+});
+
 test('a declarative future edition activates through the real catalog, course loader and history UI',async({page})=>{
   await page.setViewportSize({width:390,height:844});const errors=watchRelevantErrors(page),fixture=await installFutureEditionFixture(page);
   await openSite(page,'/?race=solo-future&section=history');
