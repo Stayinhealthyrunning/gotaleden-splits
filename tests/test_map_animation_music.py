@@ -21,6 +21,7 @@ class MapAnimationMusicTests(unittest.TestCase):
         cls.results = json.loads(
             (DOCS / "data/results-2026.json").read_text(encoding="utf-8")
         )
+        cls.config = json.loads((ROOT / "config/races.json").read_text(encoding="utf-8"))
 
     def test_music_asset_exists_and_has_content(self):
         music = ASSETS / "gotaleden-ultra.mp3"
@@ -32,27 +33,28 @@ class MapAnimationMusicTests(unittest.TestCase):
         self.assertLess(self.html.index('assets/data-index.js'), media_index)
         self.assertLess(media_index, self.html.index('assets/runner-replay.js'))
         self.assertLess(media_index, self.html.index('assets/map-duel.js'))
-        sources = sum(
-            path.read_text(encoding="utf-8").count("gotaleden-ultra.mp3")
-            for path in ASSETS.glob("*.js")
-        )
-        self.assertEqual(sources, 1)
-        self.assertIn("assets/gotaleden-ultra.mp3?v=20260901-music1", self.media)
+        sources = sum(path.read_text(encoding="utf-8").count("gotaleden-ultra.mp3") for path in ASSETS.glob("*.js"))
+        self.assertEqual(sources, 0)
+        self.assertEqual(self.config["event"]["media"]["audio_source"], "assets/gotaleden-ultra.mp3?v=20260901-music1")
+        self.assertNotIn("gotaleden", self.media.casefold())
 
-    def test_media_defaults_and_gotaleden_storage_keys_execute(self):
+    def test_media_defaults_and_legacy_storage_migration_execute(self):
         node = os.environ.get("GOTALEDEN_NODE") or shutil.which("node")
         if not node:
             self.skipTest("Node.js is required for media configuration tests")
         script = r"""
-const fs=require('fs'),vm=require('vm'),store={};
+const fs=require('fs'),vm=require('vm'),store={'gotaleden-music-enabled':'false','gotaleden-music-volume':'0.6'};
 const context={window:{},localStorage:{getItem:key=>Object.hasOwn(store,key)?store[key]:null,setItem:(key,value)=>store[key]=String(value)}};
+context.data=JSON.parse(fs.readFileSync('docs/data/results-2026.json','utf8'));
+vm.runInNewContext(fs.readFileSync('docs/assets/race-ui.js','utf8'),context);
 vm.runInNewContext(fs.readFileSync('docs/assets/race-media.js','utf8'),context);
-const media=context.window.GotaledenMedia;
-if(media.audioEnabled!==true)throw new Error('music must default on');
-if(media.volume!==.35)throw new Error('default volume');
+const media=context.window.GRaceMedia.configure(context.window.GRaceUI.event(context.data));
+if(media.audioEnabled!==false)throw new Error('legacy enabled must migrate');
+if(media.volume!==.6)throw new Error('legacy volume must migrate');
 media.setEnabled(false);media.setVolume(.6);
-if(store['gotaleden-music-enabled']!=='false')throw new Error('enabled key');
-if(store['gotaleden-music-volume']!=='0.6')throw new Error('volume key');
+if(store['gotaleden:music-enabled']!=='false')throw new Error('enabled key');
+if(store['gotaleden:music-volume']!=='0.6')throw new Error('volume key');
+if(media.audioSource!=='assets/gotaleden-ultra.mp3?v=20260901-music1')throw new Error('event audio source');
 """
         completed = subprocess.run(
             [node, "-e", script], cwd=ROOT, text=True, capture_output=True, check=False

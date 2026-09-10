@@ -25,6 +25,16 @@ def event_contract(config: dict[str, Any]) -> dict[str, Any]:
     missing = [key for key in ("event_key", "name", "product_title", "official_site_url", "storage_namespace") if not event.get(key)]
     if missing:
         raise SourceBindingError(f"Event is missing presentation fields: {', '.join(missing)}")
+    media = event.get("media", {})
+    if not isinstance(media, dict):
+        raise SourceBindingError("event media must be an object")
+    if any(not isinstance(media.get(key), str) for key in ("audio_source",) if key in media):
+        raise SourceBindingError("event media audio_source must be a string")
+    if "default_volume" in media and (not isinstance(media["default_volume"], (int, float)) or not 0 <= media["default_volume"] <= 1):
+        raise SourceBindingError("event media default_volume must be between 0 and 1")
+    for key in ("legacy_enabled_storage_keys", "legacy_volume_storage_keys"):
+        if key in media and (not isinstance(media[key], list) or any(not isinstance(value, str) or not value for value in media[key])):
+            raise SourceBindingError(f"event media {key} must be a list of non-empty strings")
     profiles = config.get("competition_profiles")
     if not isinstance(profiles, dict) or not profiles:
         raise SourceBindingError("competition_profiles must be a non-empty object")

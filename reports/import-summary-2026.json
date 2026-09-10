@@ -10,12 +10,23 @@
       "gotaleden"
     ],
     "custom_event_namespace": "gotaleden",
+    "media": {
+      "audio_source": "assets/gotaleden-ultra.mp3?v=20260901-music1",
+      "default_volume": 0.35,
+      "legacy_enabled_storage_keys": [
+        "gotaleden-music-enabled"
+      ],
+      "legacy_volume_storage_keys": [
+        "gotaleden-music-volume"
+      ]
+    },
     "presentation": {
       "title_lead": "Gotaleden",
       "title_accent": "Splits",
       "hero_lead": "Följ loppet kontroll för kontroll. Upptäck tempot, placeringarna och berättelsen längs leden.",
       "loading_text": "Bygger Gotaleden-analysen…",
-      "footer_text": "Gotaleden Splits · Premiäråret 2026 · Officiell rutt från Göteborg till Alingsås"
+      "footer_text": "Gotaleden Splits · Premiäråret 2026 · Officiell rutt från Göteborg till Alingsås",
+      "data_principle": "Dataprincip: endast publicerade EQ Timing-passager visas. Saknade mellantider uppskattas aldrig i tabeller eller analyser. Kartanimationen interpolerar enbart mellan kända passager och märks därför som uppskattad."
     },
     "help_content": {
       "override_asset": "assets/analysis-help-content.js"
