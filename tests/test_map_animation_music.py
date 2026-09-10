@@ -81,7 +81,7 @@ if(store['gotaleden-music-volume']!=='0.6')throw new Error('volume key');
 
     def test_map_duel_reuses_shared_state_and_syncs_its_button(self):
         for token in (
-            "media=window.GotaledenMedia||{}",
+            "media=window.GRaceMedia||{}",
             "initialAudioEnabled=Boolean(media.audioEnabled&&audio)",
             "syncAudioButton();playButton.onclick=toggle",
             "media.setEnabled?media.setEnabled(!audioEnabled)",

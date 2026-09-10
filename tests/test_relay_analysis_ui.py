@@ -32,7 +32,7 @@ class RelayAnalysisUiTests(unittest.TestCase):
     def test_conflicting_person_sex_never_controls_relay_class(self):
         self.run_node(r"""
 global.window={};require('vm').runInThisContext(require('fs').readFileSync('docs/assets/data-adapter.js','utf8'));
-const race={section:'x',type:'relay',gpx_distance_km:1,nominal_distance_km:1,records:[
+const race={section:'x',type:'relay',gpx_distance_km:1,nominal_distance_km:1,participant:{entity:'team'},class_metadata:{classes:[{id:'women',family:'women',source_name:'Kvinnor',ranked:true,color:'#db2777'},{id:'men',family:'men',source_name:'Män',ranked:true,color:'#2563eb'}]},records:[
  {bib:'A',name:'Lag A',sex:'M',class_name:'Kvinnor ',class_is_ranked:true,status:'FINISHED',finish_seconds:100},
  {bib:'B',name:'Lag B',sex:'F',class_name:'Män',class_is_ranked:true,status:'FINISHED',finish_seconds:90}]};
 const adapter=window.GDataAdapter.create({races:{r:race},checkpoints:{r:[{key:'s',name:'S',route_distance_km:0},{key:'m',name:'Mål',route_distance_km:1}]},splits:[]},{full_distance_km:1,points:[[0,0,0,0],[0,0,0,1]]},{points:[]});
@@ -55,12 +55,12 @@ const race=adapter.race('relay-75-2026'),field=adapter.segmentRanking(race.recor
             self.assertIn(text, self.app)
         self.assertIn("<span>Snabbare än</span><strong>${relative.percentile?relative.percentile+' %'", self.app)
         self.assertNotIn("<span>Percentil</span>", self.app)
-        self.assertIn("race.isRelay?'':record.club", self.app)
+        self.assertIn("race.isTeam?'':record.club", self.app)
         self.assertIn("heading('overall_place','Total','result-place')", self.app)
         self.assertIn('aria-sort=', self.app)
         self.assertIn("Alla lag", self.replay)
-        self.assertIn("Min stafettklass", self.replay)
-        self.assertIn("record.isRelay&&key==='sex'", self.replay)
+        self.assertIn("key==='class'?'Min klass'", self.replay)
+        self.assertIn("record.isTeam&&key==='sex'", self.replay)
         self.assertIn("non-competitive-badge", self.replay)
         self.assertIn("adapter.relayClassMeta(record)", self.duel)
         self.assertIn("color:item.color", self.duel)
@@ -76,8 +76,7 @@ const race=adapter.race('relay-75-2026'),field=adapter.segmentRanking(race.recor
         self.assertIn(".analysis-grid>*{min-width:0}", self.css)
 
     def test_relay_simulator_uses_whole_field_despite_class_filter(self):
-        self.assertIn("targetFinishers=race.isRelay?race.records.filter(adapter.statusFinished):finishers", self.app)
-        self.assertIn("finishers=(race.isRelay?race.records:state.filtered).filter(adapter.statusFinished)", self.app)
+        self.assertIn("finishers=(race.isTeam?race.records:state.filtered).filter(adapter.statusFinished)", self.app)
         self.assertIn("classRecords=selected?finishers.filter(record=>record.class_name===selected):[]", self.app)
         self.run_node(r"""
 const fs=require('fs'),vm=require('vm');global.window={};vm.runInThisContext(fs.readFileSync('docs/assets/data-adapter.js','utf8'));
@@ -105,8 +104,9 @@ if(!men.length||whole.length<=men.length)throw new Error(`whole=${whole.length},
         self.assertIn("if(changing){state.duelIds=[];state.clubNames=[];state.selectedRecordId=null;state.sortKey='overall_place';state.sortDir=1}", self.app)
 
     def test_individual_contract_and_data_integrity_remain(self):
-        for text in ("Kön", "Genusperspektiv", "Klass & ålder", "Klubb & ort"):
+        for text in ("Kön", "Genusperspektiv", "Klubb & ort"):
             self.assertIn(text, self.html + self.app)
+        self.assertEqual(self.data["races"]["individual-75-2026"]["ui_labels"]["age_analysis"], "Klass & ålder")
         for text in ("Hela fältet", "Min klass", "Mitt kön"):
             self.assertIn(text, self.replay)
         self.assertEqual(sum(len(r["records"]) for r in self.data["races"].values()), 607)

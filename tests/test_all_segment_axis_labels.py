@@ -38,8 +38,8 @@ const axisLabels=labels=>{
   const html=window.GCharts.lines([{name:'Serie',values:labels.map((_,index)=>index+1)}],labels);
   return [...html.matchAll(/<text[^>]+transform="rotate\(-18 [^"]+\)"[^>]*>([^<]+)<\/text>/g)].map(match=>match[1]);
 };
-const labels75=['Skatås','Kåsjön','Jonsered','Lerum','Floda','Tollered','Norsesund','Västra Bodarna','Mål'];
-const labels35=['Tollered','Norsesund','Västra Bodarna','Mål'];
+const labels75=['Skatås','Kåsjön','Jonsered','Lerum','Floda','Tollered','Norsesund','Västra Bodarna','Alingsås'];
+const labels35=['Tollered','Norsesund','Västra Bodarna','Alingsås'];
 const expected75=['Skatås','Kåsjön','Jonsered','Lerum','Floda','Tollered','Norsesund','Västra Bodarna','Alingsås'];
 const expected35=['Tollered','Norsesund','Västra Bodarna','Alingsås'];
 if(JSON.stringify(axisLabels(labels75))!==JSON.stringify(expected75))throw new Error('75 km labels');

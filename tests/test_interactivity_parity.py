@@ -125,7 +125,7 @@ class InteractivityParityTests(unittest.TestCase):
         self.assertIn("classGroups", self.interactive)
         self.assertIn("OFFICIELLA STAFETTKLASSER", self.interactive)
         self.assertIn("Inga lagmedlemmar kopplas till en specifik etapp", self.interactive)
-        self.assertIn("if(race.isRelay){$$('[data-sex-toggles]')", self.interactive)
+        self.assertIn("if(race.isTeam){$$('[data-sex-toggles]')", self.interactive)
         self.assertIn("node.hidden=true", self.interactive)
         self.assertNotIn("relay_leg_assignments", self.index + self.app + self.interactive)
 

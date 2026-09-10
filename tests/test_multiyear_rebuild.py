@@ -21,7 +21,11 @@ from source_bindings import (  # noqa: E402
 
 def synthetic_config():
     return {
-        "event": {"event_key": "portable-event", "name": "Portable event"},
+        "event": {"event_key": "portable-event", "name": "Portable event", "product_title": "Portable analysis", "official_site_url": "https://example.test", "storage_namespace": "portable"},
+        "competition_profiles": {
+            "solo": {"participant": {"entity": "person", "singular": "entrant", "plural": "entrants", "profile_label": "ENTRY", "possessive": "Entrant's"}, "competition": {"format": "solo", "team_structure": {"kind": "none", "member_assignment": "unknown"}}, "capabilities": {"goal_pace": False}},
+            "team": {"participant": {"entity": "team", "singular": "crew", "plural": "crews", "profile_label": "CREW", "possessive": "Crew's"}, "competition": {"format": "stage-team", "team_structure": {"kind": "sequential", "leg_count": 2, "member_assignment": "unknown"}}, "capabilities": {"goal_pace": False}},
+        },
         "source_events": {
             "source-alpha": {
                 "provider": "eqtiming",
@@ -39,24 +43,28 @@ def synthetic_config():
             {
                 "race_key": "edition-a", "race_family": "family-long", "year": 2031,
                 "section": "Long A", "type": "individual", "data_status": "available", "course_version": "course-a",
+                "competition_profile": "solo", "presentation": {"distance_label": "long", "route_stops": [{"label": "Start"}, {"label": "Finish"}]},
                 "route_range": {"from": "start", "to": "finish"}, "checkpoint_keys": ["start", "finish"],
                 "source_binding": {"source_event": "source-alpha", "race": "long"},
             },
             {
                 "race_key": "edition-b", "race_family": "family-long", "year": 2032,
                 "section": "Long B", "type": "individual", "data_status": "available", "course_version": "course-a",
+                "competition_profile": "solo", "presentation": {"distance_label": "long", "route_stops": [{"label": "Start"}, {"label": "Finish"}]},
                 "route_range": {"from": "start", "to": "finish"}, "checkpoint_keys": ["start", "finish"],
                 "source_binding": {"source_event": "source-beta", "race": "long"},
             },
             {
                 "race_key": "edition-c", "race_family": "family-short", "year": 2032,
                 "section": "Short", "type": "relay", "data_status": "available", "course_version": "course-b",
+                "competition_profile": "team", "presentation": {"distance_label": "short", "route_stops": [{"label": "Middle"}, {"label": "Finish"}]},
                 "route_range": {"from": "mid", "to": "finish"}, "checkpoint_keys": ["mid", "finish"],
                 "source_binding": {"source_event": "source-beta", "race": "short"},
             },
             {
                 "race_key": "edition-planned", "race_family": "future-format", "year": 2033,
                 "section": "Future", "type": "individual", "data_status": "planned", "course_version": "course-c",
+                "competition_profile": "solo", "presentation": {"distance_label": "future", "route_stops": [{"label": "Start"}, {"label": "Finish"}]},
                 "route_range": {"from": "start", "to": "finish"}, "checkpoint_keys": ["start", "finish"],
             },
         ],
@@ -118,9 +126,11 @@ class MultiyearRebuildTests(unittest.TestCase):
             )
             connection.execute(
                 """INSERT INTO races(race_key,event_key,race_family,course_version,data_status,is_analyzable,
-                   source_event_key,section_name,race_type,year) VALUES(?,?,?,?,?,?,?,?,?,?)""",
+                   source_event_key,section_name,race_type,participant_entity,competition_format,team_structure_json,
+                   capabilities_json,presentation_json,year) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 (f"race-{event_key}", "portable-event", "family-long", course_version, "available", 1,
-                 event_key, event_key, "individual", 2031 + offset),
+                 event_key, event_key, "individual", "person", "solo", '{"kind":"none","member_assignment":"unknown"}',
+                 '{}', '{"distance_label":"long"}', 2031 + offset),
             )
             source_id = connection.execute(
                 "SELECT id FROM sources WHERE provider=? AND source_event_key=? AND code=?",
