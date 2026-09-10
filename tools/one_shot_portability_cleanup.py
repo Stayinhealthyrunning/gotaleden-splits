@@ -12,23 +12,6 @@ def rep(path_name, old, new, count=1):
     path.write_text(text.replace(old, new), encoding="utf-8")
 
 
-# Race UI: resolve official results from provider-neutral source metadata.
-rep("docs/assets/race-ui.js",
-    "const source=data?.meta?.event||data?.event||{};if(eventCache.has(source))return eventCache.get(source);",
-    "const source=data?.meta?.event||data?.event||{},sourceEvents=data?.meta?.source_events||data?.source_events||{};if(eventCache.has(source))return eventCache.get(source);")
-rep("docs/assets/race-ui.js",
-    "presentation,helpContent:source.help_content||{},storageKey:suffix=>`${storageNamespace}:${suffix}`",
-    "presentation,helpContent:source.help_content||{},sourceEvents,storageKey:suffix=>`${storageNamespace}:${suffix}`")
-rep("docs/assets/race-ui.js",
-    "const participant=source.participant||{},competition=source.competition||{},capabilities=source.capabilities||{},presentation=source.presentation||{},uiLabels=source.uiLabels||source.ui_labels||{},entity=participant.entity||'person',labels={singular:clean(participant.singular)||'deltagare',plural:clean(participant.plural)||'deltagare',profile:clean(participant.profile_label)||'DELTAGARANALYS',possessive:clean(participant.possessive)||'Deltagarens'},model={event:eventModel,race:source,entity,isTeam:entity==='team',labels,uiLabels,competition:",
-    "const participant=source.participant||{},competition=source.competition||{},capabilities=source.capabilities||{},presentation=source.presentation||{},uiLabels=source.uiLabels||source.ui_labels||{},entity=participant.entity||'person',labels={singular:clean(participant.singular)||'deltagare',plural:clean(participant.plural)||'deltagare',profile:clean(participant.profile_label)||'DELTAGARANALYS',possessive:clean(participant.possessive)||'Deltagarens'},sourceEventKey=source.sourceEventKey||source.source_event_key||null,sourceEvent=eventModel?.sourceEvents?.[sourceEventKey]||{},sourceUrl=clean(source.officialUrl||source.official_url||sourceEvent.results_url||''),model={event:eventModel,race:source,entity,isTeam:entity==='team',labels,uiLabels,sourceEventKey,sourceUrl,competition:")
-rep("docs/assets/race-ui.js",
-    "route=document.querySelector('.hero__route');",
-    "route=document.querySelector('.hero__route'),sourceLink=document.getElementById('source-link');")
-rep("docs/assets/race-ui.js",
-    ").join('')}\n  }\n  function escapeHtml",
-    ").join('')}if(sourceLink){sourceLink.hidden=!model.sourceUrl;if(model.sourceUrl){sourceLink.href=model.sourceUrl;sourceLink.textContent=model.uiLabels?.source_results||'Officiella resultat ↗'}else sourceLink.removeAttribute('href')}\n  }\n  function escapeHtml")
-
 # Static shell: no event/provider/participant-format assumptions.
 rep("docs/index.html",
     '<p class="eyebrow ink">INDIVIDUELL LOPPANALYS</p>',
@@ -84,7 +67,7 @@ rep("e2e/app.spec.js",
 # Regression gates: these leaks must not return to generic runtime/static shell.
 rep("tests/test_event_portability.py",
     '"62 km", "alingsas", "floda", "gothenburg", "skatas", "nolhaga", "tollered"):',
-    '"62 km", "alingsas", "floda", "gothenburg", "skatas", "nolhaga", "tollered", "Publicerad lagtid", "Lagklass", "Lagmedlemmar", "stafettfältet", "stafettens officiella"):' )
+    '"62 km", "alingsas", "floda", "gothenburg", "skatas", "nolhaga", "tollered", "Publicerad lagtid", "Lagklass", "Lagmedlemmar", "stafettfältet", "stafettens officiella"):')
 rep("tests/test_event_portability.py",
     '        self.assertNotIn("isRelay", central_ui)\n',
     '        self.assertNotIn("isRelay", central_ui)\n        html = (ROOT / "docs/index.html").read_text(encoding="utf-8")\n        self.assertNotIn("live.eqtiming.com", html)\n')
