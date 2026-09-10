@@ -19,7 +19,7 @@
   <header class="hero">
     <div class="hero__glow"></div>
     <div class="hero__inner">
-      <p class="eyebrow" id="hero-eyebrow">GÖTEBORG · FLODA · ALINGSÅS</p>
+      <p class="eyebrow" id="hero-eyebrow">LÄSER BANA</p>
       <h1><span id="product-title-main">Race</span> <em id="product-title-accent">Analysis</em></h1>
       <p class="hero__lead" id="hero-lead">Läser eventpresentation…</p>
       <div class="hero__route" aria-label="Banans platser"></div>
@@ -90,7 +90,7 @@
     <div class="active-filter-summary" id="active-filter-summary" aria-live="polite"></div>
 
     <section class="kpis" id="overview-kpis" aria-label="Nyckeltal"></section>
-    <section class="relay-class-kpis" id="relay-class-kpis" aria-label="Stafettklasser" hidden></section>
+    <section class="relay-class-kpis" id="relay-class-kpis" aria-label="Klasser" hidden></section>
 
     <section class="feature-grid equal-panels">
       <article class="panel wide-card">
@@ -143,7 +143,7 @@
       <div class="section-intro"><p class="eyebrow ink">DELSTRÄCKELABBET</p><h2>Var avgjordes loppet?</h2><p>Jämför segment, relativa prestationer och placeringar utan att fabricera saknade passager.</p></div>
       <section class="course-difficulty panel" id="course-difficulty" aria-label="Banans svårighetsprofil"></section>
       <article class="panel segment-lab">
-        <div class="segment-controls"><label>Från<select id="segment-from"></select></label><label>Till<select id="segment-to"></select></label><label>Sortera<select id="segment-metric"><option value="time">Snabbast tid</option><option value="relative">Bäst mot median</option><option value="gain">Flest vunna platser</option></select></label><label id="segment-comparison-field" hidden>Jämför mot<select id="segment-comparison"><option value="class" selected>Egen klass</option><option value="field">Hela stafettfältet</option></select></label></div>
+        <div class="segment-controls"><label>Från<select id="segment-from"></select></label><label>Till<select id="segment-to"></select></label><label>Sortera<select id="segment-metric"><option value="time">Snabbast tid</option><option value="relative">Bäst mot median</option><option value="gain">Flest vunna platser</option></select></label><label id="segment-comparison-field" hidden>Jämför mot<select id="segment-comparison"><option value="class" selected>Egen klass</option><option value="field">Hela fältet</option></select></label></div>
         <div class="podium" id="segment-podium"></div><div class="ranking" id="segment-ranking"></div>
       </article>
       <div class="feature-grid">
@@ -173,13 +173,13 @@
       <div class="pagination"><span id="result-count"></span><div><button class="button secondary" id="prev-page">Föregående</button><span id="page-label"></span><button class="button secondary" id="next-page">Nästa</button></div></div>
     </section>
 
-    <section class="data-note panel"><p><strong>Dataprincip:</strong> endast publicerade EQ Timing-passager visas. Saknade mellantider uppskattas aldrig i tabeller eller analyser. Kartanimationen interpolerar enbart mellan kända passager och märks därför som uppskattad.</p></section>
+    <section class="data-note panel"><p id="data-principle-copy">Dataprincip: läser datakällan…</p></section>
   </main>
 
   <dialog id="detail-dialog"><button class="dialog-close" type="button" aria-label="Stäng">×</button><div id="detail-content"></div></dialog>
   <dialog id="duel-dialog" class="duel-dialog">
     <header class="duel-dialog-header">
-      <div class="duel-dialog-heading"><span>KARTDUELL</span><strong id="duel-dialog-race">Gotaleden Splits</strong><small id="duel-dialog-count">2 deltagare</small></div>
+      <div class="duel-dialog-heading"><span>KARTDUELL</span><strong id="duel-dialog-race">Race analysis</strong><small id="duel-dialog-count">2 deltagare</small></div>
       <div class="duel-dialog-clock" aria-label="Tävlingsklocka"><span>TÄVLINGSKLOCKA</span><strong id="duel-dialog-clock">0:00:00</strong><small>av <span id="duel-dialog-clock-max">0:00:00</span></small></div>
       <div class="duel-dialog-actions"><button class="button secondary" id="duel-dialog-share" type="button">↗ <span>Dela</span></button><button class="duel-dialog-close" type="button" aria-label="Stäng Kartduell">×</button></div>
     </header>
@@ -190,7 +190,7 @@
 
   <script src="vendor/leaflet/leaflet.js?v=1.9.4"></script>
   <script src="assets/data-index.js?v=20260720-parity3"></script>
-  <script src="assets/race-ui.js?v=20260910-portability1"></script>
+  <script src="assets/race-ui.js?v=20260910-d2"></script>
   <script src="assets/course-data.js?v=20260909-course1"></script>
   <script src="assets/data-adapter.js?v=20260909-course1"></script>
   <script src="assets/history-engine.js?v=20260909-history1"></script>
@@ -200,7 +200,7 @@
   <script src="assets/analysis-help-content.js?v=20260908-goal-pace1"></script>
   <script src="assets/analysis-help.js?v=20260908-goal-pace1"></script>
   <script src="assets/course-difficulty.js?v=20260908-course-segments1"></script>
-  <script src="assets/race-media.js?v=20260901-music1"></script>
+  <script src="assets/race-media.js?v=20260910-d2"></script>
   <script src="assets/runner-replay.js?v=20260907-product-completion1"></script>
   <script src="assets/profile-journey.js?v=20260904-journey2"></script>
   <script src="assets/map-duel.js?v=20260903-standalone-map2"></script>
@@ -210,6 +210,6 @@
   <script src="assets/interactive-analysis.js?v=20260907-product-completion1"></script>
   <script src="assets/favorites.js?v=20260907-favorites1"></script>
   <script src="assets/app-state.js?v=20260909-e2e1"></script>
-  <script src="assets/app.js?v=20260909-course1"></script>
+  <script src="assets/app.js?v=20260910-d2"></script>
 </body>
 </html>
