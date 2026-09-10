@@ -2,7 +2,7 @@
   'use strict';
   const COLORS=Object.freeze({a:'#0b6671',b:'#b85b24'});
   const finite=v=>v!==null&&v!==undefined&&v!==''&&Number.isFinite(Number(v));
-  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
+  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const num=(v,d=0)=>finite(v)?Number(v).toLocaleString('sv-SE',{maximumFractionDigits:d}):'–';
   function duration(value){if(!finite(value))return'Tid saknas';const tenths=Math.round(Math.abs(Number(value))*10),seconds=Math.floor(tenths/10),h=Math.floor(seconds/3600),m=Math.floor(seconds%3600/60),s=String(seconds%60).padStart(2,'0'),fraction=tenths%10?','+tenths%10:'';return(h?`${h}:${String(m).padStart(2,'0')}:`:`${m}:`)+s+fraction}
   const pace=v=>finite(v)&&v>0?duration(Math.round(v))+' /km':'Tid saknas';
