@@ -133,7 +133,7 @@ window.GAnalysisHelpContent = {
   },
   "profile-summary": {
     "title": "Löpar-/lagprofil – grundfakta",
-    "html": "<h4>Vad visar detta?</h4><p>Profilens faktarutor samlar publicerad sluttid, placeringar och metadata.</p><h4>Individuellt</h4><p>Sluttid och placering kommer från resultatet. Snabbare än X % beskriver personens prestationsposition bland fullföljande och är avrundad. Klass- och könsplacering visas där officiella värden finns.</p><h4>Stafett</h4><p>Allt visas på lagnivå. Lagklass kommer från officiellt klassnamn. Mixed fri märks Ej tävling. Snabbare än i klassen/fältet beskriver lagets position bland fullföljande.</p><h4>Viktig skillnad</h4><p>Snabbare än X % är inte samma sak som Q25/Q75 i Tidsgränser i fältet.</p><h4>Begränsningar</h4><p>Profilreferenser påverkas inte av huvudsidans filter.</p>"
+    "html": "<h4>Vad visar detta?</h4><p>Profilens faktarutor samlar publicerad sluttid, placeringar och metadata.</p><h4>Individuellt</h4><p>Sluttid och placering kommer från resultatet. Snabbare än X % är den avrundade andelen fullföljande i jämförelsefältet som har en strikt långsammare sluttid. Delad sluttid ger därför samma värde och den egna posten räknas inte som långsammare. Klass- och könsplacering visas där officiella värden finns.</p><h4>Stafett</h4><p>Allt visas på lagnivå. Lagklass kommer från officiellt klassnamn. Mixed fri märks Ej tävling. Snabbare än i klassen/fältet beräknas på samma sätt bland fullföljande lag.</p><h4>Viktig skillnad</h4><p>Snabbare än X % är inte samma sak som Q25/Q75 i Tidsgränser i fältet.</p><h4>Begränsningar</h4><p>Profilreferenser påverkas inte av huvudsidans filter.</p>"
   },
   "profile-relative-insights": {
     "title": "Profil – bäst/svagast mot referensmedian",
