@@ -21,6 +21,7 @@ class RelayAnalysisUiTests(unittest.TestCase):
         cls.duel = (DOCS / "assets/map-duel.js").read_text(encoding="utf-8")
         cls.css = (DOCS / "assets/style.css").read_text(encoding="utf-8")
         cls.data = json.loads((DOCS / "data/results-2026.json").read_text(encoding="utf-8"))
+        cls.config = json.loads((ROOT / "config/races.json").read_text(encoding="utf-8"))
 
     def run_node(self, body):
         node = os.environ.get("GOTALEDEN_NODE") or shutil.which("node")
@@ -51,8 +52,22 @@ const race=adapter.race('relay-75-2026'),field=adapter.segmentRanking(race.recor
 """)
 
     def test_relay_results_profile_replay_and_duel_contracts(self):
-        for text in ("Lagklass", "Klassplats", "Tävlingsstatus", "Snabbare än i klassen", "Snabbare än i fältet", "Relativt egen klass"):
-            self.assertIn(text, self.app)
+        relay_labels = self.config["competition_profiles"]["relay"]["ui_labels"]
+        self.assertEqual(relay_labels["class"], "Lagklass")
+        self.assertEqual(relay_labels["members"], "Lagmedlemmar")
+        self.assertEqual(relay_labels["class_reference"], "Min lagklass")
+        self.assertNotIn("Lagklass", self.app)
+        self.assertNotIn("Lagmedlemmar", self.app)
+        for token in (
+            "teamLabel(race,'class','Klass')",
+            "teamLabel(race,'class_place','Klassplats')",
+            "teamLabel(race,'class_reference','min klass')",
+            "teamLabel(race,'members','Medlemmar')",
+            "Tävlingsstatus",
+            "Snabbare än i klassen",
+            "Snabbare än i fältet",
+        ):
+            self.assertIn(token, self.app)
         self.assertIn("<span>Snabbare än</span><strong>${relative.percentile?relative.percentile+' %'", self.app)
         self.assertNotIn("<span>Percentil</span>", self.app)
         self.assertIn("race.isTeam?'':record.club", self.app)
@@ -67,8 +82,11 @@ const race=adapter.race('relay-75-2026'),field=adapter.segmentRanking(race.recor
         self.assertIn("BASE_PLAYBACK_SECONDS=180", self.duel)
 
     def test_relay_analysis_features_and_mixed_free_rules_are_wired(self):
-        for text in ("renderRelayStatistics", "relayClassAdvancements", "Egen klass", "Hela stafettfältet", "Fartretention per klass"):
+        for text in ("renderRelayStatistics", "relayClassAdvancements", "Egen klass", "Fartretention per klass"):
             self.assertIn(text, self.interactive + self.app + self.html)
+        relay_labels = self.config["competition_profiles"]["relay"]["ui_labels"]
+        self.assertEqual(relay_labels["field_analysis"], "Hela stafettfältet")
+        self.assertEqual(relay_labels["class_analysis_eyebrow"], "OFFICIELLA STAFETTKLASSER")
         self.assertIn("group.ranked", self.interactive)
         self.assertIn("Ej tävling", self.interactive + self.app + self.replay + self.duel)
         self.assertIn("filter(item=>relayClassMeta(item).ranked)", self.adapter)
