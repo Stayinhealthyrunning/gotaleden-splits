@@ -71,7 +71,7 @@ class HistorySourceInventoryTests(unittest.TestCase):
                 inventory_race["status_counts"],
                 dict(collections.Counter(record["status"] for record in self.web["races"][race_key]["records"])),
             )
-            self.assertEqual(inventory_race["published_checkpoint_keys"], web_checkpoint_keys[race_key])
+            self.assertEqual(inventory_race["normalized_checkpoint_keys"], web_checkpoint_keys[race_key])
             self.assertEqual(inventory_race["participant_entity"], self.web["races"][race_key]["participant"]["entity"])
             binding = source_event["race_bindings"][race_config["source_binding"]["race"]]
             self.assertEqual(inventory_race["published_race_name"], binding["source_race_name"])
