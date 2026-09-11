@@ -13,7 +13,7 @@
   <meta name="twitter:description" content="Analysera resultat, verkliga passager, fart och loppförlopp för Gotaleden Stafett & Ultra 2026.">
   <title>Gotaleden Splits</title>
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=1.9.4">
-  <link rel="stylesheet" href="assets/style.css?v=20260908-course-segments1">
+  <link rel="stylesheet" href="assets/style.css?v=20260911-e3">
 </head>
 <body>
   <header class="hero">
@@ -27,7 +27,7 @@
   </header>
 
   <main>
-    <div class="race-selection"><nav class="race-switch" id="race-switch" aria-label="Välj loppfamilj" role="tablist"></nav><label class="race-year-select" for="race-year">År / edition<select id="race-year" aria-label="Välj år eller edition"></select></label></div>
+    <div class="race-selection"><nav class="race-switch" id="race-switch" aria-label="Välj loppfamilj" role="tablist"></nav><label class="race-year-select" for="race-year">År / upplaga<select id="race-year" aria-label="Välj år eller upplaga"></select></label></div>
 
     <nav class="analysis-nav" aria-label="Analysnavigation">
       <div class="analysis-nav__scroll">
@@ -84,7 +84,7 @@
     </section>
 
     <section class="panel goal-pace" id="goal-pace">
-      <div class="goal-pace-head"><div><p class="eyebrow ink">PERSONLIG LOPPPLAN</p><h2>Måltempo</h2><p>Gör en önskad sluttid till en bananpassad plan för det valda individuella loppet.</p></div><span class="pill" id="goal-pace-race">Individuellt 75</span></div>
+      <div class="goal-pace-head"><div><p class="eyebrow ink">PERSONLIG LOPPPLAN</p><h2>Måltempo</h2><p>Gör en önskad sluttid till en segmenterad plan för det valda individuella loppet.</p></div><span class="pill" id="goal-pace-race">Individuellt 75</span></div>
       <div id="goal-pace-content"></div>
     </section>
     <div class="active-filter-summary" id="active-filter-summary" aria-live="polite"></div>
@@ -128,7 +128,7 @@
         <article class="panel wide-card"><div class="panel-head"><div><p class="eyebrow ink">FART GENOM LOPPET</p><h3>Median &amp; spridning per delsträcka</h3></div><span class="pill" data-unit-label>min/km</span></div><div class="chart" id="gender-pace"></div></article>
         <article class="panel"><div class="panel-head"><div><p class="eyebrow ink">PACING</p><h3>Fartretention</h3></div><span class="pill" id="group-retention-copy">100 = respektive köns medianfart över hela loppet</span></div><div class="chart" id="gender-retention"></div></article>
       </div>
-      <article class="panel automatic-insights"><div class="panel-head"><div><p class="eyebrow ink">AUTOMATISKA INSIKTER</p><h3>Vad skiljer grupperna?</h3></div><span class="pill">faktisk 2026-data</span></div><div class="story-strip" id="gender-insights"></div></article>
+      <article class="panel automatic-insights"><div class="panel-head"><div><p class="eyebrow ink">AUTOMATISKA INSIKTER</p><h3>Vad skiljer grupperna?</h3></div><span class="pill" id="group-insights-data-label">faktisk loppdata</span></div><div class="story-strip" id="gender-insights"></div></article>
     </section>
 
     <section class="audience-world" id="age-analysis">
@@ -151,7 +151,7 @@
         <article class="panel"><div class="panel-head"><div><p class="eyebrow ink">FÄLTETS FLÖDE</p><h3>Så sprids startfältet</h3></div></div><div class="chart" id="field-flow"></div></article>
       </div>
       <section class="panel race-intelligence" id="race-intelligence"><div class="panel-head"><div><p class="eyebrow ink">RACE INTELLIGENCE LAB · ETT ÅR</p><h3>Loppets automatiska berättelse</h3></div><span class="pill">klickbara datapunkter</span></div><div class="story-strip" id="race-story"></div></section>
-      <section class="panel standout-world" id="standouts"><div class="panel-head"><div><p class="eyebrow ink">PRESTATIONER SOM STICKER UT · 2026</p><h3>Fem sätt att hitta ovanliga lopp</h3></div></div><div class="standout-tabs" id="standout-tabs"></div><div class="ranking" id="standout-ranking"></div></section>
+      <section class="panel standout-world" id="standouts"><div class="panel-head"><div><p class="eyebrow ink" id="standouts-eyebrow">PRESTATIONER SOM STICKER UT</p><h3>Fem sätt att hitta ovanliga lopp</h3></div></div><div class="standout-tabs" id="standout-tabs"></div><div class="ranking" id="standout-ranking"></div></section>
     </section>
 
     <section class="audience-world" id="history" aria-label="Historik"><div id="history-content"></div></section>
@@ -176,8 +176,8 @@
     <section class="data-note panel"><p id="data-principle-copy">Dataprincip: läser datakällan…</p></section>
   </main>
 
-  <dialog id="detail-dialog"><button class="dialog-close" type="button" aria-label="Stäng">×</button><div id="detail-content"></div></dialog>
-  <dialog id="duel-dialog" class="duel-dialog">
+  <dialog id="detail-dialog" aria-labelledby="detail-title"><button class="dialog-close" type="button" aria-label="Stäng profil">×</button><div id="detail-content"></div></dialog>
+  <dialog id="duel-dialog" class="duel-dialog" aria-labelledby="duel-dialog-race">
     <header class="duel-dialog-header">
       <div class="duel-dialog-heading"><span>KARTDUELL</span><strong id="duel-dialog-race">Race analysis</strong><small id="duel-dialog-count">2 deltagare</small></div>
       <div class="duel-dialog-clock" aria-label="Tävlingsklocka"><span>TÄVLINGSKLOCKA</span><strong id="duel-dialog-clock">0:00:00</strong><small>av <span id="duel-dialog-clock-max">0:00:00</span></small></div>
@@ -195,9 +195,9 @@
   <script src="assets/data-adapter.js?v=20260910-e1"></script>
   <script src="assets/history-engine.js?v=20260909-history1"></script>
   <script src="assets/charts.js?v=20260908-course-segments1"></script>
-  <script src="assets/history-ui.js?v=20260909-history1"></script>
+  <script src="assets/history-ui.js?v=20260911-e3"></script>
   <script src="assets/map-engine.js?v=20260909-course1"></script>
-  <script src="assets/analysis-help-content.js?v=20260910-e1"></script>
+  <script src="assets/analysis-help-content.js?v=20260911-e3"></script>
   <script src="assets/analysis-help.js?v=20260908-goal-pace1"></script>
   <script src="assets/course-difficulty.js?v=20260908-course-segments1"></script>
   <script src="assets/race-media.js?v=20260910-d2"></script>
@@ -206,10 +206,10 @@
   <script src="assets/map-duel.js?v=20260903-standalone-map2"></script>
   <script src="assets/head-to-head.js?v=20260907-head-to-head1"></script>
   <script src="assets/personal-summary.js?v=20260908-goal-pace1"></script>
-  <script src="assets/goal-pace.js?v=20260908-goal-pace1"></script>
+  <script src="assets/goal-pace.js?v=20260911-e3"></script>
   <script src="assets/interactive-analysis.js?v=20260910-e1"></script>
   <script src="assets/favorites.js?v=20260907-favorites1"></script>
   <script src="assets/app-state.js?v=20260909-e2e1"></script>
-  <script src="assets/app.js?v=20260910-e1"></script>
+  <script src="assets/app.js?v=20260911-e3"></script>
 </body>
 </html>

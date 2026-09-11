@@ -1,11 +1,14 @@
+import errno
 import hashlib
 import json
+import os
 import sqlite3
 import subprocess
 import sys
 import unittest
 from contextlib import contextmanager
 from pathlib import Path
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
 TOOLS = ROOT / "tools"
@@ -13,6 +16,7 @@ if str(TOOLS) not in sys.path:
     sys.path.insert(0, str(TOOLS))
 
 from eqtiming_official_import import build_relay_assignments, eqtiming_source_context  # noqa: E402
+from build_project_data import write_payload  # noqa: E402
 
 
 EXPECTED_SOURCE_HASHES = {
@@ -193,6 +197,52 @@ class ProjectDataTests(unittest.TestCase):
             second_person_keys = conn.execute("SELECT person_key FROM athletes ORDER BY person_key").fetchall()
         self.assertEqual(first, second)
         self.assertEqual(first_person_keys, second_person_keys)
+
+    def test_web_payload_write_is_atomic_and_retries_transient_replace_errors(self):
+        output = ROOT / "reports" / f".atomic-write-{os.getpid()}-windows.json"
+        output.unlink(missing_ok=True)
+        self.addCleanup(output.unlink, missing_ok=True)
+        try:
+            real_replace = os.replace
+            attempts = 0
+
+            def flaky_replace(source, target):
+                nonlocal attempts
+                attempts += 1
+                if attempts == 1:
+                    raise OSError(errno.EACCES, "transient file watcher conflict")
+                real_replace(source, target)
+
+            with (
+                mock.patch("build_project_data.IS_WINDOWS", True),
+                mock.patch("build_project_data.os.replace", side_effect=flaky_replace),
+            ):
+                write_payload(output, {"event": "Götaleden"})
+
+            self.assertEqual(json.loads(output.read_text(encoding="utf-8")), {"event": "Götaleden"})
+            self.assertEqual(attempts, 2)
+            self.assertEqual(list(output.parent.glob(f".{output.name}.*.tmp")), [])
+        finally:
+            output.unlink(missing_ok=True)
+
+    def test_web_payload_write_does_not_retry_replace_errors_outside_windows(self):
+        output = ROOT / "reports" / f".atomic-write-{os.getpid()}-posix.json"
+        output.unlink(missing_ok=True)
+        self.addCleanup(output.unlink, missing_ok=True)
+        try:
+            replace = mock.Mock(side_effect=OSError(errno.EACCES, "replace failed"))
+
+            with (
+                mock.patch("build_project_data.IS_WINDOWS", False),
+                mock.patch("build_project_data.os.replace", replace),
+            ):
+                with self.assertRaises(OSError):
+                    write_payload(output, {"event": "neutral"})
+
+            self.assertEqual(replace.call_count, 1)
+            self.assertEqual(list(output.parent.glob(f".{output.name}.*.tmp")), [])
+        finally:
+            output.unlink(missing_ok=True)
 
 
 if __name__ == "__main__":
