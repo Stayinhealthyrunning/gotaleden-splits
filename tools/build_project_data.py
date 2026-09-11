@@ -21,6 +21,7 @@ WEB_RESULTS_COMPAT = (ROOT / "docs" / "data" / "results-2026.json",)
 WEB_ROUTE = ROOT / "docs" / "data" / "route.json"
 REPORT = ROOT / "reports" / "import-summary.json"
 REPORT_COMPAT = (ROOT / "reports" / "import-summary-2026.json",)
+IS_WINDOWS = os.name == "nt"
 
 
 def write_payload(path: Path, payload: dict, aliases: tuple[Path, ...] = (), *, compact: bool = True) -> None:
@@ -43,7 +44,7 @@ def write_payload(path: Path, payload: dict, aliases: tuple[Path, ...] = (), *, 
                     temporary = None
                     break
                 except OSError as error:
-                    retryable = os.name == "nt" and (
+                    retryable = IS_WINDOWS and (
                         error.errno in {errno.EACCES, errno.EBUSY, errno.EINVAL, errno.EPERM}
                         or getattr(error, "winerror", None) in {5, 32, 33}
                     )

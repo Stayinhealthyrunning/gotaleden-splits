@@ -5,7 +5,6 @@ import os
 import sqlite3
 import subprocess
 import sys
-import tempfile
 import unittest
 from contextlib import contextmanager
 from pathlib import Path
@@ -200,8 +199,10 @@ class ProjectDataTests(unittest.TestCase):
         self.assertEqual(first_person_keys, second_person_keys)
 
     def test_web_payload_write_is_atomic_and_retries_transient_replace_errors(self):
-        with tempfile.TemporaryDirectory(dir=ROOT / "reports") as directory:
-            output = Path(directory) / "results.json"
+        output = ROOT / "reports" / f".atomic-write-{os.getpid()}-windows.json"
+        output.unlink(missing_ok=True)
+        self.addCleanup(output.unlink, missing_ok=True)
+        try:
             real_replace = os.replace
             attempts = 0
 
@@ -213,29 +214,35 @@ class ProjectDataTests(unittest.TestCase):
                 real_replace(source, target)
 
             with (
-                mock.patch("build_project_data.os.name", "nt"),
+                mock.patch("build_project_data.IS_WINDOWS", True),
                 mock.patch("build_project_data.os.replace", side_effect=flaky_replace),
             ):
                 write_payload(output, {"event": "Götaleden"})
 
             self.assertEqual(json.loads(output.read_text(encoding="utf-8")), {"event": "Götaleden"})
             self.assertEqual(attempts, 2)
-            self.assertEqual(list(output.parent.glob(".results.json.*.tmp")), [])
+            self.assertEqual(list(output.parent.glob(f".{output.name}.*.tmp")), [])
+        finally:
+            output.unlink(missing_ok=True)
 
     def test_web_payload_write_does_not_retry_replace_errors_outside_windows(self):
-        with tempfile.TemporaryDirectory(dir=ROOT / "reports") as directory:
-            output = Path(directory) / "results.json"
+        output = ROOT / "reports" / f".atomic-write-{os.getpid()}-posix.json"
+        output.unlink(missing_ok=True)
+        self.addCleanup(output.unlink, missing_ok=True)
+        try:
             replace = mock.Mock(side_effect=OSError(errno.EACCES, "replace failed"))
 
             with (
-                mock.patch("build_project_data.os.name", "posix"),
+                mock.patch("build_project_data.IS_WINDOWS", False),
                 mock.patch("build_project_data.os.replace", replace),
             ):
                 with self.assertRaises(OSError):
                     write_payload(output, {"event": "neutral"})
 
             self.assertEqual(replace.call_count, 1)
-            self.assertEqual(list(output.parent.glob(".results.json.*.tmp")), [])
+            self.assertEqual(list(output.parent.glob(f".{output.name}.*.tmp")), [])
+        finally:
+            output.unlink(missing_ok=True)
 
 
 if __name__ == "__main__":
