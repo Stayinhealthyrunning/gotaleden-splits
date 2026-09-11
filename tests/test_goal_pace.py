@@ -79,10 +79,13 @@ console.log(JSON.stringify(values.map(parts=>window.GGoalPace.validateParts(race
         self.assertIn("Historisk segmentviktning saknas", self.module)
         self.assertIn("jämnt tempo", self.module)
         self.assertIn("inte historiskt bananpassad", self.module)
+        self.assertIn("Skapa loppplan", self.module)
+        self.assertNotIn("Skapa bananpassad plan", self.module)
+        self.assertIn("segmenterad plan", self.html)
 
     def test_ui_navigation_persistence_and_personal_integration(self):
         for token in ('data-target="goal-pace"', 'id="goal-pace"',
-                      'goal-pace.js?v=20260908-goal-pace1'):
+                      'goal-pace.js?v=20260911-e3'):
             self.assertIn(token, self.html)
         self.assertIn("eventModel?.storageKey('goal-pace')", self.module)
         self.assertIn("eventName('goal-pace')", self.app)

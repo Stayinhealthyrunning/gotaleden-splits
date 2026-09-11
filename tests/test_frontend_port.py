@@ -122,6 +122,15 @@ class FrontendPortTests(unittest.TestCase):
             self.assertNotIn(forbidden, public_text)
         self.assertIn('id="history"', self.index)
         self.assertIn("history-engine.js", self.index)
+        history_copy = "\n".join(
+            (DOCS / "assets" / name).read_text(encoding="utf-8").casefold()
+            for name in ("history-ui.js", "analysis-help-content.js")
+        )
+        for forbidden in (
+            "katalogiserade editions", "reference edition", "canonical identities",
+            "race family", "performance-delta", "comparison identity",
+        ):
+            self.assertNotIn(forbidden, history_copy)
 
     def test_public_relay_ui_has_no_runner_to_leg_claim(self):
         public_text = f"{self.index}\n{self.app}".casefold()
