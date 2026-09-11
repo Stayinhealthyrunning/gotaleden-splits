@@ -47,7 +47,7 @@
         "result_count": 274,
         "status_counts": {"FINISHED": 206, "DNF": 13, "DNS": 55},
         "split_count": 2121,
-        "published_checkpoint_keys": ["skatas", "kasjon", "jonsered", "lerum", "floda", "tollered", "norsesund", "vastra_bodarna", "nolhaga", "alingsas"]
+        "normalized_checkpoint_keys": ["skatas", "kasjon", "jonsered", "lerum", "floda", "tollered", "norsesund", "vastra_bodarna", "nolhaga", "alingsas"]
       },
       {
         "race_key": "individual-35-2026",
@@ -58,7 +58,7 @@
         "result_count": 163,
         "status_counts": {"FINISHED": 127, "DNF": 2, "DNS": 34},
         "split_count": 638,
-        "published_checkpoint_keys": ["tollered", "norsesund", "vastra_bodarna", "nolhaga", "alingsas"]
+        "normalized_checkpoint_keys": ["tollered", "norsesund", "vastra_bodarna", "nolhaga", "alingsas"]
       },
       {
         "race_key": "relay-75-2026",
@@ -69,7 +69,7 @@
         "result_count": 121,
         "status_counts": {"FINISHED": 109, "DNF": 1, "DNS": 11},
         "split_count": 1077,
-        "published_checkpoint_keys": ["skatas", "kasjon", "jonsered", "lerum", "floda", "tollered", "norsesund", "vastra_bodarna", "nolhaga", "alingsas"]
+        "normalized_checkpoint_keys": ["skatas", "kasjon", "jonsered", "lerum", "floda", "tollered", "norsesund", "vastra_bodarna", "nolhaga", "alingsas"]
       },
       {
         "race_key": "relay-35-2026",
@@ -80,7 +80,7 @@
         "result_count": 49,
         "status_counts": {"FINISHED": 45, "DNF": 1, "DNS": 3},
         "split_count": 223,
-        "published_checkpoint_keys": ["tollered", "norsesund", "vastra_bodarna", "nolhaga", "alingsas"]
+        "normalized_checkpoint_keys": ["tollered", "norsesund", "vastra_bodarna", "nolhaga", "alingsas"]
       }
     ]
   },
