@@ -37,9 +37,10 @@ async function chooseDuelRunner(page,name){
 
 test('site, runner profile and Individual 75 target pace work without relevant errors',async({page})=>{
   const errors=watchRelevantErrors(page);await openSite(page);
+  await expect(page.locator('#group-insights-data-label')).toHaveText('faktisk 2026-data');await expect(page.locator('#standouts-eyebrow')).toHaveText('PRESTATIONER SOM STICKER UT · 2026');
   await page.locator('#runner-search').fill('Anton Gustafsson');await page.locator('#runner-suggestions [data-record-id]').filter({hasText:'Anton Gustafsson'}).click();
   await expect(page.locator('#detail-dialog')).toBeVisible();await expect(page.locator('#detail-dialog h2')).toHaveText('Anton Gustafsson');await expect(page.locator('#personal-summary')).toBeVisible();
-  await page.getByRole('button',{name:'Planera måltempo'}).click();await expect(page).toHaveURL(/section=goal-pace/);
+  await page.getByRole('button',{name:'Planera måltempo'}).click();await expect(page).toHaveURL(/section=goal-pace/);await expect(page.locator('[data-goal-create]')).toHaveText('Skapa loppplan');
   await page.locator('[data-goal-hours]').fill('9');await page.locator('[data-goal-minutes]').fill('30');await page.locator('[data-goal-create]').click();
   await expect(page.locator('[data-goal-output] tbody tr')).toHaveCount(9);await expect(page.locator('[data-goal-output] tbody tr').last().locator('td').nth(4)).toHaveText('9:30:00');
   expect(errors).toEqual([]);
@@ -74,7 +75,7 @@ test('Head-to-head opens for two valid runners',async({page})=>{
 test('Runner Replay, Kartduell and a direct map link use the selected course bundle',async({page})=>{
   const errors=watchRelevantErrors(page);await openSite(page);
   await page.locator('#runner-search').fill('Anton Gustafsson');const runner=page.locator('#runner-suggestions [data-record-id]').filter({hasText:'Anton Gustafsson'});const runnerId=await runner.getAttribute('data-record-id');await runner.click();await expect(page.locator('#detail-replay [data-map-engine]')).toBeVisible();await page.locator('#detail-dialog .dialog-close').click();
-  await page.locator('[data-target="map-duel"]').click();await chooseDuelRunner(page,'Anton Gustafsson');await chooseDuelRunner(page,'Anton Aro');await page.locator('#open-map-duel').click();await expect(page.locator('#duel-dialog [data-duel-map] .leaflet-container')).toBeVisible();
+  await page.locator('[data-target="map-duel"]').click();await chooseDuelRunner(page,'Anton Gustafsson');await chooseDuelRunner(page,'Anton Aro');await page.locator('#open-map-duel').click();await expect(page.getByRole('dialog',{name:'Individuellt 75'})).toBeVisible();await expect(page.locator('#duel-dialog [data-duel-map] .leaflet-container')).toBeVisible();
   const secondId=await page.locator('#duel-selected [data-remove-duel]').nth(1).getAttribute('data-remove-duel');await page.goto(`/karta.html?race=individual-75-2026&entries=${runnerId.split(':')[1]},${secondId.split(':')[1]}`);await expect(page.locator('#map-page-root')).toHaveAttribute('aria-busy','false');await expect(page.locator('#map-page-root [data-duel-map] .leaflet-container')).toBeVisible();
   expect(errors).toEqual([]);
 });
@@ -92,10 +93,17 @@ test('390px viewport keeps critical controls usable without horizontal overflow'
 test('catalog-driven family and year controls keep single-year history intentional',async({page})=>{
   const errors=watchRelevantErrors(page);await openSite(page,'/?race=individual-75-2026&section=history');
   await expect(page.locator('#race-switch [role="tab"]')).toHaveCount(4);await expect(page.locator('#race-year')).toHaveValue('individual-75-2026');await expect(page).toHaveURL(/race=individual-75-2026&section=history/);
-  await expect(page.locator('#history-content')).toContainText('Flerårsjämförelser aktiveras när ytterligare analyserbara editions finns.');await expect(page.locator('[data-history-edition]')).toHaveCount(1);await expect(page.locator('[data-history-reference]')).toHaveCount(0);
+  await expect(page.locator('#history-content')).toContainText('Flerårsjämförelser aktiveras när ytterligare analyserbara upplagor finns.');await expect(page.locator('[data-history-edition]')).toHaveCount(1);await expect(page.locator('[data-history-reference]')).toHaveCount(0);
   await page.getByRole('tab',{name:/Individuellt 35/}).click();await expect(page).toHaveURL(/race=individual-35-2026/);await expect(page.locator('#race-year')).toHaveValue('individual-35-2026');await expect(page.locator('#history-content h2')).toContainText('Individuellt 35');
   for(const race of ['relay-75-2026','relay-35-2026']){await openSite(page,`/?race=${race}&section=history`);await expect(page.locator('#race-year')).toHaveValue(race);await expect(page.locator('#history-content [data-history-edition]')).toHaveCount(1);await expect(page.locator('#history-content')).toContainText('Inga verifierade återkommande deltagare')}
   await page.setViewportSize({width:390,height:844});await openSite(page,'/?race=individual-75-2026&section=history');expect(await page.evaluate(()=>document.documentElement.scrollWidth>document.documentElement.clientWidth)).toBe(false);expect(errors).toEqual([]);
+});
+
+test('participant search explains no matches and profile dialog restores focus',async({page})=>{
+  const errors=watchRelevantErrors(page);await openSite(page);const search=page.locator('#runner-search');
+  await expect(search).toHaveAttribute('role','combobox');await expect(search).toHaveAttribute('aria-autocomplete','list');await search.fill('zzzz-ingen-traff');await expect(page.locator('#runner-suggestions')).toBeVisible();await expect(page.locator('#runner-suggestions [role="option"]')).toHaveText('Ingen träff i valt lopp.');
+  await search.fill('Anton Gustafsson');await page.locator('#runner-suggestions [data-record-id]').filter({hasText:'Anton Gustafsson'}).click();await expect(page.getByRole('dialog',{name:'Anton Gustafsson'})).toBeVisible();await expect(page.locator('#detail-dialog .dialog-close')).toBeFocused();
+  await page.locator('#detail-dialog .dialog-close').click();await expect(search).toBeFocused();await expect(page.locator('#detail-dialog')).not.toBeVisible();expect(errors).toEqual([]);
 });
 
 test('empty segment selections show a truthful race-story state in every race mode',async({page})=>{
@@ -111,6 +119,7 @@ test('a declarative future edition activates through the real catalog, course lo
   await page.setViewportSize({width:390,height:844});const errors=watchRelevantErrors(page),fixture=await installFutureEditionFixture(page);
   await openSite(page,'/?race=solo-future&section=history');
   await expect(page).toHaveURL(/race=solo-future&section=history/);await expect(page.locator('#race-switch [role="tab"]')).toHaveCount(2);await expect(page.locator('#race-year')).toHaveValue('solo-future');await expect(page.locator('#race-year option')).toHaveCount(4);await expect(page.locator('#history-content [data-history-edition]')).toHaveCount(4);
+  await expect(page.locator('#race-switch [role="tab"]').first()).toContainText('4 upplagor');await expect(page.locator('#group-insights-data-label')).toHaveText('faktisk 2033-data');await expect(page.locator('#standouts-eyebrow')).toHaveText('PRESTATIONER SOM STICKER UT · 2033');await expect(page.locator('#history-content')).toContainText('4 katalogiserade upplagor');
   await expect(page.locator('[data-history-relation="compatible"]')).toContainText('2031');await expect(page.locator('[data-history-relation="incomparable"]')).toContainText('2034');await expect(page.locator('[data-history-segment-relation="compatible"]')).toContainText('2031');await expect(page.locator('#race-year option[value="solo-planned"]')).toHaveAttribute('disabled','');await expect(page.locator('#history-content')).not.toContainText('2032');
   await expect(page.locator('#course-difficulty [data-course-map] .leaflet-container')).toBeVisible();
   expect(fixture.requests.filter(path=>path.includes('route-beta')).length).toBe(2);expect(fixture.requests.some(path=>path.includes('route-alpha')||path.includes('route-gamma'))).toBe(false);
