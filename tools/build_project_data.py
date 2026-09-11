@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import errno
 import json
+import os
 import re
 import sqlite3
+import tempfile
+import time
 import unicodedata
 from pathlib import Path
 from typing import Any
@@ -25,7 +29,30 @@ def write_payload(path: Path, payload: dict, aliases: tuple[Path, ...] = (), *, 
         output.parent.mkdir(parents=True, exist_ok=True)
         if output.exists() and output.read_text(encoding="utf-8") == content:
             continue
-        output.write_text(content, encoding="utf-8")
+        temporary: Path | None = None
+        try:
+            with tempfile.NamedTemporaryFile(
+                mode="w", encoding="utf-8", newline="", delete=False,
+                dir=output.parent, prefix=f".{output.name}.", suffix=".tmp",
+            ) as handle:
+                handle.write(content)
+                temporary = Path(handle.name)
+            for attempt in range(5):
+                try:
+                    os.replace(temporary, output)
+                    temporary = None
+                    break
+                except OSError as error:
+                    retryable = os.name == "nt" and (
+                        error.errno in {errno.EACCES, errno.EBUSY, errno.EINVAL, errno.EPERM}
+                        or getattr(error, "winerror", None) in {5, 32, 33}
+                    )
+                    if not retryable or attempt == 4:
+                        raise
+                    time.sleep(0.05 * (attempt + 1))
+        finally:
+            if temporary is not None:
+                temporary.unlink(missing_ok=True)
 
 def normalize(value: str | None) -> str:
     if not value:

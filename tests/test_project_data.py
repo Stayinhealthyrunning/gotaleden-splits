@@ -1,11 +1,15 @@
+import errno
 import hashlib
 import json
+import os
 import sqlite3
 import subprocess
 import sys
+import tempfile
 import unittest
 from contextlib import contextmanager
 from pathlib import Path
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
 TOOLS = ROOT / "tools"
@@ -13,6 +17,7 @@ if str(TOOLS) not in sys.path:
     sys.path.insert(0, str(TOOLS))
 
 from eqtiming_official_import import build_relay_assignments, eqtiming_source_context  # noqa: E402
+from build_project_data import write_payload  # noqa: E402
 
 
 EXPECTED_SOURCE_HASHES = {
@@ -193,6 +198,44 @@ class ProjectDataTests(unittest.TestCase):
             second_person_keys = conn.execute("SELECT person_key FROM athletes ORDER BY person_key").fetchall()
         self.assertEqual(first, second)
         self.assertEqual(first_person_keys, second_person_keys)
+
+    def test_web_payload_write_is_atomic_and_retries_transient_replace_errors(self):
+        with tempfile.TemporaryDirectory(dir=ROOT / "reports") as directory:
+            output = Path(directory) / "results.json"
+            real_replace = os.replace
+            attempts = 0
+
+            def flaky_replace(source, target):
+                nonlocal attempts
+                attempts += 1
+                if attempts == 1:
+                    raise OSError(errno.EACCES, "transient file watcher conflict")
+                real_replace(source, target)
+
+            with (
+                mock.patch("build_project_data.os.name", "nt"),
+                mock.patch("build_project_data.os.replace", side_effect=flaky_replace),
+            ):
+                write_payload(output, {"event": "Götaleden"})
+
+            self.assertEqual(json.loads(output.read_text(encoding="utf-8")), {"event": "Götaleden"})
+            self.assertEqual(attempts, 2)
+            self.assertEqual(list(output.parent.glob(".results.json.*.tmp")), [])
+
+    def test_web_payload_write_does_not_retry_replace_errors_outside_windows(self):
+        with tempfile.TemporaryDirectory(dir=ROOT / "reports") as directory:
+            output = Path(directory) / "results.json"
+            replace = mock.Mock(side_effect=OSError(errno.EACCES, "replace failed"))
+
+            with (
+                mock.patch("build_project_data.os.name", "posix"),
+                mock.patch("build_project_data.os.replace", replace),
+            ):
+                with self.assertRaises(OSError):
+                    write_payload(output, {"event": "neutral"})
+
+            self.assertEqual(replace.call_count, 1)
+            self.assertEqual(list(output.parent.glob(".results.json.*.tmp")), [])
 
 
 if __name__ == "__main__":
