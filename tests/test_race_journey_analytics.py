@@ -30,10 +30,10 @@ class RaceJourneyAnalyticsTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 0, completed.stderr or completed.stdout)
 
     def test_journey_assets_are_ordered_and_lifecycle_is_scoped_to_detail(self):
-        self.assertIn("runner-replay.js?v=20260907-product-completion1", self.html)
+        self.assertIn("runner-replay.js?v=20260911-e4", self.html)
         self.assertIn("profile-journey.js?v=20260904-journey2", self.html)
-        self.assertIn("data-adapter.js?v=20260910-e1", self.html)
-        self.assertIn("app.js?v=20260911-e3", self.html)
+        self.assertIn("data-adapter.js?v=20260911-e4", self.html)
+        self.assertIn("app.js?v=20260911-e4", self.html)
         self.assertIn("charts.js?v=20260908-course-segments1", self.html)
         self.assertIn("style.css?v=20260911-e3", self.html)
         self.assertLess(self.html.index("runner-replay.js"), self.html.index("profile-journey.js"))

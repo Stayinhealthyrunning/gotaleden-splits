@@ -46,7 +46,7 @@
     for(const values of familyIndex.values())values.sort(editionOrder);
 
     for(const race of adapter.races.values())for(const record of race.records){
-      if(record.isRelay||!record.personKey)continue;
+      if(record.isTeam||!record.personKey)continue;
       if(!personIndex.has(record.personKey))personIndex.set(record.personKey,[]);
       personIndex.get(record.personKey).push(record);
     }
@@ -70,7 +70,7 @@
     function selectedRecords(race,filters={}){
       if(!race)return[];
       const normalized={...filters};
-      if(race.isRelay)delete normalized.sex;
+      if(race.isTeam)delete normalized.sex;
       if(normalized.class&&!normalized.className)normalized.className=normalized.class;
       delete normalized.class;
       return adapter.filtered?adapter.filtered(race.key,normalized):race.records.filter(record=>(!normalized.sex||record.sex===normalized.sex)&&(!normalized.className||record.class_name===normalized.className)&&(!normalized.status||record.status===normalized.status));
@@ -228,7 +228,7 @@
     function compareAppearances(firstId,secondId){
       const first=adapter.record(firstId),second=adapter.record(secondId);
       if(!first||!second)return null;
-      const samePerson=Boolean(first.personKey&&first.personKey===second.personKey&&!first.isRelay&&!second.isRelay);
+      const samePerson=Boolean(first.personKey&&first.personKey===second.personKey&&!first.isTeam&&!second.isTeam);
       const course=comparability(first.raceKey,second.raceKey);
       const finishTimeComparisonAllowed=samePerson&&course.value!=='incomparable'&&adapter.statusFinished(first)&&adapter.statusFinished(second);
       return{

@@ -145,6 +145,16 @@ test('an alternate four-family event and two-person Duo use the same generic run
   const visibleText=await page.locator('body').innerText();for(const forbidden of ['Gotaleden','Göteborg','Floda','Alingsås','stafett','Stafett'])expect(visibleText).not.toContain(forbidden);expect(await page.evaluate(()=>document.documentElement.scrollWidth>document.documentElement.clientWidth)).toBe(false);expect(errors).toEqual([]);
 });
 
+test('source and event text cannot create markup in runtime views',async({page})=>{
+  const fixture=createAlternateEventFixture(),payload='<img data-e4-xss="true" src="missing" onerror="window.__e4Xss=(window.__e4Xss||0)+1">';
+  const solo=fixture.data.races['long-solo-b'];solo.participant.profile_label=payload;solo.participant.possessive=payload;fixture.data.race_catalog['long-solo-b'].participant=solo.participant;fixture.data.checkpoints['long-solo-b'][0].name=payload;fixture.data.checkpoints['long-solo-b'][1].name=payload;
+  const duo=fixture.data.races['duo-long-a'];duo.records[0].class_name=payload;
+  await page.route('**/data/results.json**',route=>route.fulfill({contentType:'application/json',body:JSON.stringify(fixture.data)}));
+  await page.route('**/data/alternate/**',route=>{const path=new URL(route.request().url()).pathname.replace(/^\//,'').split('?')[0],asset=fixture.assets[path];return asset?route.fulfill({contentType:'application/json',body:JSON.stringify(asset)}):route.continue()});
+  await openSite(page,'/?race=long-solo-b&runner=1');await expect(page.locator('#detail-dialog')).toBeVisible();expect(await page.locator('[data-e4-xss]').count()).toBe(0);expect(await page.evaluate(()=>window.__e4Xss||0)).toBe(0);await page.locator('#detail-dialog .dialog-close').click();
+  await page.getByRole('tab',{name:/Duo Long/}).click();await page.locator('#class-filter').selectOption(payload);expect(await page.locator('[data-e4-xss]').count()).toBe(0);expect(await page.evaluate(()=>window.__e4Xss||0)).toBe(0);
+});
+
 test('course difficulty keeps map, elevation, distribution, KPI and table on one selected segment',async({page})=>{
   const errors=watchRelevantErrors(page);await openSite(page,'/?race=individual-75-2026&section=segments');const course=page.locator('#course-difficulty');await course.scrollIntoViewIfNeeded();
   const nameAt=async index=>(await course.locator(`[data-course-row="${index}"] .course-segment-name strong`).textContent()).trim();
