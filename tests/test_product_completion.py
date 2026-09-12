@@ -58,7 +58,7 @@ class ProductCompletionTests(unittest.TestCase):
         self.assertIn("navigator.share", module)
         self.assertIn("navigator.clipboard", module)
         self.assertIn('aria-live="polite"', module)
-        self.assertIn("personal-summary.js?v=20260908-goal-pace1", html)
+        self.assertIn("personal-summary.js?v=20260911-e4", html)
 
     def test_faster_than_position_is_strict_tie_safe_and_finished_only(self):
         self.run_node(r"""
