@@ -88,7 +88,7 @@ if(JSON.stringify(axisLabels(labels35))!==JSON.stringify(expected35))throw new E
         self.assertIn("'segment-line-chart'", self.charts)
         self.assertIn("rotate(-18", self.charts)
         self.assertIn("assets/charts.js?v=20260921-acceptance1", self.html)
-        self.assertIn("assets/style.css?v=20260921-acceptance1", self.html)
+        self.assertIn("assets/style.css?v=20260921-map-highlight1", self.html)
 
     def test_data_and_nolhaga_invariants_are_unchanged(self):
         self.assertEqual(
