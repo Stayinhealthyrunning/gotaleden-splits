@@ -19,6 +19,7 @@ class RelayAnalysisUiTests(unittest.TestCase):
         cls.interactive = (DOCS / "assets/interactive-analysis.js").read_text(encoding="utf-8")
         cls.replay = (DOCS / "assets/runner-replay.js").read_text(encoding="utf-8")
         cls.duel = (DOCS / "assets/map-duel.js").read_text(encoding="utf-8")
+        cls.playback = (DOCS / "assets/playback.js").read_text(encoding="utf-8")
         cls.css = (DOCS / "assets/style.css").read_text(encoding="utf-8")
         cls.data = json.loads((DOCS / "data/results-2026.json").read_text(encoding="utf-8"))
         cls.config = json.loads((ROOT / "config/races.json").read_text(encoding="utf-8"))
@@ -82,7 +83,7 @@ const race=adapter.race('relay-75-2026'),field=adapter.segmentRanking(race.recor
         self.assertIn("non-competitive-badge", self.replay)
         self.assertIn("adapter.relayClassMeta(record)", self.duel)
         self.assertIn("color:item.color", self.duel)
-        self.assertIn("BASE_PLAYBACK_SECONDS=180", self.duel)
+        self.assertIn("BASE_PLAYBACK_SECONDS=90", self.playback)
 
     def test_relay_analysis_features_and_mixed_free_rules_are_wired(self):
         for text in ("renderRelayStatistics", "relayClassAdvancements", "Egen klass", "Fartretention per klass"):
@@ -117,9 +118,9 @@ if(!men.length||whole.length<=men.length)throw new Error(`whole=${whole.length},
         self.assertIn("!meta.ranked?' · Ej tävling':item.state.classPlace?` · klass #${item.state.classPlace}`:' · klass –'", self.duel)
         self.assertNotIn("meta.ranked&&record.class_place?'#'+record.class_place:'Ej tävling'", self.app)
         self.assertNotIn("meta.ranked&&item.state.classPlace?` · klass #${item.state.classPlace}`:' · Ej tävling'", self.duel)
-        self.assertIn("BASE_PLAYBACK_SECONDS=180", self.duel)
-        self.assertIn("audio.loop=true", self.duel)
-        self.assertIn("if(pauseAudio)audio?.pause()", self.duel)
+        self.assertIn("BASE_PLAYBACK_SECONDS=90", self.playback)
+        self.assertIn("audio.loop=false", self.duel)
+        self.assertIn("if(pauseAudio)audioController.pause()", self.duel)
 
     def test_race_switch_resets_result_sorting(self):
         self.assertIn("if(changing){state.duelIds=[];state.clubNames=[];state.selectedRecordId=null;state.sortKey='overall_place';state.sortDir=1}", self.app)

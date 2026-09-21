@@ -94,10 +94,8 @@ for(const [key,count] of Object.entries(expected)){
         )
 
     def test_main_and_gender_charts_use_whole_race_profiles(self):
-        self.assertIn(
-            "pacing=adapter.wholeRacePaceProfile(records,race)", self.app
-        )
-        self.assertIn("values:pacing.indexValues", self.app)
+        self.assertNotIn('id="pacing-chart"', self.html)
+        self.assertIn("adapter.wholeRacePaceProfile(records.filter(definition.test),race)", self.app)
         self.assertIn(
             "retention:adapter.wholeRacePaceProfile(all,race)", self.app
         )
@@ -122,14 +120,13 @@ for(const [key,count] of Object.entries(expected)){
         )
 
     def test_reference_lines_copy_and_cache_versions(self):
-        self.assertEqual(self.app.count("referenceValue:100"), 2)
+        self.assertEqual(self.app.count("referenceValue:100"), 1)
         self.assertIn("referenceValue:100", self.interactive)
-        self.assertIn("Fart relativt hela loppet", self.html)
-        self.assertIn("100 = medianfart för hela loppet", self.html)
-        self.assertIn("100 = respektive köns medianfart över hela loppet", self.html)
+        self.assertNotIn("Fart relativt hela loppet", self.html)
+        self.assertIn("100 = varje series egen hel-loppsmedianfart", self.html)
         self.assertIn("data-adapter.js?v=20260911-e4", self.html)
-        self.assertIn("interactive-analysis.js?v=20260910-e1", self.html)
-        self.assertIn("app.js?v=20260911-e4", self.html)
+        self.assertIn("interactive-analysis.js?v=20260921-acceptance1", self.html)
+        self.assertIn("app.js?v=20260921-acceptance1", self.html)
 
     def test_source_data_and_nolhaga_are_unchanged(self):
         self.assertEqual(

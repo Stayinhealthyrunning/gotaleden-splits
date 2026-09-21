@@ -115,8 +115,8 @@ if(!api.entry('filters')||typeof api.close!=='function'||typeof api.enhance!=='f
         self.assertIn("analysis-help.js?v=20260908-goal-pace1", self.index)
         self.assertIn("analysis-help-content.js?v=20260910-e1", self.map_page)
         self.assertIn("analysis-help.js?v=20260907-head-to-head1", self.map_page)
-        self.assertIn("style.css?v=20260911-e3", self.index)
-        self.assertIn("style.css?v=20260907-favorites1", self.map_page)
+        self.assertIn("style.css?v=20260921-acceptance1", self.index)
+        self.assertIn("style.css?v=20260921-acceptance1", self.map_page)
 
     def test_dialog_css_is_scoped_responsive_and_motion_safe(self):
         for token in (
