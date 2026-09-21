@@ -58,15 +58,12 @@ if(JSON.stringify(axisLabels(labels35))!==JSON.stringify(expected35))throw new E
 
     def test_every_relevant_view_uses_the_shared_line_or_flow_chart(self):
         for token in (
-            "$('#median-pace').innerHTML=window.GCharts.lines",
-            "$('#pacing-chart').innerHTML=window.GCharts.lines",
             "$('#gender-pace').innerHTML=window.GCharts.distributionBand",
             "$('#gender-retention').innerHTML=window.GCharts.lines",
             "$('#age-pace').innerHTML=selected.length?window.GCharts.lines",
             "$('#club-pace').innerHTML=stats.length?window.GCharts.lines",
             "$('#club-pacing-extra').innerHTML=stats.length?window.GCharts.lines",
             "$('#field-flow').innerHTML=window.GCharts.flow",
-            "$('#detail-placement').innerHTML=window.GCharts.lines",
             "$('#detail-pacing').innerHTML=window.GCharts.lines",
         ):
             self.assertIn(token, self.app + self.interactive)
@@ -90,8 +87,8 @@ if(JSON.stringify(axisLabels(labels35))!==JSON.stringify(expected35))throw new E
         self.assertIn(".chart:has(>.segment-line-chart),.panel:has(.segment-line-chart){min-width:0}", self.style)
         self.assertIn("'segment-line-chart'", self.charts)
         self.assertIn("rotate(-18", self.charts)
-        self.assertIn("assets/charts.js?v=20260908-course-segments1", self.html)
-        self.assertIn("assets/style.css?v=20260911-e3", self.html)
+        self.assertIn("assets/charts.js?v=20260921-acceptance1", self.html)
+        self.assertIn("assets/style.css?v=20260921-acceptance1", self.html)
 
     def test_data_and_nolhaga_invariants_are_unchanged(self):
         self.assertEqual(

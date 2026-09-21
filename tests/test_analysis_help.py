@@ -12,14 +12,14 @@ ASSETS = DOCS / "assets"
 EXPECTED_IDS = {
     "head-to-head-overview", "head-to-head-gap", "head-to-head-placement",
     "head-to-head-segments", "head-to-head-field-pacing", "head-to-head-course",
-    "filters", "overview-kpis", "finish-distribution", "overview-segment-pace",
+    "filters", "overview-kpis", "finish-distribution",
     "elevation-profile", "placement-engine", "target-time-simulator", "dnf-funnel",
-    "segment-character", "advancement-ranking", "whole-race-pacing", "group-kpis",
+    "segment-character", "advancement-ranking", "group-kpis",
     "group-pace-distribution", "group-retention", "group-insights", "age-class-lab",
     "age-class-pace", "pace-heatmap", "course-difficulty", "course-elevation-map",
     "course-distribution", "segment-lab", "time-thresholds", "field-flow",
     "race-intelligence", "standouts", "club-arena", "profile-summary",
-    "profile-relative-insights", "profile-placement", "profile-pacing", "profile-splits",
+    "profile-relative-insights", "profile-pacing", "profile-splits",
     "runner-replay", "journey-gap", "journey-placement", "journey-pacing", "map-duel",
     "results-database", "data-principles",
     "goal-pace",
@@ -33,6 +33,7 @@ class AnalysisHelpTests(unittest.TestCase):
     def setUpClass(cls):
         cls.content = (ASSETS / "analysis-help-content.js").read_text(encoding="utf-8")
         cls.runtime = (ASSETS / "analysis-help.js").read_text(encoding="utf-8")
+        cls.app = (ASSETS / "app.js").read_text(encoding="utf-8")
         cls.style = (ASSETS / "style.css").read_text(encoding="utf-8")
         cls.index = (DOCS / "index.html").read_text(encoding="utf-8")
         cls.map_page = (DOCS / "karta.html").read_text(encoding="utf-8")
@@ -41,7 +42,9 @@ class AnalysisHelpTests(unittest.TestCase):
         node = os.environ.get("GOTALEDEN_NODE") or shutil.which("node")
         if not node:
             self.skipTest("Node.js is required")
-        result = subprocess.run([node, "-e", body], cwd=ROOT, text=True, capture_output=True)
+        result = subprocess.run(
+            [node, "-e", body], cwd=ROOT, text=True, encoding="utf-8", capture_output=True
+        )
         self.assertEqual(result.returncode, 0, result.stderr or result.stdout)
         return result.stdout.strip()
 
@@ -56,7 +59,7 @@ console.log(JSON.stringify(window.GAnalysisHelpContent));
     def test_registry_has_exact_reviewed_entries_and_quality(self):
         registry = self.registry()
         self.assertEqual(set(registry), EXPECTED_IDS)
-        self.assertEqual(len(registry), 51)
+        self.assertEqual(len(registry), 48)
         for help_id, entry in registry.items():
             self.assertTrue(entry.get("title", "").strip(), help_id)
             self.assertTrue(entry.get("html", "").strip(), help_id)
@@ -73,6 +76,36 @@ console.log(JSON.stringify(window.GAnalysisHelp.validate()));
         self.assertEqual(set(report["usedIds"]), EXPECTED_IDS)
         self.assertEqual(report["missing"], [])
         self.assertEqual(report["unknown"], [])
+
+    def test_removed_panels_leave_no_help_or_profile_rendering_remnants(self):
+        removed_ids = (
+            "overview-segment-pace", "whole-race-pacing", "profile-placement"
+        )
+        for help_id in removed_ids:
+            self.assertNotIn(help_id, self.content)
+            self.assertNotIn(help_id, self.runtime)
+        for removed_copy in (
+            "Medianfart per delsträcka", "Fart relativt hela loppet",
+            "Profil – placering genom loppet",
+        ):
+            self.assertNotIn(removed_copy, self.content)
+        self.assertNotIn('id="detail-placement"', self.app)
+        self.assertNotIn("$('#detail-placement')", self.app)
+        self.assertIn('<section class="detail-grid single">', self.app)
+
+    def test_group_help_describes_all_women_men_and_configured_team_classes(self):
+        registry = self.registry()
+        for help_id in ("group-pace-distribution", "group-retention"):
+            html = registry[help_id]["html"]
+            for token in (
+                "Alla", "Kvinnor", "Män", "aktuella filtrerade urvalets",
+                "stabila kompletta", "konfigurerade klass",
+            ):
+                self.assertIn(token, html, (help_id, token))
+        profile = registry["profile-pacing"]["html"]
+        self.assertIn("Prestationsindex", profile)
+        self.assertIn("Fartretention", profile)
+        self.assertNotIn("Fart relativt hela loppet", profile)
 
     def test_button_uses_one_fixed_inline_svg_and_accessible_native_markup(self):
         output = self.run_node(r"""
@@ -111,12 +144,12 @@ if(!api.entry('filters')||typeof api.close!=='function'||typeof api.enhance!=='f
         for page in (self.index, self.map_page):
             self.assertLess(page.index("analysis-help-content.js"), page.index("analysis-help.js"))
             self.assertLess(page.index("analysis-help.js"), page.index("map-duel.js"))
-        self.assertIn("analysis-help-content.js?v=20260911-e3", self.index)
+        self.assertIn("analysis-help-content.js?v=20260921-acceptance2", self.index)
         self.assertIn("analysis-help.js?v=20260908-goal-pace1", self.index)
-        self.assertIn("analysis-help-content.js?v=20260910-e1", self.map_page)
+        self.assertIn("analysis-help-content.js?v=20260921-acceptance2", self.map_page)
         self.assertIn("analysis-help.js?v=20260907-head-to-head1", self.map_page)
-        self.assertIn("style.css?v=20260911-e3", self.index)
-        self.assertIn("style.css?v=20260907-favorites1", self.map_page)
+        self.assertIn("style.css?v=20260921-acceptance1", self.index)
+        self.assertIn("style.css?v=20260921-acceptance1", self.map_page)
 
     def test_dialog_css_is_scoped_responsive_and_motion_safe(self):
         for token in (

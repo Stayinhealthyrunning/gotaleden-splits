@@ -93,7 +93,7 @@ class FrontendPortTests(unittest.TestCase):
     def test_audio_uses_central_source_and_requires_a_user_gesture(self):
         self.assertIn("assets/race-media.js", self.index)
         self.assertIn("media.audioSource?new Audio(media.audioSource):null", self.duel)
-        self.assertIn("playAudio();lastFrame", self.duel)
+        self.assertIn("playAudio({restart});lastFrame", self.duel)
         self.assertNotIn("autoplay", (self.index + self.duel).casefold())
 
     def test_35_km_route_slice_starts_at_floda(self):
