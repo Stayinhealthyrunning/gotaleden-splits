@@ -36,8 +36,9 @@ class AcceptanceFixesOneTests(unittest.TestCase):
         self.assertNotIn('id="pacing-chart"', self.html)
         self.assertNotIn("LOPPETS DYNAMIK", self.html)
         self.assertNotIn("Fart relativt hela loppet", self.html)
-        self.assertIn("$('#detail-placement')?.closest('article')?.remove()", self.app)
-        self.assertIn("closest('.detail-grid')?.classList.add('single')", self.app)
+        self.assertNotIn('id="detail-placement"', self.app)
+        self.assertNotIn("$('#detail-placement')", self.app)
+        self.assertIn('<section class="detail-grid single">', self.app)
 
     def test_all_women_and_men_use_group_correct_methods(self):
         for token in ("{id:'all',name:'Alla'", "{id:'F',name:'Kvinnor'", "{id:'M',name:'Män'"):

@@ -92,7 +92,7 @@ const favorites=window.GFavorites.create({storage:broken});favorites.add('relay-
         self.assertIn("race.uiLabels?.saved", self.app)
         self.assertNotIn("record.sex", self.runtime)
         content = (ASSETS / "analysis-help-content.js").read_text(encoding="utf-8")
-        self.assertEqual(content.count('"title":'), 51)
+        self.assertEqual(content.count('"title":'), 48)
 
 
 if __name__ == "__main__":
