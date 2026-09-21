@@ -16,6 +16,7 @@ class AcceptanceFixesOneTests(unittest.TestCase):
         cls.html = (DOCS / "index.html").read_text(encoding="utf-8")
         cls.app = (ASSETS / "app.js").read_text(encoding="utf-8")
         cls.charts = (ASSETS / "charts.js").read_text(encoding="utf-8")
+        cls.style = (ASSETS / "style.css").read_text(encoding="utf-8")
         cls.course = (ASSETS / "course-difficulty.js").read_text(encoding="utf-8")
         cls.map_engine = (ASSETS / "map-engine.js").read_text(encoding="utf-8")
         cls.playback = (ASSETS / "playback.js").read_text(encoding="utf-8")
@@ -46,23 +47,31 @@ class AcceptanceFixesOneTests(unittest.TestCase):
         self.assertIn("adapter.segmentGroupDistribution(race,definition.test,records)", self.app)
         self.assertIn("adapter.wholeRacePaceProfile(records.filter(definition.test),race)", self.app)
 
-    def test_percentile_positions_use_actual_times_on_one_domain(self):
-        self.assertNotIn("--step:${index}", self.charts)
+    def test_finish_progression_keeps_exact_quantiles_without_time_geometry(self):
+        self.assertIn("När hade fältet gått i mål?", self.html)
+        self.assertNotIn("Tidsgränser i fältet", self.html)
         script = r"""
 const fs=require('fs'),vm=require('vm');global.window={};
 vm.runInThisContext(fs.readFileSync('docs/assets/charts.js','utf8'));
 const q=(values,p)=>{const s=values.slice().sort((a,b)=>a-b),i=(s.length-1)*p,l=Math.floor(i),h=Math.ceil(i);return s[l]+(s[h]-s[l])*(i-l)};
-const html=window.GCharts.percentileTimeline([
- {name:'A',color:'#111',values:[1000,2000,3000,4000,5000]},
- {name:'B',color:'#222',values:[2000,4000,6000,8000,10000]}
+const html=window.GCharts.finishProgression([
+ {name:'Kvinnor',color:'#111',values:[1000,2000,3000,4000,5000]},
+ {name:'Män',color:'#222',values:[2000,4000,6000,8000,10000]}
 ],q);
-if(!html.includes('data-time-min=')||!html.includes('data-time-max='))throw new Error('domain');
-if((html.match(/class="percentile-marker"/g)||[]).length!==10)throw new Error('markers');
-const points=[...html.matchAll(/data-percentile-time="([\d.]+)" cx="([\d.]+)"/g)].map(m=>({t:+m[1],x:+m[2]}));
-for(let i=1;i<5;i++)if(points[i].t>points[i+5].t&&points[i].x<=points[i+5].x)throw new Error('time geometry');
-if(!(points[0].x<points[5].x))throw new Error('shared scale');
+for(const share of [10,25,50,75,90])if(!html.includes(`data-finish-share="${share}"`))throw new Error(`share ${share}`);
+if(!html.includes('50 % i mål · median')||!html.includes('Kvinnor')||!html.includes('Män'))throw new Error('copy');
+const women=[...html.matchAll(/data-finish-group="Kvinnor" data-finish-time="([\d.]+)"/g)].map(match=>+match[1]);
+const men=[...html.matchAll(/data-finish-group="Män" data-finish-time="([\d.]+)"/g)].map(match=>+match[1]);
+if(JSON.stringify(women)!==JSON.stringify([1400,2000,3000,4000,4600]))throw new Error(`women ${women}`);
+if(JSON.stringify(men)!==JSON.stringify([2800,4000,6000,8000,9200]))throw new Error(`men ${men}`);
+if(html.includes('<svg')||html.includes('percentile-marker')||html.includes('data-time-min'))throw new Error('time chart geometry');
+for(const width of [10,25,50,75,90])if(!html.includes(`width:${width}%`))throw new Error(`progress ${width}`);
 """
         self.run_node(script)
+        self.assertNotIn("percentileTimeline", self.charts)
+        percentile_css = self.style.split(".percentile-ladder", 1)[1].split(".profile-history", 1)[0]
+        self.assertNotIn("overflow-x:auto", percentile_css)
+        self.assertNotIn("min-width:680px", percentile_css)
 
     def test_map_highlight_has_dedicated_front_pane_and_replaces(self):
         for token in (

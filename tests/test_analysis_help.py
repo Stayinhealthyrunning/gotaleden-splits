@@ -107,6 +107,17 @@ console.log(JSON.stringify(window.GAnalysisHelp.validate()));
         self.assertIn("Fartretention", profile)
         self.assertNotIn("Fart relativt hela loppet", profile)
 
+    def test_finish_progression_help_starts_plainly_then_documents_quantiles(self):
+        entry = self.registry()["time-thresholds"]
+        self.assertEqual(entry["title"], "När hade fältet gått i mål?")
+        for token in (
+            "10 % i mål betyder", "snabbaste tiondelen", "FINISHED",
+            "Q10", "Q25", "Q50", "Q75", "Q90", "linjär interpolation",
+            "Kvinnor", "Män", "konfigurerade klassgrupperna", "Ej tävling",
+        ):
+            self.assertIn(token, entry["html"])
+        self.assertNotIn("Tidsgränser i fältet", self.content)
+
     def test_button_uses_one_fixed_inline_svg_and_accessible_native_markup(self):
         output = self.run_node(r"""
 const fs=require('fs'),vm=require('vm');global.window={};
@@ -144,12 +155,12 @@ if(!api.entry('filters')||typeof api.close!=='function'||typeof api.enhance!=='f
         for page in (self.index, self.map_page):
             self.assertLess(page.index("analysis-help-content.js"), page.index("analysis-help.js"))
             self.assertLess(page.index("analysis-help.js"), page.index("map-duel.js"))
-        self.assertIn("analysis-help-content.js?v=20260921-acceptance2", self.index)
+        self.assertIn("analysis-help-content.js?v=20260921-finish-progression1", self.index)
         self.assertIn("analysis-help.js?v=20260908-goal-pace1", self.index)
-        self.assertIn("analysis-help-content.js?v=20260921-acceptance2", self.map_page)
+        self.assertIn("analysis-help-content.js?v=20260921-finish-progression1", self.map_page)
         self.assertIn("analysis-help.js?v=20260907-head-to-head1", self.map_page)
-        self.assertIn("style.css?v=20260921-map-highlight1", self.index)
-        self.assertIn("style.css?v=20260921-map-highlight1", self.map_page)
+        self.assertIn("style.css?v=20260921-finish-progression1", self.index)
+        self.assertIn("style.css?v=20260921-finish-progression1", self.map_page)
 
     def test_dialog_css_is_scoped_responsive_and_motion_safe(self):
         for token in (

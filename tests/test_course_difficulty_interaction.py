@@ -60,7 +60,7 @@ if(window.GCharts.elevation(points,checkpoints).includes('elevation-range-highli
         self.assertIn('.fallback-map>svg.dragging{cursor:grabbing}',self.style)
         self.assertNotIn('.route-map svg{',self.style)
         self.assertNotIn('.route-map svg.dragging',self.style)
-        self.assertIn('style.css?v=20260921-map-highlight1',self.html)
+        self.assertIn('style.css?v=20260921-finish-progression1',self.html)
 
     def test_elevation_exposes_one_keyboard_hit_area_per_complete_segment(self):
         self.run_node(r"""
@@ -85,7 +85,7 @@ if((html.match(/class="elevation-segment-hit"/g)||[]).length!==2||!html.includes
         self.assertIn("teamLabel('field_pace_eyebrow'",self.course)
 
     def test_statistical_copy_and_runner_gap_words(self):
-        for label in ('Topp 10 %-gräns','Topp 25 %-gräns','75 % i mål inom','90 % i mål inom','90 % inom tiden'):
+        for label in ('Topp 10 %-gräns','90 % inom tiden','10 % i mål','25 % i mål','50 % i mål · median','75 % i mål','90 % i mål'):
             self.assertIn(label,self.charts)
         self.run_node(r"""
 global.window={};require('vm').runInThisContext(require('fs').readFileSync('docs/assets/runner-replay.js','utf8'));
