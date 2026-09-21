@@ -18,6 +18,7 @@ class MapAnimationMusicTests(unittest.TestCase):
         cls.media = (ASSETS / "race-media.js").read_text(encoding="utf-8")
         cls.replay = (ASSETS / "runner-replay.js").read_text(encoding="utf-8")
         cls.duel = (ASSETS / "map-duel.js").read_text(encoding="utf-8")
+        cls.playback = (ASSETS / "playback.js").read_text(encoding="utf-8")
         cls.results = json.loads(
             (DOCS / "data/results-2026.json").read_text(encoding="utf-8")
         )
@@ -67,19 +68,19 @@ if(media.audioSource!=='assets/gotaleden-ultra.mp3?v=20260901-music1')throw new 
             "data-replay-audio",
             "data-replay-volume",
             'aria-label="Musikvolym"',
-            "function playAudio()",
-            "playAudio();lastFrame",
-            "audio?.pause()",
-            "if(audio)audio.currentTime=0",
+            "function playAudio({restart=false}={})",
+            "playAudio({restart});lastFrame",
+            "audioController.pause()",
+            "audioController.reset()",
             "audio.removeAttribute('src');audio.load()",
-            "audio.loop=true",
+            "audio.loop=false",
         ):
             self.assertIn(token, self.replay)
-        self.assertIn("audio.play().catch(()=>showAudioNote", self.replay)
+        self.assertIn("createAudioController", self.replay)
         self.assertIn("function stop({pauseAudio=true}={})", self.replay)
-        self.assertIn("function finishAnimation(){stop({pauseAudio:false})}", self.replay)
+        self.assertIn("function finishAnimation(){stop({pauseAudio:false});audioController.finish()}", self.replay)
         self.assertIn("if(time>=maxTime)finishAnimation()", self.replay)
-        self.assertIn("else if(playing||time>=maxTime)playAudio()", self.replay)
+        self.assertIn("else if(playing)playAudio()", self.replay)
 
     def test_map_duel_reuses_shared_state_and_syncs_its_button(self):
         for token in (
@@ -88,13 +89,13 @@ if(media.audioSource!=='assets/gotaleden-ultra.mp3?v=20260901-music1')throw new 
             "syncAudioButton();playButton.onclick=toggle",
             "media.setEnabled?media.setEnabled(!audioEnabled)",
             "data-duel-volume",
-            "if(audio)audio.currentTime=0",
+            "audioController.reset()",
             "audio.removeAttribute('src');audio.load()",
-            "audio.loop=true",
+            "audio.loop=false",
         ):
             self.assertIn(token, self.duel)
-        self.assertIn("audio.play().catch(()=>showAudioNote", self.duel)
-        self.assertIn("else if(playing||time>=maxTime)playAudio()", self.duel)
+        self.assertIn("createAudioController", self.duel)
+        self.assertIn("else if(playing)playAudio()", self.duel)
 
     def test_audio_never_follows_map_playback_speed(self):
         self.assertIn("audio.playbackRate=1", self.replay)
