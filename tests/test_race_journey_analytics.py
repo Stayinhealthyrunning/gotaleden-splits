@@ -35,7 +35,7 @@ class RaceJourneyAnalyticsTests(unittest.TestCase):
         self.assertIn("data-adapter.js?v=20260911-e4", self.html)
         self.assertIn("app.js?v=20260921-acceptance1", self.html)
         self.assertIn("charts.js?v=20260921-acceptance1", self.html)
-        self.assertIn("style.css?v=20260921-acceptance1", self.html)
+        self.assertIn("style.css?v=20260921-map-highlight1", self.html)
         self.assertLess(self.html.index("runner-replay.js"), self.html.index("profile-journey.js"))
         self.assertLess(self.html.index("profile-journey.js"), self.html.index("app.js"))
         self.assertIn("journey:null", self.app)

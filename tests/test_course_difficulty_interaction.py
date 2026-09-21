@@ -18,6 +18,7 @@ class CourseDifficultyInteractionTests(unittest.TestCase):
         cls.course=(ASSETS/'course-difficulty.js').read_text(encoding='utf-8')
         cls.map=(ASSETS/'map-engine.js').read_text(encoding='utf-8')
         cls.charts=(ASSETS/'charts.js').read_text(encoding='utf-8')
+        cls.style=(ASSETS/'style.css').read_text(encoding='utf-8')
 
     def run_node(self,script):
         node=os.environ.get('GOTALEDEN_NODE') or shutil.which('node')
@@ -53,6 +54,13 @@ const map=window.GMapEngine.create(container,{adapter,race:{}});map.highlightRan
 const fs=require('fs'),vm=require('vm');global.window={};vm.runInThisContext(fs.readFileSync('docs/assets/charts.js','utf8'));const points=[{route_distance_km:0,elevation_m:0},{route_distance_km:2,elevation_m:10}],checkpoints=[];
 if(window.GCharts.elevation(points,checkpoints).includes('elevation-range-highlight'))throw new Error('old call');const html=window.GCharts.elevation(points,checkpoints,{highlightRange:{from:.5,to:1.5}});if(!html.includes('data-highlight-from="0.5"')||!html.includes('data-highlight-to="1.5"'))throw new Error(html);
 """)
+
+    def test_fallback_svg_layout_does_not_target_leaflet_renderers(self):
+        self.assertIn('.fallback-map>svg{display:block;width:100%;height:auto;',self.style)
+        self.assertIn('.fallback-map>svg.dragging{cursor:grabbing}',self.style)
+        self.assertNotIn('.route-map svg{',self.style)
+        self.assertNotIn('.route-map svg.dragging',self.style)
+        self.assertIn('style.css?v=20260921-map-highlight1',self.html)
 
     def test_elevation_exposes_one_keyboard_hit_area_per_complete_segment(self):
         self.run_node(r"""
