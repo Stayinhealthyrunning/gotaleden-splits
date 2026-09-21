@@ -59,14 +59,14 @@ if(mixed.count!==13||mixed.segments.some(segment=>segment.n!==13)||men.count!==0
 """)
 
     def test_renderers_pass_filtered_records_to_group_distributions(self):
-        for source in (self.app,self.interactive):
-            self.assertIn('segmentGroupDistribution(race,record=>record.sex===sex,records)',source)
-            self.assertIn('segmentGroupDistribution(race,record=>adapter.relayClassMeta(record).id===group.id,records)',source)
+        self.assertIn('segmentGroupDistribution(race,definition.test,records)',self.app)
+        self.assertIn('segmentGroupDistribution(race,record=>adapter.relayClassMeta(record).id===group.id,records)',self.app)
         self.assertNotIn('relayClassGroups(race.records,race)',self.interactive)
 
     def test_toggles_remove_the_whole_series_and_band_elements_share_id(self):
-        self.assertIn("filter(sex=>sexViews.pace[sex])",self.interactive)
-        self.assertIn("filter(group=>relayViews.pace.has(group.id))",self.interactive)
+        self.assertIn("{id:'all',name:'Alla'",self.app)
+        self.assertIn("{id:'F',name:'Kvinnor'",self.app)
+        self.assertIn("{id:'M',name:'Män'",self.app)
         self.assertIn('class="distribution-band" data-series=',self.charts)
         self.assertIn('distribution-median" data-series=',self.charts)
 

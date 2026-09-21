@@ -15,6 +15,7 @@ class ModalMapDuelTests(unittest.TestCase):
         cls.css = (ASSETS / "style.css").read_text(encoding="utf-8")
         cls.duel = (ASSETS / "map-duel.js").read_text(encoding="utf-8")
         cls.replay = (ASSETS / "runner-replay.js").read_text(encoding="utf-8")
+        cls.playback = (ASSETS / "playback.js").read_text(encoding="utf-8")
         cls.standalone = (DOCS / "karta.html").read_text(encoding="utf-8")
 
     def test_selection_contract_requires_two_and_caps_at_five(self):
@@ -43,7 +44,7 @@ class ModalMapDuelTests(unittest.TestCase):
         self.assertIn("addEventListener('close',destroyDuel)", self.app)
         self.assertIn("function destroyDuel(){state.duel?.destroy();state.duel=null", self.app)
         self.assertIn("destroyDuel();$('#duel-dialog-race')", self.app)
-        self.assertIn("destroy(){stop();destroyed=true;if(audio){audio.currentTime=0;audio.removeAttribute('src');audio.load()}map.destroy()", self.duel)
+        self.assertIn("destroy(){stop();destroyed=true;audioController.destroy()", self.duel)
 
     def test_share_uses_standalone_url_without_navigating(self):
         self.assertIn("window.GMapDuel.buildUrl(state.raceKey,records,state.duel.getTime())", self.app)
@@ -62,16 +63,16 @@ class ModalMapDuelTests(unittest.TestCase):
         ):
             self.assertIn(token, self.css)
 
-    def test_both_playbacks_keep_music_after_finish_but_destroy_stops_it(self):
+    def test_both_playbacks_fade_music_after_finish_and_destroy_stops_it(self):
         for source in (self.duel, self.replay):
-            self.assertIn("audio.loop=true", source)
+            self.assertIn("audio.loop=false", source)
             self.assertIn("audio.playbackRate=1", source)
             self.assertIn("function stop({pauseAudio=true}={})", source)
-            self.assertIn("function finishAnimation(){stop({pauseAudio:false})}", source)
-            self.assertIn("else if(playing||time>=maxTime)playAudio()", source)
-            self.assertIn("if(audio)audio.currentTime=0", source)
+            self.assertIn("function finishAnimation(){stop({pauseAudio:false});audioController.finish()}", source)
+            self.assertIn("else if(playing)playAudio()", source)
+            self.assertIn("audioController.reset()", source)
             self.assertIn("audio.removeAttribute('src');audio.load()", source)
-        self.assertIn("const BASE_PLAYBACK_SECONDS=180", self.duel)
+        self.assertIn("const BASE_PLAYBACK_SECONDS=90", self.playback)
 
 
 if __name__ == "__main__":

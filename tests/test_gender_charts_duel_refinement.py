@@ -22,6 +22,7 @@ class GenderChartsDuelRefinementTests(unittest.TestCase):
         cls.app = (ASSETS / "app.js").read_text(encoding="utf-8")
         cls.duel = (ASSETS / "map-duel.js").read_text(encoding="utf-8")
         cls.replay = (ASSETS / "runner-replay.js").read_text(encoding="utf-8")
+        cls.playback = (ASSETS / "playback.js").read_text(encoding="utf-8")
 
     def test_only_requested_feature_grids_are_equal_on_desktop(self):
         self.assertEqual(self.html.count('class="feature-grid equal-panels"'), 2)
@@ -30,7 +31,7 @@ class GenderChartsDuelRefinementTests(unittest.TestCase):
             self.css,
         )
         self.assertIn(
-            ".feature-grid,.feature-grid.equal-panels{grid-template-columns:1fr}",
+            ".feature-grid,.feature-grid.equal-panels{grid-template-columns:minmax(0,1fr)}",
             self.css,
         )
 
@@ -63,8 +64,10 @@ for(const token of ['data-sex="F" data-visual-offset-x="-2.5"','data-sex="M" dat
 
     def test_gender_series_and_both_reference_100_calls_are_wired(self):
         self.assertIn("({id:sex,name:sexMeta[sex].label", self.interactive)
-        self.assertIn("({id:group.sex,name:group.label", self.app)
-        self.assertEqual(self.app.count("referenceValue:100"), 2)
+        self.assertIn("{id:'all',name:'Alla'", self.app)
+        self.assertIn("adapter.wholeRacePaceProfile(records.filter(definition.test),race)", self.app)
+        self.assertEqual(self.app.count("referenceValue:100"), 1)
+        self.assertIn("referenceValue:100", self.interactive)
         self.assertIn(".reference-line", self.css)
         self.assertIn("stroke-dasharray:6 5", self.css)
 
@@ -82,26 +85,25 @@ for(const token of ['data-sex="F" data-visual-offset-x="-2.5"','data-sex="M" dat
         self.assertIn("item?.count||0", self.interactive)
 
     def test_percentiles_use_finished_results_per_gender(self):
-        self.assertIn("data-percentile-sex", self.interactive)
         self.assertIn(
             "record.sex===sex&&adapter.statusFinished(record)", self.interactive
         )
-        self.assertIn("window.GCharts.percentileLadder(finishTimes", self.interactive)
+        self.assertIn("window.GCharts.percentileTimeline(percentileGroups", self.interactive)
 
     def test_duel_duration_and_finish_audio_contract(self):
-        self.assertIn("const BASE_PLAYBACK_SECONDS=180", self.duel)
-        self.assertIn("maxTime/BASE_PLAYBACK_SECONDS", self.duel)
-        self.assertIn("audio.loop=true", self.duel)
-        self.assertIn("function finishAnimation(){stop({pauseAudio:false})}", self.duel)
+        self.assertIn("const BASE_PLAYBACK_SECONDS=90", self.playback)
+        self.assertIn("window.GRacePlayback.raceDelta", self.duel)
+        self.assertIn("audio.loop=false", self.duel)
+        self.assertIn("function finishAnimation(){stop({pauseAudio:false});audioController.finish()}", self.duel)
         self.assertIn("if(time>=maxTime)finishAnimation()", self.duel)
         self.assertIn("function stop({pauseAudio=true}={})", self.duel)
-        self.assertIn("if(pauseAudio)audio?.pause()", self.duel)
+        self.assertIn("if(pauseAudio)audioController.pause()", self.duel)
         self.assertIn("if(playing){stop();return}", self.duel)
-        self.assertIn("playAudio();lastFrame=performance.now()", self.duel)
-        self.assertIn("if(time>=maxTime){time=0;if(audio)audio.currentTime=0}", self.duel)
+        self.assertIn("playAudio({restart});lastFrame=performance.now()", self.duel)
+        self.assertIn("if(restart){time=0;audioController.reset()}", self.duel)
         self.assertIn("function reset(){stop();time=0", self.duel)
-        self.assertIn("if(audio)audio.currentTime=0", self.duel)
-        self.assertIn("audio.loop=true", self.replay)
+        self.assertIn("audioController.reset()", self.duel)
+        self.assertIn("audio.loop=false", self.replay)
 
 
 if __name__ == "__main__":

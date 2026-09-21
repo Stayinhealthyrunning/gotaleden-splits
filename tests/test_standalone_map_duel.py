@@ -21,6 +21,7 @@ class StandaloneMapDuelTests(unittest.TestCase):
         cls.map_page = (ASSETS / "map-page.js").read_text(encoding="utf-8")
         cls.map_css = (ASSETS / "map-page.css").read_text(encoding="utf-8")
         cls.replay = (ASSETS / "runner-replay.js").read_text(encoding="utf-8")
+        cls.playback = (ASSETS / "playback.js").read_text(encoding="utf-8")
         cls.results = json.loads((DOCS / "data/results-2026.json").read_text(encoding="utf-8"))
 
     def run_node(self, script):
@@ -70,7 +71,7 @@ if(timed.time!==15272)throw new Error('initial clock time');
 if(!window.GMapPage.selectionFrom('?race=individual-75-2026&entries=1,2,3,4,5,6',adapter).error)throw new Error('max five');
 """
         self.run_node(script)
-        self.assertIn('assets/map-duel.js?v=20260903-standalone-map2', self.map_html)
+        self.assertIn('assets/map-duel.js?v=20260921-acceptance1', self.map_html)
         self.assertIn('assets/map-page.js?v=20260909-course1', self.map_html)
         self.assertIn('assets/course-data.js?v=20260909-course1', self.map_html)
         self.assertIn('assets/map-page.css?v=20260903-standalone-map2', self.map_html)
@@ -93,17 +94,17 @@ if(!window.GMapPage.selectionFrom('?race=individual-75-2026&entries=1,2,3,4,5,6'
         self.assertIn("[data-duel-fit]').onclick=()=>{camera.value='overview';map.fit()}", self.duel)
 
     def test_music_transport_contract_is_explicit(self):
-        self.assertIn("audio.loop=true", self.duel)
-        self.assertIn("function finishAnimation(){stop({pauseAudio:false})}", self.duel)
-        self.assertIn("else if(playing||time>=maxTime)playAudio()", self.duel)
-        self.assertIn("if(pauseAudio)audio?.pause()", self.duel)
+        self.assertIn("audio.loop=false", self.duel)
+        self.assertIn("function finishAnimation(){stop({pauseAudio:false});audioController.finish()}", self.duel)
+        self.assertIn("else if(playing)playAudio()", self.duel)
+        self.assertIn("if(pauseAudio)audioController.pause()", self.duel)
         self.assertIn("if(playing){stop();return}", self.duel)
-        self.assertIn("if(time>=maxTime){time=0;if(audio)audio.currentTime=0}", self.duel)
+        self.assertIn("if(restart){time=0;audioController.reset()}", self.duel)
         self.assertIn("function reset(){stop();time=0", self.duel)
         self.assertIn("audio.playbackRate=1", self.duel)
         self.assertNotIn("audio.playbackRate=Number(speed", self.duel)
-        self.assertIn("const BASE_PLAYBACK_SECONDS=180", self.duel)
-        self.assertIn("maxTime/BASE_PLAYBACK_SECONDS", self.duel)
+        self.assertIn("const BASE_PLAYBACK_SECONDS=90", self.playback)
+        self.assertIn("window.GRacePlayback.raceDelta", self.duel)
 
     def test_adapter_preserves_dnf_nolhaga_and_35_km_math(self):
         script = r"""
@@ -144,9 +145,9 @@ if(!state.stopped||state.finished||state.distance!==profile.maxDistance||state.d
         self.assertNotIn("aktuell löpare", self.duel.casefold())
 
     def test_runner_replay_contract_remains_separate(self):
-        self.assertIn("audio.loop=true", self.replay)
-        self.assertIn("function finishAnimation(){stop({pauseAudio:false})}", self.replay)
-        self.assertIn("else if(playing||time>=maxTime)playAudio()", self.replay)
+        self.assertIn("audio.loop=false", self.replay)
+        self.assertIn("function finishAnimation(){stop({pauseAudio:false});audioController.finish()}", self.replay)
+        self.assertIn("else if(playing)playAudio()", self.replay)
         self.assertIn("window.GRunnerReplay", self.replay)
         self.assertNotIn("map-page", self.replay)
 
