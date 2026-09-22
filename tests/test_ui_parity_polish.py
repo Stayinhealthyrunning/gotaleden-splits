@@ -98,6 +98,10 @@ class UiParityPolishTests(unittest.TestCase):
             self.assertIn(token, self.replay)
         self.assertIn("for(const selector of ['.replay-comparison-controls'", self.replay)
         self.assertIn("'[data-elevation-dock]'", self.replay)
+        self.assertNotIn("data-elevation-toggle", self.replay)
+        self.assertNotIn("Förstora höjdprofil", self.replay)
+        self.assertNotIn("Förminska höjdprofil", self.replay)
+        self.assertNotIn("elevationExpanded", self.replay)
 
     def test_profile_replay_is_visually_prioritized_before_secondary_analysis(self):
         self.assertIn("detailContent.insertBefore(container,secondaryInsights)", self.replay)
