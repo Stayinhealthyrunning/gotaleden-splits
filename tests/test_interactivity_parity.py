@@ -22,6 +22,9 @@ class InteractivityParityTests(unittest.TestCase):
         cls.interactive = (DOCS / "assets" / "interactive-analysis.js").read_text(
             encoding="utf-8"
         )
+        cls.course = (DOCS / "assets" / "course-difficulty.js").read_text(
+            encoding="utf-8"
+        )
         cls.results = json.loads((DOCS / "data" / "results-2026.json").read_text(encoding="utf-8"))
         cls.config = json.loads((ROOT / "config" / "races.json").read_text(encoding="utf-8"))
 
@@ -106,11 +109,11 @@ class InteractivityParityTests(unittest.TestCase):
             "data-scatter-reset",
             "gender-insights",
             "age-group-controls",
-            "race-story",
             "standout-tabs",
             "club-pacing-extra",
         ):
             self.assertIn(feature, self.index)
+        self.assertIn("race-story", self.course)
         for behavior in (
             "renderSexExploration",
             "renderGenderInsights",
