@@ -34,6 +34,11 @@ class CourseDifficultyInteractionTests(unittest.TestCase):
         self.assertIn('state.courseDifficulty?.destroy();state.courseDifficulty=null',self.app)
         self.assertIn('state.courseDifficulty?.syncFromSegmentLab',self.app)
 
+    def test_race_story_is_grouped_with_the_course_interactions(self):
+        self.assertIn('id="race-intelligence"',self.course)
+        self.assertLess(self.course.index('data-course-distribution'),self.course.index('id="race-intelligence"'))
+        self.assertLess(self.course.index('id="race-intelligence"'),self.course.index('class="course-segments"'))
+
     def test_route_segment_interpolates_exact_boundaries(self):
         self.run_node(r"""
 const fs=require('fs'),vm=require('vm');global.window={};vm.runInThisContext(fs.readFileSync('docs/assets/map-engine.js','utf8'));

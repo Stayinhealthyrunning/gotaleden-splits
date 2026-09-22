@@ -25,13 +25,18 @@ class GenderChartsDuelRefinementTests(unittest.TestCase):
         cls.playback = (ASSETS / "playback.js").read_text(encoding="utf-8")
 
     def test_only_requested_feature_grids_are_equal_on_desktop(self):
-        self.assertEqual(self.html.count('class="feature-grid equal-panels"'), 2)
+        self.assertEqual(self.html.count('class="feature-grid equal-panels'), 2)
+        self.assertIn('class="feature-grid equal-panels group-pace-comparison"', self.html)
         self.assertIn(
             ".feature-grid.equal-panels{grid-template-columns:repeat(2,minmax(0,1fr))}",
             self.css,
         )
         self.assertIn(
             ".feature-grid,.feature-grid.equal-panels{grid-template-columns:minmax(0,1fr)}",
+            self.css,
+        )
+        self.assertIn(
+            ".group-pace-comparison>.panel{display:flex;flex-direction:column}",
             self.css,
         )
 
