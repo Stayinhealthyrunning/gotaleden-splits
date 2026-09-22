@@ -14,6 +14,7 @@ class UltravasanParityRefreshTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.html = (DOCS / "index.html").read_text(encoding="utf-8")
+        cls.karta = (DOCS / "karta.html").read_text(encoding="utf-8")
         cls.charts = (DOCS / "assets/charts.js").read_text(encoding="utf-8")
         cls.interactive = (DOCS / "assets/interactive-analysis.js").read_text(
             encoding="utf-8"
@@ -122,11 +123,21 @@ for(const token of ['data-edge-padding="8"','cx="64" cy="28"','cx="892" cy="264"
             self.assertEqual(sum(item["analysis_boundary"] is not False for item in checkpoints) - 1, count)
         for name in (
             "og:title", "og:description", "og:url", "og:type",
-            "twitter:card", "twitter:title", "twitter:description",
+            "og:image", "og:image:width", "og:image:height", "og:image:alt",
+            "twitter:card", "twitter:title", "twitter:description", "twitter:image",
         ):
             self.assertIn(name, self.html)
-        self.assertNotIn("og:image", self.html)
-        self.assertNotIn("twitter:image", self.html)
+        self.assertIn('content="Gotaleden Splits"', self.html)
+        self.assertIn('content="summary_large_image"', self.html)
+        self.assertIn('content="https://stayinhealthyrunning.github.io/gotaleden-splits/assets/social/gotaleden-splits-share.png"', self.html)
+        self.assertIn('property="og:image"', self.karta)
+        self.assertIn('name="twitter:image"', self.karta)
+        image_path = DOCS / "assets/social/gotaleden-splits-share.png"
+        self.assertTrue(image_path.is_file())
+        image_header = image_path.read_bytes()
+        self.assertEqual(image_header[:8], b"\x89PNG\r\n\x1a\n")
+        self.assertEqual(int.from_bytes(image_header[16:20], "big"), 1200)
+        self.assertEqual(int.from_bytes(image_header[20:24], "big"), 630)
         self.assertIn("instagram.com/stayinhealthyrunning", self.html)
         self.assertIn("youtube.com/playlist", self.html)
 
