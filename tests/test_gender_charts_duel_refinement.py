@@ -88,7 +88,7 @@ for(const token of ['data-sex="F" data-visual-offset-x="-2.5"','data-sex="M" dat
         self.assertIn(
             "record.sex===sex&&adapter.statusFinished(record)", self.interactive
         )
-        self.assertIn("window.GCharts.percentileTimeline(percentileGroups", self.interactive)
+        self.assertIn("window.GCharts.finishProgression(percentileGroups", self.interactive)
 
     def test_duel_duration_and_finish_audio_contract(self):
         self.assertIn("const BASE_PLAYBACK_SECONDS=90", self.playback)
