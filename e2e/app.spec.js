@@ -53,6 +53,17 @@ test('site, runner profile and Individual 75 target pace work without relevant e
   expect(errors).toEqual([]);
 });
 
+test('Spurtvinnaren uses the last timing-only control before finish for individual races',async({page})=>{
+  const errors=watchRelevantErrors(page);await openSite(page,'/?race=individual-75-2026&section=segments');
+  await expect(page.locator('#spurtvinnaren')).toBeVisible();await expect(page.locator('#sprint-control-label')).toHaveText('Nolhaga → mål');
+  expect(await page.locator('#sprint-women .sprint-row').count()).toBeGreaterThanOrEqual(5);expect(await page.locator('#sprint-men .sprint-row').count()).toBeGreaterThanOrEqual(5);
+  await expect(page.locator('#sprint-women .sprint-row').first()).toHaveClass(/medal-1/);await expect(page.locator('#sprint-men .sprint-row').first()).toHaveClass(/medal-1/);
+  await expect(page.locator('#sprint-women-filter-wrap')).toBeHidden();await expect(page.locator('#sprint-men-filter-wrap')).toBeHidden();
+  const firstName=(await page.locator('#sprint-women .sprint-row').first().locator('.sprint-runner strong').textContent()).trim();await page.locator('#sprint-women .sprint-row').first().click();await expect(page.locator('#detail-dialog h2')).toHaveText(firstName);await page.locator('#detail-dialog .dialog-close').click();
+  await page.getByRole('tab',{name:/Individuellt\s*35/}).click();await expect(page.locator('#sprint-control-label')).toHaveText('Nolhaga → mål');expect(await page.locator('#sprint-women .sprint-row').count()).toBeGreaterThanOrEqual(5);expect(await page.locator('#sprint-men .sprint-row').count()).toBeGreaterThanOrEqual(5);
+  await page.getByRole('tab',{name:/Stafett 75/}).click();await expect(page.locator('#spurtvinnaren')).toBeHidden();expect(errors).toEqual([]);
+});
+
 test('Individual 35 stays scoped to four Floda-to-Alingsås segments',async({page})=>{
   await openSite(page);await page.getByRole('tab',{name:/Individuellt\s*35/}).click();await expect(page).toHaveURL(/race=individual-35-2026/);await page.locator('[data-target="goal-pace"]').click();
   await expect(page.getByRole('tab',{name:/Individuellt\s*35/})).toHaveAttribute('aria-selected','true');await expect(page.locator('#goal-pace-race')).toHaveText('Individuellt 35');
