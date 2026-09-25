@@ -114,7 +114,7 @@
     render($('#sprint-women'),women,'kvinna');render($('#sprint-men'),men,'man');
     $('#sprint-women-coverage').textContent=control?`${women.rows.length.toLocaleString('sv-SE')} giltiga spurttider`:'saknar spurtkontroll';
     $('#sprint-men-coverage').textContent=control?`${men.rows.length.toLocaleString('sv-SE')} giltiga spurttider`:'saknar spurtkontroll';
-    $('[data-sprint-open-id]',root).forEach(button=>button.onclick=()=>openDetail(state.adapter.record(button.dataset.sprintOpenId),button));
+    $$('[data-sprint-open-id]',root).forEach(button=>button.onclick=()=>openDetail(state.adapter.record(button.dataset.sprintOpenId),button));
   }
 
   function renderClubArena(){

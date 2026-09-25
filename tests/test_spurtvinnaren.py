@@ -53,6 +53,7 @@ console.log(JSON.stringify({control:'nolhaga',knownSprint:item.sprintSeconds}));
             self.assertIn(token,css)
         self.assertIn("renderSprintWinners();renderHistory()",app)
         self.assertIn("root.hidden=Boolean(race.isTeam)",app)
+        self.assertIn("$$('[data-sprint-open-id]',root).forEach",app)
 
 if __name__=="__main__":
     unittest.main()
