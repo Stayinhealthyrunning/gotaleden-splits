@@ -18,7 +18,7 @@
   <meta name="twitter:image" content="https://stayinhealthyrunning.github.io/gotaleden-splits/assets/social/gotaleden-splits-share.png">
   <title>Gotaleden Splits</title>
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=1.9.4">
-  <link rel="stylesheet" href="assets/style.css?v=20260921-finish-progression1">
+  <link rel="stylesheet" href="assets/style.css?v=20260921-finish-progression1&amp;sprint=1">
 </head>
 <body>
   <header class="hero">
@@ -150,6 +150,22 @@
         <article class="panel"><div class="panel-head"><div><p class="eyebrow ink">FÄLTETS FLÖDE</p><h3>Så sprids startfältet</h3></div></div><div class="chart" id="field-flow"></div></article>
       </div>
       <section class="panel standout-world" id="standouts"><div class="panel-head"><div><p class="eyebrow ink" id="standouts-eyebrow">PRESTATIONER SOM STICKER UT</p><h3>Fem sätt att hitta ovanliga lopp</h3></div></div><div class="standout-tabs" id="standout-tabs"></div><div class="ranking" id="standout-ranking"></div></section>
+      <section class="panel sprint-card" id="spurtvinnaren">
+        <div class="panel-head"><div><p class="eyebrow ink">SPURTVINNAREN</p><h3>Årets snabbaste löpare på målspurten</h3></div><span class="pill" id="sprint-control-label">Sista kontrollen → mål</span></div>
+        <p class="panel-copy sprint-explanation">Spurttiden är den officiella sluttiden minus tiden vid den sista särskilda timing-/speakerkontrollen före mål. Kontrollens namn får variera mellan upplagor. Ingen tid interpoleras eller ersätts med en vanlig analyscheckpoint.</p>
+        <div class="sprint-columns">
+          <section class="sprint-sex-group women">
+            <h4>Loppets spurtdrottning</h4>
+            <div class="sprint-sex-controls"><label id="sprint-women-filter-wrap">Kvinnoklass<select id="sprint-women-class"><option value="">Alla kvinnor</option></select></label><span class="sprint-coverage" id="sprint-women-coverage"></span></div>
+            <div class="sprint-list" id="sprint-women"></div>
+          </section>
+          <section class="sprint-sex-group men">
+            <h4>Loppets spurtkung</h4>
+            <div class="sprint-sex-controls"><label id="sprint-men-filter-wrap">Mansklass<select id="sprint-men-class"><option value="">Alla män</option></select></label><span class="sprint-coverage" id="sprint-men-coverage"></span></div>
+            <div class="sprint-list" id="sprint-men"></div>
+          </section>
+        </div>
+      </section>
     </section>
 
     <section class="audience-world" id="history" aria-label="Historik"><div id="history-content"></div></section>
@@ -209,7 +225,8 @@
   <script src="assets/interactive-analysis.js?v=20260921-finish-progression1"></script>
   <script src="assets/favorites.js?v=20260907-favorites1"></script>
   <script src="assets/app-state.js?v=20260911-e4"></script>
-  <script src="assets/app.js?v=20260921-acceptance1"></script>
+  <script src="assets/spurt-winners.js?v=20260925-sprint1"></script>
+  <script src="assets/app.js?v=20260921-acceptance1&amp;sprint=1"></script>
 
   <!-- Cloudflare Web Analytics: production hostname only -->
   <script>
