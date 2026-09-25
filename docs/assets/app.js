@@ -30,7 +30,7 @@
     $('#result-search').oninput=()=>{state.page=1;renderResults()};$('#prev-page').onclick=()=>{if(state.page>1){state.page--;renderResults()}};$('#next-page').onclick=()=>{state.page++;renderResults()};
     $$('th[data-sort]').forEach(header=>header.onclick=()=>{const key=header.dataset.sort;state.sortDir=state.sortKey===key?-state.sortDir:1;state.sortKey=key;renderResults()});
     setupRecordPicker($('#runner-search'),$('#runner-suggestions'),(record,trigger)=>openDetail(record,trigger));setupRecordPicker($('#duel-search'),$('#duel-suggestions'),record=>addDuelRecord(record));setupClubPicker($('#club-search'),$('#club-suggestions'),{exclude:()=>state.clubNames,onSelect:name=>{if(state.clubNames.length<4)state.clubNames.push(name);$('#club-search').value='';renderClubArena()}});setupClubPicker($('#club-filter'),$('#club-filter-suggestions'),{onSelect:name=>{$('#club-filter').value=name;filtersChanged()}});$('#open-map-duel').onclick=openDuelDialog;$('#open-head-to-head').onclick=()=>openHeadToHead();
-    $('#segment-from').onchange=renderSegmentLab;$('#segment-to').onchange=renderSegmentLab;$('#segment-metric').onchange=renderSegmentLab;$('#segment-comparison').onchange=renderSegmentLab;
+    $('#segment-from').onchange=renderSegmentLab;$('#segment-to').onchange=renderSegmentLab;$('#segment-metric').onchange=renderSegmentLab;$('#segment-comparison').onchange=renderSegmentLab;$('#sprint-women-class').onchange=renderSprintWinners;$('#sprint-men-class').onchange=renderSprintWinners;
     $('#detail-dialog .dialog-close').onclick=()=>$('#detail-dialog').close();$('#detail-dialog').addEventListener('close',()=>{const section=state.activeSection,trigger=state.detailTrigger;state.detailTrigger=null;state.journey?.destroy();state.journey=null;state.replay?.destroy();state.replay=null;state.selectedRecordId=null;state.restoringSection=true;requestAnimationFrame(()=>{document.getElementById(section)?.scrollIntoView({block:'start'});state.activeSection=section;syncUrlState();const active=document.activeElement;if(trigger?.isConnected&&trigger.getClientRects().length&&(active===document.body||active?.closest?.('#detail-dialog,[role="listbox"]')))trigger.focus({preventScroll:true});setTimeout(()=>{state.restoringSection=false;syncNavigation()},160)})});
     $('#duel-dialog .duel-dialog-close').onclick=()=>$('#duel-dialog').close();$('#duel-dialog').addEventListener('close',destroyDuel);$('#duel-dialog-share').onclick=shareDuel;
     state.goalPace=window.GGoalPace.create($('#goal-pace-content'),{adapter:state.adapter,eventModel:state.eventUi});document.addEventListener(state.eventUi.eventName('goal-pace'),event=>{const record=state.adapter.record(event.detail?.recordId);if(record&&record.raceKey===state.raceKey&&state.raceUi.can('goal_pace'))state.goalPace.setRunner(record);state.activeSection='goal-pace';state.detailTrigger=null;$('#detail-dialog').close();syncUrlState()});
@@ -57,7 +57,7 @@
   function populateSegmentControls(){const checkpoints=state.adapter.race(state.raceKey).analysisCheckpoints;$('#segment-from').innerHTML=checkpoints.slice(0,-1).map((checkpoint,index)=>`<option value="${checkpoint.key}" ${index===0?'selected':''}>${esc(checkpoint.name)}</option>`).join('');$('#segment-to').innerHTML=checkpoints.slice(1).map((checkpoint,index)=>`<option value="${checkpoint.key}" ${index===0?'selected':''}>${esc(checkpoint.name)}</option>`).join('')}
   function filtersChanged(){state.page=1;syncUrlState();renderAll()}
   function currentFilters(){return{sex:state.raceUi?.can('sex_filter')?$('#sex-filter').value:'',className:$('#class-filter').value,status:$('#status-filter').value,club:state.raceUi?.can('club_analysis')?$('#club-filter').value:''}}
-  function renderAll(){state.filtered=state.adapter.filtered(state.raceKey,currentFilters());$$('[data-unit-label]').forEach(element=>element.textContent=state.unit==='speed'?'km/h':'min/km');renderActiveFilterSummary();renderOverview();renderStatistics();renderGender();renderSegmentLab();renderCourseDifficulty();renderHistory();renderClubArena();renderDuel();renderFavorites();renderResults();renderInteractive()}
+  function renderAll(){state.filtered=state.adapter.filtered(state.raceKey,currentFilters());$('[data-unit-label]').forEach(element=>element.textContent=state.unit==='speed'?'km/h':'min/km');renderActiveFilterSummary();renderOverview();renderStatistics();renderGender();renderSegmentLab();renderCourseDifficulty();renderSprintWinners();renderHistory();renderClubArena();renderDuel();renderFavorites();renderResults();renderInteractive()}
   function renderActiveFilterSummary(){const filters=currentFilters(),race=state.adapter.race(state.raceKey),items=[];if(filters.sex)items.push(['sex',sexLabel(filters.sex)]);if(filters.className)items.push(['className',filters.className]);if(filters.status)items.push(['status',filters.status]);if(filters.club)items.push(['club',filters.club]);const root=$('#active-filter-summary');root.innerHTML=items.length?`<span>Aktivt urval:</span>${items.map(([key,label])=>`<button type="button" data-clear-filter="${key}">${esc(label)} ×</button>`).join('')}`:`<span>Hela loppet · ${state.filtered.length} resultat</span>`;$$('[data-clear-filter]',root).forEach(button=>button.onclick=()=>{const ids={sex:'sex-filter',className:'class-filter',status:'status-filter',club:'club-filter'};$('#'+ids[button.dataset.clearFilter]).value='';filtersChanged()})}
   function renderCourseDifficulty(){if(state.courseDifficulty&&!state.courseDifficulty.destroyed)return;state.courseDifficulty=window.GCourseDifficulty.create($('#course-difficulty'),{adapter:state.adapter,race:state.adapter.race(state.raceKey),renderSegmentLab})}
   function renderHistory(){window.GHistoryUI?.render($('#history-content'),{engine:state.history,adapter:state.adapter,raceKey:state.raceKey,filters:currentFilters(),referenceRaceKey:state.historyReferenceKey,segmentKey:state.historySegmentKey,onReferenceChange:key=>{state.historyReferenceKey=key;state.historySegmentKey=null;renderHistory()},onSegmentChange:key=>{state.historySegmentKey=key;renderHistory()}})}
@@ -88,6 +88,35 @@
     const comparison=race.isTeam?$('#segment-comparison').value:'field',ranking=adapter.segmentRanking(state.filtered,$('#segment-from').value,$('#segment-to').value,$('#segment-metric').value,comparison),metric=$('#segment-metric').value,format=item=>metric==='gain'?`${item.gain>0?'+':''}${item.gain??'–'} platser`:metric==='relative'?`${Math.round((1-item.relative)*100)} % mot ${comparison==='class'?'klassmedian':'fältmedian'}`:fmtTime(item.time);$('#segment-podium').innerHTML=ranking.slice(0,3).map((item,index)=>`<article class="place-${index+1}"><b>${index+1}</b><strong>${esc(item.record.name)}</strong><small>${race.isTeam?esc(adapter.relayClassMeta(item.record).shortLabel):''}</small><span>${esc(format(item))}</span></article>`).join('')||'<div class="empty">Kompletta passager saknas för valet.</div>';$('#segment-ranking').innerHTML=ranking.slice(3,13).map((item,index)=>rankingRow(index+3,item.record,format(item))).join('');state.courseDifficulty?.syncFromSegmentLab($('#segment-from').value,$('#segment-to').value);
   }
   function rankingRow(index,record,value){return`<button class="ranking-row" data-open-id="${esc(record.id)}"><b>${index+1}</b><span><strong>${esc(record.name)}</strong><small>#${esc(record.bib)} · ${esc(record.class_name||'')}</small></span><em>${esc(value)}</em></button>`}
+  const fmtSprint=seconds=>{if(!finite(seconds)||Number(seconds)<0)return'–';const value=Math.round(Number(seconds));return value>=3600?fmtTime(value):`${Math.floor(value/60)}:${String(value%60).padStart(2,'0')}`};
+  function renderSprintWinners(){
+    const root=$('#spurtvinnaren'),race=state.adapter.race(state.raceKey);if(!root||!race)return;
+    root.hidden=Boolean(race.isTeam);if(race.isTeam)return;
+    const api=window.GSpurtWinners,control=api?.lastTimingControl(race),womenSelect=$('#sprint-women-class'),menSelect=$('#sprint-men-class');
+    const populate=(select,wrap,sex,allLabel)=>{
+      const options=api?.classOptions(race,sex)||[],sameRace=select.dataset.race===race.key,old=sameRace?select.value:'';
+      select.innerHTML=`<option value="">${allLabel}</option>`+options.map(value=>`<option value="${esc(value)}">${esc(value)}</option>`).join('');
+      select.value=sameRace&&options.includes(old)?old:'';
+      select.dataset.race=race.key;wrap.hidden=options.length<=1;return select.value;
+    };
+    const womenClass=populate(womenSelect,$('#sprint-women-filter-wrap'),'F','Alla kvinnor');
+    const menClass=populate(menSelect,$('#sprint-men-filter-wrap'),'M','Alla män');
+    $('#sprint-control-label').textContent=control?`${control.name} → mål`:'Sista kontrollen → mål';
+    const women=api?.ranking(race,state.adapter,{sex:'F',className:womenClass})||{rows:[]},men=api?.ranking(race,state.adapter,{sex:'M',className:menClass})||{rows:[]};
+    const render=(target,model,label)=>{
+      if(!control){target.innerHTML=`<div class="empty compact-empty">Ingen särskild officiell timingkontroll före mål finns i resultatunderlaget för denna upplaga.</div>`;return}
+      const rows=api.top(model.rows,5);
+      target.innerHTML=rows.length?rows.map(item=>{
+        const medal=item.rank<=3?` medal-${item.rank}`:'',place=item.record.overall_place??'–';
+        return`<button class="sprint-row${medal}" data-sprint-open-id="${esc(item.record.id)}"><b class="sprint-rank">${item.rank}</b><span class="sprint-runner"><strong>${esc(item.record.name)}</strong><small>${esc(item.record.class_name||'Okänd klass')} · slutplats ${esc(place)}</small></span><em class="sprint-time"><span>Spurttid</span><strong>${fmtSprint(item.sprintSeconds)}</strong></em></button>`;
+      }).join(''):`<div class="empty compact-empty">Ingen ${label} har en giltig registrerad passage vid den sista kontrollen före mål.</div>`;
+    };
+    render($('#sprint-women'),women,'kvinna');render($('#sprint-men'),men,'man');
+    $('#sprint-women-coverage').textContent=control?`${women.rows.length.toLocaleString('sv-SE')} giltiga spurttider`:'saknar spurtkontroll';
+    $('#sprint-men-coverage').textContent=control?`${men.rows.length.toLocaleString('sv-SE')} giltiga spurttider`:'saknar spurtkontroll';
+    $('[data-sprint-open-id]',root).forEach(button=>button.onclick=()=>openDetail(state.adapter.record(button.dataset.sprintOpenId),button));
+  }
+
   function renderClubArena(){
     const adapter=state.adapter,race=adapter.race(state.raceKey),available=new Set(adapter.clubNames(race.records).map(item=>item[0]));
     state.clubNames=state.clubNames.filter(name=>available.has(name));
