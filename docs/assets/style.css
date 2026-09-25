@@ -120,3 +120,26 @@ body:has(dialog[open]){overflow:hidden}.duel-dialog{width:min(96vw,1600px);heigh
 /* Måltempo */
 .goal-pace{scroll-margin-top:120px}.goal-pace-head{display:flex;justify-content:space-between;gap:20px;align-items:flex-start}.goal-pace-controls{display:flex;align-items:end;gap:10px;flex-wrap:wrap;margin-top:18px}.goal-pace-controls>div{display:grid;gap:5px}.goal-pace-controls label{font-size:.72rem;font-weight:800;color:var(--muted)}.goal-pace-controls input{width:92px;padding:11px;border:1px solid var(--line);border-radius:11px;background:#fff}.goal-pace-distance,.goal-pace-explanation,.goal-runner-context{color:var(--muted);line-height:1.5}.goal-pace-distance{margin:12px 0}.goal-pace-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin:18px 0}.goal-pace-summary article{padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--wash)}.goal-pace-summary span,.goal-pace-summary strong,.goal-pace-summary small{display:block}.goal-pace-summary span{font-size:.72rem;color:var(--muted)}.goal-pace-summary strong{margin-top:5px;color:var(--deep)}.goal-pace-error{margin-top:15px;padding:13px;border:1px solid #d99b83;border-radius:12px;background:#fff4ed;color:#7a3825}.goal-pace-table{overflow:auto;margin-top:15px}.goal-pace-table table{min-width:720px}.goal-pace-table th,.goal-pace-table td{padding:10px;text-align:left;border-bottom:1px solid var(--line)}
 @media(max-width:720px){.goal-pace-head{display:block}.goal-pace-summary{grid-template-columns:1fr 1fr}.goal-pace-controls .button{flex-basis:100%}.goal-pace-table{overflow:visible}.goal-pace-table table,.goal-pace-table tbody,.goal-pace-table tr,.goal-pace-table td{display:block;min-width:0}.goal-pace-table thead{display:none}.goal-pace-table tr{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:10px 0;padding:11px;border:1px solid var(--line);border-radius:13px;background:#fff}.goal-pace-table td{padding:3px;border:0}.goal-pace-table td:before{content:attr(data-label);display:block;font-size:.65rem;color:var(--muted);font-weight:750}}
+
+/* Spurtvinnaren */
+.sprint-card{margin-top:17px}
+.sprint-explanation{margin:10px 0 16px;max-width:950px}
+.sprint-columns{display:grid;grid-template-columns:1fr 1fr;gap:17px}
+.sprint-sex-group{min-width:0}
+.sprint-sex-group h4{margin:0 0 9px;padding:9px 11px;border-radius:10px;font-size:.84rem}
+.sprint-sex-group.women h4{background:#fce7f3;color:#a61d61}
+.sprint-sex-group.men h4{background:#dbeafe;color:#1d4f9c}
+.sprint-sex-controls{display:grid;grid-template-columns:minmax(160px,240px) minmax(0,1fr);gap:10px;align-items:end;margin-bottom:10px}
+.sprint-sex-controls label{font-size:.66rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.sprint-sex-controls label[hidden]{display:none}
+.sprint-sex-controls select{margin-top:5px}
+.sprint-coverage{padding-bottom:9px;text-align:right;color:var(--muted);font-size:.66rem}
+.sprint-list{display:grid;gap:7px}
+.sprint-row{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:10px;align-items:center;width:100%;padding:10px 11px;border:1px solid transparent;border-radius:12px;background:var(--wash);color:var(--ink);text-align:left}
+.sprint-rank{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:#fff;color:var(--deep);font-size:.72rem}
+.sprint-runner{min-width:0}.sprint-runner strong,.sprint-runner small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sprint-runner small{margin-top:3px;color:var(--muted);font-size:.65rem}
+.sprint-time{text-align:right;font-style:normal}.sprint-time span,.sprint-time strong{display:block}.sprint-time span{font-size:.56rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}.sprint-time strong{margin-top:2px;color:var(--deep);font-variant-numeric:tabular-nums}
+.sprint-row.medal-1{background:linear-gradient(135deg,#fff8dc,#f4e3a4);border-color:#d2ad42}.sprint-row.medal-1 .sprint-rank{background:#b98b12;color:#fff}
+.sprint-row.medal-2{background:linear-gradient(135deg,#f8f9fa,#e3e6e8);border-color:#b8bec3}.sprint-row.medal-2 .sprint-rank{background:#879198;color:#fff}
+.sprint-row.medal-3{background:linear-gradient(135deg,#fbefe6,#e5b995);border-color:#b77a4b}.sprint-row.medal-3 .sprint-rank{background:#9c5d35;color:#fff}
+@media(max-width:720px){.sprint-columns{grid-template-columns:1fr}.sprint-sex-controls{grid-template-columns:1fr}.sprint-coverage{text-align:left;padding-bottom:0}}
