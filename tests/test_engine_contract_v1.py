@@ -46,10 +46,11 @@ class EngineContractV1Tests(unittest.TestCase):
         principles = " ".join(self.contract["principles"]).lower()
         identity = " ".join(self.contract["identity"]["rules"]).lower()
         course = " ".join(self.contract["course"]["rules"]).lower()
+        replay = self.contract["capabilities"]["replay"].lower()
         self.assertIn("never fabricated", principles)
         self.assertIn("name equality alone", identity)
         self.assertIn("race family is not a course version", course)
-        self.assertIn("locally usable route asset", course)
+        self.assertIn("local route asset", course + " " + replay)
 
 
 if __name__ == "__main__":
