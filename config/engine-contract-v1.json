@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "contract_id": "loppanalys-engine-1.0",
+  "status": "frozen",
+  "purpose": "Portable semantic boundary between event-specific source normalization and reusable race analysis UI/engines.",
+  "principles": [
+    "Source observations are never fabricated to satisfy a feature.",
+    "Race family does not imply identical course geometry.",
+    "Feature availability is capability-driven per race edition.",
+    "Missing demographic, identity, checkpoint or route evidence remains missing.",
+    "Replay interpolation is presentation-only and never becomes a source split.",
+    "Cross-year identity requires explicit confidence-bearing evidence.",
+    "Event-specific source acquisition remains outside the engine contract."
+  ],
+  "payload": {
+    "required_top_level": ["event", "race_catalog", "courses", "races", "checkpoints", "splits"],
+    "optional_top_level": ["teams", "team_members", "capabilities", "sources"],
+    "event_required": ["event_key", "name", "product_title", "storage_namespace"],
+    "race_required": ["race_key", "race_family", "year", "data_status", "participant", "competition", "capabilities"],
+    "race_recommended": ["race_date", "course_version", "source_binding", "section", "nominal_distance_km", "presentation"],
+    "participant_required": ["entity"],
+    "participant_entities": ["person", "team"],
+    "competition_required": ["format", "team_structure"],
+    "team_member_assignment": ["unknown", "source_verified"],
+    "data_status": ["available", "planned", "cancelled", "unavailable"],
+    "record_status": ["FINISHED", "DNF", "DNS", "DSQ", "UNKNOWN"]
+  },
+  "capabilities": {
+    "finish_statistics": "Requires result/finish observations.",
+    "runner_profile": "Requires a person or team result record.",
+    "sex_filter": "Requires source-backed sex coverage sufficient for the view.",
+    "age_analysis": "Requires source-backed age or age-category data appropriate to the view.",
+    "club_analysis": "Requires source-backed club/location values appropriate to the view.",
+    "class_analysis": "Requires source-backed class/category semantics.",
+    "segment_analysis": "Requires at least two observed analysis boundaries for relevant records.",
+    "replay": "Requires observed timing anchors plus a locally usable route asset.",
+    "head_to_head": "Requires compatible observed timing data for compared entries.",
+    "person_history": "Requires a separate verified/confidence-bearing cross-edition identity layer.",
+    "course_history": "Requires explicit course-version/comparison evidence.",
+    "goal_pace": "Requires a race for which a finish-time target is semantically meaningful.",
+    "team_members": "Requires source-backed team/member rows; does not imply leg assignment."
+  },
+  "course": {
+    "key": "course_version",
+    "rules": [
+      "A race family is not a course version.",
+      "Whole-course performance comparison requires identical course_version or an explicit comparison group/method.",
+      "Geometry evidence and redistributable local route assets are separate concepts.",
+      "No route-dependent feature may be enabled solely because another edition in the family has geometry."
+    ],
+    "recommended_fields": ["checkpoint_catalog", "segments", "whole_course_comparison_group", "assets", "geometry_evidence"]
+  },
+  "checkpoints": {
+    "required": ["key", "name"],
+    "recommended": ["source_label", "semantic_key", "sequence_no", "race_distance_km", "route_distance_km", "analysis_boundary", "replay_anchor"],
+    "rules": [
+      "Retain source labels alongside normalized semantics.",
+      "Only observed/published timing passages are source splits.",
+      "Auxiliary or display-only points must not silently become analysis boundaries."
+    ]
+  },
+  "identity": {
+    "rules": [
+      "Source-local result identity never implies cross-year person identity.",
+      "Name equality alone is insufficient for cross-year linkage.",
+      "Cross-year person keys must preserve evidence/confidence and ambiguity handling.",
+      "Team names never become person identities."
+    ]
+  },
+  "loading": {
+    "minimum": "An implementation may load one complete payload.",
+    "progressive": ["shell", "active", "core", "full"],
+    "rule": "Progressive loading is an optimization; all hydration phases must preserve semantic parity with the complete payload."
+  }
+}
