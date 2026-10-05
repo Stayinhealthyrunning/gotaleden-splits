@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "display_name": "Anonym löpare",
+  "suppressed_name_sha256": [
+    "60281510db5a6f1f59e2289a3a3d626486574721721f65cbd72bebfc4b766509",
+    "4493941171a4de6f03587fb78df6ce271acd9c7fef00487a86008a9025d3af60"
+  ],
+  "policy": "Public identity suppression. Keep performance observations for statistics, but do not publish the person's name, bib, club or other direct identity fields."
+}
