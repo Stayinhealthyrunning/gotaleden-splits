@@ -14,6 +14,7 @@
     raceCache.set(source,model);return model;
   }
   function applyBranding(document,eventModel){
+    if(document.body)document.body.dataset.eventKey=eventModel.key;
     const lead=document.getElementById('product-title-main'),accent=document.getElementById('product-title-accent'),heroLead=document.getElementById('hero-lead'),loading=document.getElementById('loading-text'),footer=document.getElementById('footer-text'),dataPrinciple=document.getElementById('data-principle-copy');if(lead)lead.textContent=eventModel.presentation.title_lead||eventModel.productTitle;if(accent)accent.textContent=eventModel.presentation.title_accent||'';if(heroLead)heroLead.textContent=eventModel.presentation.hero_lead||'';if(loading)loading.textContent=eventModel.presentation.loading_text||'Bygger analysen…';if(footer)footer.textContent=eventModel.presentation.footer_text||eventModel.productTitle;if(dataPrinciple)dataPrinciple.textContent=eventModel.presentation.data_principle||'Dataprincip: endast publicerade passager visas. Saknade mellantider uppskattas aldrig i tabeller eller analyser.';const mapBrand=document.getElementById('map-race');if(mapBrand)mapBrand.textContent=eventModel.productTitle;document.title=eventModel.productTitle;
   }
   function applyRacePresentation(document,model){
