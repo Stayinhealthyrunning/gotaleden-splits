@@ -1,0 +1,137 @@
+/* Event entrypoint theme. Analytical series keep their existing color semantics. */
+body[data-event-key="gotaleden-stafett-ultra"] {
+  --forest: #1f3a27;
+  --brand-leaf: #a7c957;
+  --anemone: #f5f1e8;
+  --river: #5e8c8a;
+  --brick: #b55243;
+  --earth: #6b5e4e;
+  --ink: #23392b;
+  --granite: #3e5344;
+  --muted: #586a5e;
+  --deep: #28543b;
+  --teal: #416f6b;
+  --lake: #5e8c8a;
+  --sky: #e4efeb;
+  --paper: #fffcf5;
+  --wash: #f1f5e9;
+  --line: rgba(45, 78, 55, .16);
+  --shadow: 0 16px 42px rgba(39, 63, 43, .075);
+  --shadow-strong: 0 24px 64px rgba(34, 58, 40, .16);
+  --radius: 21px;
+  background: radial-gradient(ellipse at 94% 19%, rgba(167, 201, 87, .10), transparent 30rem),
+    linear-gradient(180deg, #eef2e9 0, #faf8f1 33rem, #f5f6ef 100%);
+}
+
+body[data-event-key="gotaleden-stafett-ultra"] h2,
+body[data-event-key="gotaleden-stafett-ultra"] .section-intro h2 {
+  color: var(--forest);
+  font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+  font-weight: 600;
+  letter-spacing: -.025em;
+}
+body[data-event-key="gotaleden-stafett-ultra"] h3,
+body[data-event-key="gotaleden-stafett-ultra"] h4 { color: var(--forest); }
+
+body[data-event-key="gotaleden-stafett-ultra"] .hero {
+  min-height: 455px;
+  background: linear-gradient(90deg, rgba(22, 44, 29, .94) 0%, rgba(22, 44, 29, .80) 36%, rgba(22, 44, 29, .36) 72%, rgba(22, 44, 29, .16) 100%),
+    url("visual/gotaleden-spring-hero.jpg") center 55% / cover no-repeat;
+}
+body[data-event-key="gotaleden-stafett-ultra"] .hero::before {
+  width: 52%; height: 66%; right: -9%; bottom: -42%;
+  border-color: rgba(245, 241, 232, .35);
+  box-shadow: 0 0 0 22px rgba(245, 241, 232, .055), 0 0 0 48px rgba(245, 241, 232, .035);
+}
+body[data-event-key="gotaleden-stafett-ultra"] .hero::after { display: none; }
+body[data-event-key="gotaleden-stafett-ultra"] .hero__glow {
+  background: linear-gradient(180deg, transparent 57%, rgba(14, 40, 25, .32));
+}
+body[data-event-key="gotaleden-stafett-ultra"] .hero__inner { padding-block: 86px 58px; }
+body[data-event-key="gotaleden-stafett-ultra"] .hero h1 {
+  max-width: 1000px;
+  font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+  font-weight: 600;
+  font-size: clamp(3.5rem, 8.5vw, 7rem);
+  line-height: .94;
+  letter-spacing: -.065em;
+  text-shadow: 0 3px 24px rgba(7, 28, 17, .36);
+}
+body[data-event-key="gotaleden-stafett-ultra"] .hero h1 em {
+  color: #d5e7b4;
+  font-weight: 400;
+  font-style: italic;
+}
+body[data-event-key="gotaleden-stafett-ultra"] .hero__lead { max-width: 610px; }
+body[data-event-key="gotaleden-stafett-ultra"] .hero__route {
+  width: fit-content;
+  max-width: 100%;
+  padding: 10px 13px;
+  border: 1px solid rgba(245, 241, 232, .27);
+  border-radius: 999px;
+  background: rgba(20, 49, 31, .35);
+  backdrop-filter: blur(8px);
+}
+body[data-event-key="gotaleden-stafett-ultra"] .hero__route i { background: #b8d083; }
+body[data-event-key="gotaleden-stafett-ultra"] .hero__route .route-stop-start,
+body[data-event-key="gotaleden-stafett-ultra"] .hero__route .route-stop-finish { color: #e9f2d2; }
+
+body[data-event-key="gotaleden-stafett-ultra"] .panel,
+body[data-event-key="gotaleden-stafett-ultra"] .kpis article,
+body[data-event-key="gotaleden-stafett-ultra"] .gender-kpis article {
+  border-color: var(--line);
+  background-color: rgba(255, 253, 247, .97);
+  box-shadow: var(--shadow);
+}
+body[data-event-key="gotaleden-stafett-ultra"] .runner-lookup,
+body[data-event-key="gotaleden-stafett-ultra"] .elevation-card,
+body[data-event-key="gotaleden-stafett-ultra"] .course-difficulty {
+  background: linear-gradient(145deg, #fffdf7, #f0f5e9);
+}
+body[data-event-key="gotaleden-stafett-ultra"] .race-switch,
+body[data-event-key="gotaleden-stafett-ultra"] .analysis-nav {
+  border-color: var(--line);
+  background: rgba(255, 252, 245, .95);
+}
+body[data-event-key="gotaleden-stafett-ultra"] .race-switch button { color: var(--forest); }
+body[data-event-key="gotaleden-stafett-ultra"] .race-switch button:hover,
+body[data-event-key="gotaleden-stafett-ultra"] .analysis-nav button:hover { background: #edf3e4; }
+body[data-event-key="gotaleden-stafett-ultra"] .race-switch button.active {
+  color: #fff;
+  background: linear-gradient(130deg, var(--forest), #3c6949);
+  box-shadow: 0 9px 22px rgba(31, 58, 39, .22);
+}
+body[data-event-key="gotaleden-stafett-ultra"] .analysis-nav button.active { background: #e5edd7; color: var(--forest); }
+body[data-event-key="gotaleden-stafett-ultra"] .button { background: var(--forest); }
+body[data-event-key="gotaleden-stafett-ultra"] .button.secondary { background: #fffdf8; color: var(--forest); }
+body[data-event-key="gotaleden-stafett-ultra"] .pill,
+body[data-event-key="gotaleden-stafett-ultra"] .source-link { background: #e6eedb; color: var(--forest); }
+body[data-event-key="gotaleden-stafett-ultra"] .eyebrow.ink { color: #54784d; }
+body[data-event-key="gotaleden-stafett-ultra"] .section-intro { position: relative; padding-left: 24px; }
+body[data-event-key="gotaleden-stafett-ultra"] .section-intro::before {
+  content: "";
+  position: absolute;
+  top: 62px; bottom: 16px; left: 2px;
+  width: 3px;
+  border-radius: 99px;
+  background: linear-gradient(var(--brand-leaf), var(--river));
+}
+body[data-event-key="gotaleden-stafett-ultra"] .detail-hero,
+body[data-event-key="gotaleden-stafett-ultra"] .head-to-head-header {
+  background: radial-gradient(circle at 86% 8%, rgba(167, 201, 87, .24), transparent 23%),
+    linear-gradient(115deg, var(--forest), #3c6650 72%, var(--river));
+}
+body[data-event-key="gotaleden-stafett-ultra"] .detail-hero h2,
+body[data-event-key="gotaleden-stafett-ultra"] .head-to-head-header h2 { color: #fff; }
+body[data-event-key="gotaleden-stafett-ultra"] .course-standouts button,
+body[data-event-key="gotaleden-stafett-ultra"] .finish-threshold { background: #fffdf8; }
+body[data-event-key="gotaleden-stafett-ultra"] .course-standouts button:hover,
+body[data-event-key="gotaleden-stafett-ultra"] .course-standouts button:focus-visible { border-color: var(--river); }
+@media (max-width: 620px) {
+  body[data-event-key="gotaleden-stafett-ultra"] .hero { min-height: 390px; background-position: 58% center; }
+  body[data-event-key="gotaleden-stafett-ultra"] .hero__inner { padding-block: 80px 56px; }
+  body[data-event-key="gotaleden-stafett-ultra"] .hero h1 { font-size: clamp(3rem, 12vw, 4.6rem); }
+  body[data-event-key="gotaleden-stafett-ultra"] .hero__route { border-radius: 16px; }
+  body[data-event-key="gotaleden-stafett-ultra"] .section-intro { padding-left: 19px; }
+  body[data-event-key="gotaleden-stafett-ultra"] .section-intro::before { top: 44px; }
+}
