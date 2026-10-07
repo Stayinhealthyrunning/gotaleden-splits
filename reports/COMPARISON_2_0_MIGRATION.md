@@ -124,3 +124,23 @@ and gain synchronized replay. A Relay 75 comparison should do the same using
 team labels/class semantics, without pretending team members are individual
 race entities or assigning legs. A future edition with insufficient timing
 should degrade by capability rather than fabricate Gotaleden-style segments.
+
+## Implemented comparison boundary
+
+`GHeadToHead` keeps Engine 1.0's official A/B, placement, segment and stable
+FINISHED-cohort calculations. `GComparisonReplay` is a separate presentation
+controller inside that dialog, using the existing map, playback, media and
+elevation primitives. It is enabled only for two selected results in the same
+edition when that edition has replay capability, its own loaded route and at
+least two source-backed replay anchors **for each** result. Elevation seeking
+also requires that CourseVersion's elevation asset. Audio additionally requires
+event media. A missing route or sparse result never disables the shareable
+official comparison.
+
+The shared clock and reconstructed positions between source observations are
+never analytical checkpoints, segment times or official places. Sparse
+comparisons show only shared observed steps, and DNF cannot create a synthetic
+finish. This deliberately retains Gotaleden's stricter Engine 1.0 distinction
+between replay anchors and the established nine/four analysis segments. Team
+entities remain teams; member metadata never assigns a relay leg. Cross-edition
+comparison remains disabled until course and identity compatibility is explicit.

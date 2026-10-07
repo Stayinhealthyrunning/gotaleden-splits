@@ -8,6 +8,7 @@
     ['head-to-head-segments','#head-to-head-dialog [data-head-help="segments"]',null,null],
     ['head-to-head-field-pacing','#head-to-head-dialog [data-head-help="field-pacing"]',null,null],
     ['head-to-head-course','#head-to-head-dialog [data-head-help="course"]',null,null],
+    ['head-to-head-replay','#head-to-head-dialog [data-head-help="replay"]',null,null],
     ['filters','.toolbar','.toolbar',null],
     ['goal-pace','#goal-pace-content','#goal-pace','h2'],
     ['overview-kpis','#overview-kpis','#overview-kpis',null],

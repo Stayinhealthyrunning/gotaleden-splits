@@ -5,7 +5,7 @@
     "repository": "Stayinhealthyrunning/ultravasan-analys",
     "path": "config/comparison-contract-v2.json"
   },
-  "status": "migration_planned",
+  "status": "implemented",
   "current_scope": {
     "direct_comparison": "exactly two persons or teams, same RaceEdition",
     "map_duel": "2-5 persons or teams, same RaceEdition"
@@ -21,13 +21,20 @@
     "segment_comparison": true,
     "edition_field_normalization": true,
     "shared_course_context": true,
-    "animated_two_result_comparison": false,
-    "elevation_seek": "map_duel_only",
+    "animated_two_result_comparison": true,
+    "elevation_seek": true,
     "shareable_comparison_state": true,
     "cross_edition_comparison": false,
-    "sparse_comparison_fallback": false,
+    "sparse_comparison_fallback": true,
     "team_entity": true,
-    "audio": "map_duel_only"
+    "audio": true
+  },
+  "runtime_gates": {
+    "shared_course_context": "Current RaceEdition has its own loaded route asset covering its route_range.",
+    "animated_two_result_comparison": "Exactly two results in the same RaceEdition, replay capability, own route and at least two source-backed replay anchors for each selected result.",
+    "elevation_seek": "Animated comparison and an available elevation profile for the same CourseVersion.",
+    "audio": "Animated comparison and configured event audio; explicit stored volume wins over the comparison's neutral 30 percent initial volume.",
+    "shareable_comparison_state": "Available even when route or replay is unavailable; optional time and segment are restored only when present and valid."
   },
   "target_capabilities": {
     "finish_comparison": true,
