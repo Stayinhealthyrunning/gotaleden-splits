@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "contract": {
+    "id": "loppanalys-comparison-2.0",
+    "repository": "Stayinhealthyrunning/ultravasan-analys",
+    "path": "config/comparison-contract-v2.json"
+  },
+  "status": "migration_planned",
+  "current_scope": {
+    "direct_comparison": "exactly two persons or teams, same RaceEdition",
+    "map_duel": "2-5 persons or teams, same RaceEdition"
+  },
+  "participant_entities": [
+    "person",
+    "team"
+  ],
+  "current_capabilities": {
+    "finish_comparison": true,
+    "checkpoint_gap": true,
+    "placement_journey": true,
+    "segment_comparison": true,
+    "edition_field_normalization": true,
+    "shared_course_context": true,
+    "animated_two_result_comparison": false,
+    "elevation_seek": "map_duel_only",
+    "shareable_comparison_state": true,
+    "cross_edition_comparison": false,
+    "sparse_comparison_fallback": false,
+    "team_entity": true,
+    "audio": "map_duel_only"
+  },
+  "target_capabilities": {
+    "finish_comparison": true,
+    "checkpoint_gap": true,
+    "placement_journey": true,
+    "segment_comparison": true,
+    "edition_field_normalization": true,
+    "shared_course_context": true,
+    "animated_two_result_comparison": true,
+    "elevation_seek": true,
+    "shareable_comparison_state": true,
+    "cross_edition_comparison": false,
+    "sparse_comparison_fallback": true,
+    "team_entity": true,
+    "audio": true
+  },
+  "event_extensions": [
+    "participant.entity may be person or team.",
+    "Relay class/ranking semantics remain source-driven.",
+    "Team member order must never be promoted to a verified relay-leg assignment.",
+    "2026 is currently the only RaceEdition; cross-edition comparison must remain dormant until a later edition is source-bound and explicitly comparable."
+  ],
+  "must_preserve": [
+    "Engine 1.0 canonical event/competition/capability semantics.",
+    "Nine analytical segments for 75 km and four for 35 km; auxiliary points must not become segment boundaries.",
+    "Current team/relay class metadata and non-competitive class handling.",
+    "Whole-course and segment comparison keys for future CourseVersion changes.",
+    "Existing Head-to-head KPI/gap/placement/field analytics.",
+    "Existing 2-5 entity Kartduell, music and synchronized elevation."
+  ],
+  "migration_priorities": [
+    "Embed a shared-clock two-entity replay directly inside Head-to-head using existing map/replay primitives.",
+    "Synchronize checkpoint/segment selection with map, elevation and race clock.",
+    "Align playback to 30/60/120/180 second duration choices, 120-second default and 30% neutral audio volume.",
+    "Enable race soundtrack and persisted audio preferences in Head-to-head.",
+    "Replace coarse follow-camera cadence with the shared smooth-follow behavior while preserving map fit modes.",
+    "Keep team/entity labels adapter-driven.",
+    "Add sparse fallback support for future editions with incomplete checkpoint coverage without changing 2026 analytics.",
+    "Keep cross-edition comparison disabled until 2027 or later data is explicitly registered and comparable."
+  ],
+  "acceptance_gates": [
+    "2026 canonical totals remain 607 results and 4,059 passages.",
+    "Individual and relay Head-to-head both retain correct participant.entity semantics.",
+    "No auxiliary/display timing point becomes an analytical segment boundary.",
+    "No member-to-leg assignment is inferred.",
+    "Browser tests cover person/person, team/team and Kartduell handoff.",
+    "Future-edition capability logic remains explicit and does not infer comparability from family name alone."
+  ]
+}
