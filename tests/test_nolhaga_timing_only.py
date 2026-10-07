@@ -157,7 +157,7 @@ class NolhagaTimingOnlyTests(unittest.TestCase):
         self.assertNotIn("race.checkpoints.slice(1)", interactive)
         self.assertIn("race.analysisCheckpoints.slice(1)", interactive)
         self.assertIn("for(const checkpoint of race.analysisCheckpoints)", replay)
-        self.assertIn("for(const checkpoint of race.analysisCheckpoints)", duel)
+        self.assertIn("race.analysisCheckpoints.forEach((checkpoint,index,all)=>", duel)
         self.assertIn("checkpoint.analysis_boundary!==false", charts)
         self.assertIn("checkpoints=race.analysisCheckpoints", app)
         self.assertIn("speakerpassering", app)

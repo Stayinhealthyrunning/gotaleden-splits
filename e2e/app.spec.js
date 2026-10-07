@@ -90,6 +90,53 @@ test('Head-to-head opens for two valid runners',async({page})=>{
   await expect(page.locator('#open-head-to-head')).toBeEnabled();await page.locator('#open-head-to-head').click();await expect(page.locator('#head-to-head-dialog')).toBeVisible();await expect(page.locator('#head-to-head-dialog')).toContainText('Anton Gustafsson');await expect(page.locator('#head-to-head-dialog')).toContainText('Anton Aro');
 });
 
+test('Comparison 2.0 restores two-runner clock and segment, seeks from elevation and keeps browser history usable',async({page},testInfo)=>{
+  const errors=watchRelevantErrors(page),url='/?race=individual-75-2026&compare=individual-75-2026:785,individual-75-2026:777&comparisonTime=1234&comparisonSegment=3';
+  await openSite(page,url);const dialog=page.locator('#head-to-head-dialog');await expect(dialog).toBeVisible();await expect(dialog.locator('[data-head-segment="3"]')).toHaveAttribute('aria-pressed','true');await expect(dialog.locator('[data-comparison-clock]')).toHaveText('0:20:34');
+  await expect(dialog.locator('[data-head-map] .race-runner-icon')).toHaveCount(2);await expect(dialog.locator('[data-duel-elevation-marker]')).toHaveCount(2);await expect(dialog.locator('[data-comparison-duration]')).toHaveValue('120');await expect(dialog.locator('[data-comparison-camera]')).toHaveValue('both');
+  if(process.env.GOTALEDEN_VISUAL_QA){await dialog.locator('[data-head-replay-panel]').scrollIntoViewIfNeeded();await page.screenshot({path:testInfo.outputPath('individual-75-comparison.png')})}
+  const historyBefore=await page.evaluate(()=>history.length);await dialog.locator('[data-comparison-duration]').selectOption('30');await dialog.locator('[data-comparison-play]').click();await expect(dialog.locator('[data-comparison-play]')).toContainText('Pausa');await page.waitForTimeout(200);expect(await page.evaluate(()=>history.length)).toBe(historyBefore);if(process.env.GOTALEDEN_VISUAL_QA)await page.screenshot({path:testInfo.outputPath('comparison-running.png')});await dialog.locator('[data-comparison-play]').click();await expect(dialog.locator('[data-comparison-clock]')).not.toHaveText('0:20:34');
+  await dialog.locator('[data-head-segment="5"]').click();await expect(dialog.locator('[data-head-segment="5"]')).toHaveAttribute('aria-pressed','true');await expect(page).toHaveURL(/comparisonSegment=5/);const committed=page.url();
+  await dialog.locator('[data-comparison-checkpoint]').first().click();await expect(dialog.locator('[data-comparison-clock]')).not.toHaveText('0:00:00');
+  const hit=dialog.locator('[data-duel-elevation-hit]');await hit.click({position:{x:Math.round((await hit.boundingBox()).width*.4),y:20}});await expect(page).toHaveURL(/comparisonTime=/);
+  await page.goBack();await expect(dialog.locator('[data-head-segment="5"]')).toHaveAttribute('aria-pressed','true');await page.goForward();await expect(dialog).toHaveCount(1);
+  await page.goto(committed);await expect(page.locator('#head-to-head-dialog [data-head-segment="5"]')).toHaveAttribute('aria-pressed','true');await expect(page.locator('#head-to-head-dialog [data-comparison-clock]')).not.toHaveText('0:00:00');expect(errors).toEqual([]);
+});
+
+test('Comparison 2.0 sparse DNF keeps official analysis shareable but disables two-result replay',async({page},testInfo)=>{
+  const errors=watchRelevantErrors(page),data=structuredClone(require('../docs/data/results.json')),key='individual-75-2026',bib='777';
+  data.races[key].records.find(record=>record.bib===bib).status='DNF';data.races[key].records.find(record=>record.bib===bib).finish_seconds=null;
+  data.splits=data.splits.filter(split=>!(split.race_key===key&&split.bib===bib&&split.checkpoint!=='skatas'));
+  await page.route('**/data/results.json**',route=>route.fulfill({contentType:'application/json',body:JSON.stringify(data)}));
+  await openSite(page,`/?race=${key}&compare=${key}:785,${key}:777`);const dialog=page.locator('#head-to-head-dialog');await expect(dialog).toBeVisible();await expect(dialog.locator('[data-head-segment]')).toHaveCount(9);await expect(dialog.locator('[data-head-sparse]')).toContainText('SISTA GEMENSAMMA OBSERVATION');await expect(dialog.locator('[data-head-sparse]')).toContainText('Ingen gemensam målgång');await expect(dialog.locator('[data-comparison-unavailable]')).toBeVisible();await expect(dialog.locator('[data-comparison-play]')).toHaveCount(0);if(process.env.GOTALEDEN_VISUAL_QA){await dialog.locator('[data-head-sparse]').scrollIntoViewIfNeeded();await page.screenshot({path:testInfo.outputPath('sparse-dnf.png')})}
+  await dialog.locator('[data-head-segment="2"]').click();await expect(page).toHaveURL(/comparisonSegment=2/);await dialog.locator('[data-head-share]').click();await expect(dialog).toBeVisible();expect(errors).toEqual([]);
+});
+
+test('Comparison 2.0 team semantics, selected-result fallback and responsive dialog',async({page},testInfo)=>{
+  const errors=watchRelevantErrors(page);
+  for(const [race,ids,count] of [['relay-75-2026','relay-75-2026:29,relay-75-2026:100',9],['relay-35-2026','relay-35-2026:1020,relay-35-2026:1025',4],['individual-35-2026','individual-35-2026:1540,individual-35-2026:1620',4]]){
+    await openSite(page,`/?race=${race}&compare=${ids}`);const dialog=page.locator('#head-to-head-dialog');await expect(dialog).toBeVisible();await expect(dialog.locator('[data-head-segment]')).toHaveCount(count);await expect(dialog.locator('[data-head-map] .race-runner-icon')).toHaveCount(2);if(race.startsWith('relay'))await expect(dialog.locator('.head-to-head-person').first()).toContainText('LAG');if(process.env.GOTALEDEN_VISUAL_QA&&race==='relay-75-2026'){await dialog.locator('[data-head-replay-panel]').scrollIntoViewIfNeeded();await page.screenshot({path:testInfo.outputPath('relay-75-comparison.png')})}
+  }
+  for(const width of [1440,900,768,390]){await page.setViewportSize({width,height:844});await expect(page.locator('#head-to-head-dialog [data-comparison-play]')).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollWidth>document.documentElement.clientWidth)).toBe(false);if(process.env.GOTALEDEN_VISUAL_QA&&width===390){await page.locator('#head-to-head-dialog [data-head-replay-panel]').scrollIntoViewIfNeeded();await page.screenshot({path:testInfo.outputPath('mobile-390-comparison.png')})}}
+  expect(errors).toEqual([]);
+});
+
+test('Comparison 2.0 music uses 30 percent only when no explicit preference and cleans up on close',async({page})=>{
+  const errors=watchRelevantErrors(page),url='/?race=individual-75-2026&compare=individual-75-2026:785,individual-75-2026:777';await openSite(page,url);const dialog=page.locator('#head-to-head-dialog'),audio=dialog.locator('audio[data-comparison-audio]');await expect(audio).toHaveCount(1);expect(await audio.evaluate(element=>element.volume)).toBeCloseTo(.3);expect(await audio.evaluate(element=>element.paused)).toBe(true);
+  await dialog.locator('[data-comparison-play]').click();await expect.poll(()=>audio.evaluate(element=>element.paused)).toBe(false);await dialog.locator('[data-comparison-play]').click();await expect.poll(()=>audio.evaluate(element=>element.paused)).toBe(true);
+  await dialog.locator('[data-comparison-volume]').fill('0.65');const stored=await page.evaluate(()=>({key:window.GRaceMedia.volumeStorageKey,value:localStorage.getItem(window.GRaceMedia.volumeStorageKey)}));expect(Number(stored.value)).toBeCloseTo(.65);
+  await dialog.locator('.head-to-head-close').click();await expect(page.locator('audio[data-comparison-audio]')).toHaveCount(0);await page.goto(url);await expect(page.locator('audio[data-comparison-audio]')).toHaveCount(1);expect(await page.locator('audio[data-comparison-audio]').evaluate(element=>element.volume)).toBeCloseTo(.65);expect(errors).toEqual([]);
+});
+
+test('Comparison 2.0 back closes and forward restores exactly one dialog',async({page})=>{
+  const errors=watchRelevantErrors(page);await openSite(page,'/?race=individual-75-2026&section=map-duel');await chooseDuelRunner(page,'Anton Gustafsson');await chooseDuelRunner(page,'Anton Aro');await page.locator('#open-head-to-head').click();await page.locator('#head-to-head-dialog [data-head-segment="2"]').click();await expect(page).toHaveURL(/comparisonSegment=2/);
+  await page.goBack();await expect(page.locator('#head-to-head-dialog')).toHaveCount(0);await page.goForward();await expect(page.locator('#head-to-head-dialog')).toHaveCount(1);await expect(page.locator('#head-to-head-dialog [data-head-segment="2"]')).toHaveAttribute('aria-pressed','true');expect(errors).toEqual([]);
+});
+
+test('Comparison 2.0 remains operable with reduced motion',async({page})=>{
+  const errors=watchRelevantErrors(page);await page.emulateMedia({reducedMotion:'reduce'});await openSite(page,'/?race=individual-35-2026&compare=individual-35-2026:1540,individual-35-2026:1620');const dialog=page.locator('#head-to-head-dialog');await expect(dialog.locator('[data-comparison-camera]')).toHaveValue('both');await dialog.locator('[data-comparison-play]').click();await expect(dialog.locator('[data-comparison-play]')).toContainText('Pausa');await dialog.locator('[data-comparison-play]').click();await expect(dialog.locator('[data-comparison-play]')).toContainText('Fortsätt');expect(errors).toEqual([]);
+});
+
 test('Runner Replay, Kartduell and a direct map link use the selected course bundle',async({page})=>{
   const errors=watchRelevantErrors(page);await openSite(page);
   await page.locator('#runner-search').fill('Anton Gustafsson');const runner=page.locator('#runner-suggestions [data-record-id]').filter({hasText:'Anton Gustafsson'});const runnerId=await runner.getAttribute('data-record-id');await runner.click();await expect(page.locator('#detail-replay [data-map-engine]')).toBeVisible();await page.locator('#detail-dialog .dialog-close').click();

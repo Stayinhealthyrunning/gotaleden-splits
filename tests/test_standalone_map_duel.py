@@ -71,7 +71,7 @@ if(timed.time!==15272)throw new Error('initial clock time');
 if(!window.GMapPage.selectionFrom('?race=individual-75-2026&entries=1,2,3,4,5,6',adapter).error)throw new Error('max five');
 """
         self.run_node(script)
-        self.assertIn('assets/map-duel.js?v=20260921-acceptance1', self.map_html)
+        self.assertIn('assets/map-duel.js?v=20261007-comparison2', self.map_html)
         self.assertIn('assets/map-page.js?v=20260909-course1', self.map_html)
         self.assertIn('assets/course-data.js?v=20260909-course1', self.map_html)
         self.assertIn('assets/map-page.css?v=20260903-standalone-map2', self.map_html)

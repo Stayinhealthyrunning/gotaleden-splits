@@ -147,7 +147,7 @@ console.log(JSON.stringify({audio:media.audioSource,enabledKey:media.enabledStor
             "race-ui.js", "app.js", "data-adapter.js", "favorites.js", "goal-pace.js",
             "personal-summary.js", "charts.js", "course-difficulty.js", "head-to-head.js",
             "history-engine.js", "history-ui.js", "map-engine.js", "map-page.js", "map-duel.js",
-            "runner-replay.js", "profile-journey.js", "interactive-analysis.js", "race-media.js",
+            "runner-replay.js", "profile-journey.js", "interactive-analysis.js", "race-media.js", "comparison-replay.js",
         ]
         source = "\n".join((ROOT / "docs/assets" / name).read_text(encoding="utf-8") for name in core)
         for value in ("Gotaleden", "Göteborg", "Floda", "Alingsås", "Nolhaga", "Skatås", "Tollered", "EQ Timing", "route-35", "Coast Trail Lab", "long-solo-a", "62 km", "alingsas", "floda", "gothenburg", "skatas", "nolhaga", "tollered", "gotaleden-ultra", "gotaleden-music", "Publicerad lagtid", "Lagklass", "Lagmedlemmar", "stafettfältet", "stafettens officiella", "OFFICIELLA STAFETTKLASSER", "Mixed tävling", "Mixed fri", "deltagare/lag", "deltagare eller lag"):
