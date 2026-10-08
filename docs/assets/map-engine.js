@@ -18,12 +18,12 @@
     container.innerHTML='<div class="route-map leaflet-primary" data-map-engine="leaflet"><div class="leaflet-map" data-leaflet-map></div><div class="map-engine-status" data-map-status hidden></div><div class="map-primary-actions"><button type="button" data-map-action="fit">Visa hela banan</button></div></div>';
     return{root:container.firstElementChild,mapElement:container.querySelector('[data-leaflet-map]'),status:container.querySelector('[data-map-status]')};
   }
-  function createLeaflet(container,{adapter,race,mode,segments=[],onSeek=null,onSegmentSelect=null,onSegmentPreview=null,onSegmentRestore=null,layer='standard'}){
+  function createLeaflet(container,{adapter,race,mode,segments=[],onSeek=null,onSegmentSelect=null,onSegmentPreview=null,onSegmentRestore=null,layer='standard',autoFit=true}){
     const elements=shell(container),routePoints=adapter.routeSlice(race).filter(validLatLng),coordinates=routePoints.map(point=>[Number(point[0]),Number(point[1])]);
     if(coordinates.length<2)throw new Error('Banan saknar giltiga GPS-koordinater.');
     const map=L.map(elements.mapElement,{zoomControl:true,preferCanvas:!onSegmentSelect,attributionControl:true,keyboard:true}),bounds=L.latLngBounds(coordinates),highlightPaneName=`route-segment-highlight-${++engineSequence}`,highlightPane=map.createPane(highlightPaneName);highlightPane.classList.add('route-segment-highlight-pane');highlightPane.style.zIndex='475';highlightPane.style.pointerEvents='none';
     if(bounds.isValid())map.fitBounds(bounds,{padding:[42,42],animate:false});else map.setView(coordinates[0],9);
-    let tileErrors=0,follow=false,destroyed=false,highlightLayer=null;
+    let tileErrors=0,follow=false,destroyed=false,highlightLayer=null,smoothFollowInitialized=false;
     const layerConfig=MAP_LAYERS[layer]||MAP_LAYERS.standard,tileLayer=L.tileLayer(layerConfig.url,{maxZoom:layerConfig.maxZoom,attribution:layerConfig.attribution}).on('tileerror',()=>{tileErrors++;if(tileErrors===4){elements.status.hidden=false;elements.status.textContent='Kartbakgrunden kunde inte läsas, men banlager och deltagare fungerar.'}}).addTo(map);
     const routeGroup=L.layerGroup().addTo(map),routeColor='#0b6671';
     L.polyline(coordinates,{color:'#fff',weight:11,opacity:.8,lineCap:'round'}).addTo(routeGroup);
@@ -46,17 +46,27 @@
       });
       if(follow&&runners.length){const point=adapter.routePoint(runners[0].distance,race);map.panTo([point[0],point[1]],{animate:false})}
     }
-    function fit(){follow=false;map.invalidateSize(false);if(bounds.isValid())map.fitBounds(bounds,{padding:[42,42],animate:false});elements.root.dispatchEvent(new CustomEvent('race-analysis:map-fit'))}
+    function fit(){follow=false;smoothFollowInitialized=false;map.invalidateSize(false);if(bounds.isValid())map.fitBounds(bounds,{padding:[42,42],animate:false});elements.root.dispatchEvent(new CustomEvent('race-analysis:map-fit'))}
     function zoom(factor){factor>1?map.zoomIn():map.zoomOut()}
     function setFollow(value){follow=Boolean(value);return follow}
     function panToDistance(distance,zoomLevel=14){const point=adapter.routePoint(distance,race);if(validLatLng(point))map.setView([point[0],point[1]],zoomLevel,{animate:false})}
     function fitDistances(distances){const points=distances.map(distance=>adapter.routePoint(distance,race)).filter(validLatLng).map(point=>[point[0],point[1]]);if(!points.length)return;if(points.length===1){map.setView(points[0],14,{animate:false});return}map.fitBounds(L.latLngBounds(points),{padding:[90,90],maxZoom:14,animate:false})}
+    // Opt-in smooth following for two-result comparison; Kartduell retains its own cadence.
+    function easeToDistances(distances,{leader=false,reducedMotion=false}={}){
+      const points=distances.map(distance=>adapter.routePoint(distance,race)).filter(validLatLng).map(point=>L.latLng(point[0],point[1]));if(!points.length)return;
+      // Establish a useful follow zoom once, then only zoom out when separation requires it.
+      // Never recalculate zoom into a closer level on every animation frame.
+      const desiredZoom=leader||points.length===1?14:Math.min(14,map.getBoundsZoom(L.latLngBounds(points).pad(1.5),false,[80,80]));
+      if(!smoothFollowInitialized||desiredZoom<map.getZoom()-.5){map.setZoom(desiredZoom,{animate:false});smoothFollowInitialized=true}
+      const target=leader||points.length===1?points[0]:L.latLngBounds(points).getCenter(),current=map.latLngToContainerPoint(map.getCenter()),desired=map.latLngToContainerPoint(target),factor=reducedMotion?1:.38;
+      const offset=desired.subtract(current).multiplyBy(factor);if(Math.abs(offset.x)+Math.abs(offset.y)>0.4)map.panBy(offset,{animate:false});
+    }
     function clearHighlight(){if(highlightLayer){highlightLayer.remove();highlightLayer=null}}
     function highlightRange(fromDistance,toDistance,options={}){clearHighlight();const points=routeSegment(adapter,fromDistance,toDistance,race);if(points.length<2)return null;highlightLayer=L.polyline(points,{pane:highlightPaneName,className:'route-range-highlight',color:options.color||'#db5f28',weight:options.weight||11,opacity:options.opacity??1,lineCap:'round',lineJoin:'round',interactive:false}).addTo(map);const element=highlightLayer.getElement?.();if(element){element.dataset.mapHighlightFrom=String(fromDistance);element.dataset.mapHighlightTo=String(toDistance)}highlightLayer.bringToFront?.();return highlightLayer}
     if(onSeek)map.on('click',event=>{let nearest=null,best=Infinity;for(const point of routePoints){const delta=(Number(point[0])-event.latlng.lat)**2+(Number(point[1])-event.latlng.lng)**2;if(delta<best){best=delta;nearest=point}}if(nearest)onSeek(Number(nearest[2]),{source:'map'})});
     elements.root.querySelector('[data-map-action="fit"]').onclick=fit;
-    setTimeout(()=>{if(destroyed)return;map.invalidateSize(false);if(!follow)fit()},80);
-    return{kind:'leaflet',map,tileLayer,setRunners,fit,zoom,setFollow,panToDistance,fitDistances,highlightRange,clearHighlight,destroy(){destroyed=true;clearHighlight();markerMap.clear();map.remove();container.innerHTML=''},get destroyed(){return destroyed}};
+    setTimeout(()=>{if(destroyed)return;map.invalidateSize(false);if(autoFit&&!follow)fit()},80);
+    return{kind:'leaflet',map,tileLayer,setRunners,fit,zoom,setFollow,panToDistance,fitDistances,easeToDistances,highlightRange,clearHighlight,destroy(){destroyed=true;clearHighlight();markerMap.clear();map.remove();container.innerHTML=''},get destroyed(){return destroyed}};
   }
   function createFallback(container,{adapter,race,mode,segments=[],onSegmentSelect=null,onSegmentPreview=null,onSegmentRestore=null}){
     const id=`fallback-${++engineSequence}`,width=1000,height=520,padding=46,routePoints=adapter.routeSlice(race),meanLat=routePoints.reduce((sum,point)=>sum+point[0],0)/routePoints.length*Math.PI/180,xs=routePoints.map(point=>point[1]*Math.cos(meanLat)),ys=routePoints.map(point=>point[0]),minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys),scale=Math.min((width-padding*2)/(maxX-minX||1),(height-padding*2)/(maxY-minY||1)),project=point=>[padding+(point[1]*Math.cos(meanLat)-minX)*scale,height-padding-(point[0]-minY)*scale],path=routePoints.map((point,index)=>{const projected=project(point);return`${index?'L':'M'}${projected[0].toFixed(1)} ${projected[1].toFixed(1)}`}).join(' ');
@@ -64,7 +74,7 @@
     function setRunners(values){runners.innerHTML=values.map((runner,index)=>{const point=project(adapter.routePoint(runner.distance,race));return`<g class="map-runner" transform="translate(${point[0]} ${point[1]})"><circle class="runner-pulse" r="14"/><circle class="runner-dot" r="9" fill="${runner.color}"/><text class="runner-number" y="4" text-anchor="middle">${index+1}</text><text class="runner-label" x="14" y="-12">${esc(runner.name)}</text></g>`}).join('')}
     function clearHighlight(){if(highlight)highlight.innerHTML=''}
     function highlightRange(fromDistance,toDistance,options={}){const points=routeSegment(adapter,fromDistance,toDistance,race),highlightPath=points.map((point,index)=>{const value=project(point);return`${index?'L':'M'}${value[0].toFixed(1)} ${value[1].toFixed(1)}`}).join(' ');if(highlight)highlight.innerHTML=`<path class="route-range-highlight" data-map-highlight-from="${esc(fromDistance)}" data-map-highlight-to="${esc(toDistance)}" d="${highlightPath}" style="stroke:${esc(options.color||'#db5f28')};stroke-width:${Number(options.weight)||11};opacity:${options.opacity??1}"/>`;return highlightPath}
-    container.querySelectorAll?.('[data-map-segment]').forEach(element=>{const index=Number(element.dataset.mapSegment),select=()=>onSegmentSelect?.(index);element.onclick=select;element.onmouseenter=()=>onSegmentPreview?.(index);element.onmouseleave=()=>onSegmentRestore?.();element.onfocus=()=>onSegmentPreview?.(index);element.onblur=()=>onSegmentRestore?.();element.onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();select()}}});return{kind:'fallback',setRunners,fit(){},zoom(){},setFollow(){return false},panToDistance(){},fitDistances(){},highlightRange,clearHighlight,destroy(){destroyed=true;clearHighlight();container.innerHTML=''},get destroyed(){return destroyed}};
+    container.querySelectorAll?.('[data-map-segment]').forEach(element=>{const index=Number(element.dataset.mapSegment),select=()=>onSegmentSelect?.(index);element.onclick=select;element.onmouseenter=()=>onSegmentPreview?.(index);element.onmouseleave=()=>onSegmentRestore?.();element.onfocus=()=>onSegmentPreview?.(index);element.onblur=()=>onSegmentRestore?.();element.onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();select()}}});return{kind:'fallback',setRunners,fit(){},zoom(){},setFollow(){return false},panToDistance(){},fitDistances(){},easeToDistances(){},highlightRange,clearHighlight,destroy(){destroyed=true;clearHighlight();container.innerHTML=''},get destroyed(){return destroyed}};
   }
   function create(container,options){
     if(window.L){try{return createLeaflet(container,options)}catch(error){console.error('Leaflet-kartan kunde inte starta',error)}}

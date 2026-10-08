@@ -12,6 +12,14 @@ ASSETS = DOCS / "assets"
 
 
 class AllSegmentAxisLabelsTests(unittest.TestCase):
+    def run_node(self, script):
+        node = os.environ.get("GOTALEDEN_NODE") or shutil.which("node")
+        if not node:
+            self.skipTest("Node.js is required")
+        result = subprocess.run([node, "-e", script], cwd=ROOT, text=True, encoding="utf-8", capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stderr or result.stdout)
+        return result.stdout.strip()
+
     @classmethod
     def setUpClass(cls):
         cls.html = (DOCS / "index.html").read_text(encoding="utf-8")
@@ -75,9 +83,13 @@ if(JSON.stringify(axisLabels(labels35))!==JSON.stringify(expected35))throw new E
         self.assertIn(
             "for(const checkpoint of race.analysisCheckpoints)", self.replay
         )
-        self.assertIn(
-            "for(const checkpoint of race.analysisCheckpoints)", self.duel
-        )
+        output = self.run_node(r"""
+const fs=require('fs'),vm=require('vm');global.window={};vm.runInThisContext(fs.readFileSync('docs/assets/map-duel.js','utf8'));
+const race={startDistanceKm:0,endDistanceKm:3,analysisCheckpoints:[{name:'Start',route_distance_km:0},{name:'Middle',route_distance_km:1.5},{name:'Finish',route_distance_km:3}],checkpoints:[]},points=[0,1.5,3].map(route_distance_km=>({route_distance_km,elevation_m:100}));
+console.log(JSON.stringify([false,true].map(staggerLabels=>{const html=window.GMapDuel.elevationChart(points,race,[],{staggerLabels}).html;return{count:(html.match(/class="checkpoint-label"/g)||[]).length,names:['Start','Middle','Finish'].every(name=>html.includes('>'+name+'</text>'))}})));
+""")
+        for variant in json.loads(output):
+            self.assertEqual(variant, {"count": 3, "names": True})
         self.assertIn("${labels.map(label=>`<b>${esc(label)}</b>`).join('')}", self.interactive)
 
     def test_readability_and_cache_buster_are_preserved(self):
@@ -88,7 +100,7 @@ if(JSON.stringify(axisLabels(labels35))!==JSON.stringify(expected35))throw new E
         self.assertIn("'segment-line-chart'", self.charts)
         self.assertIn("rotate(-18", self.charts)
         self.assertIn("assets/charts.js?v=20260921-finish-progression1", self.html)
-        self.assertIn("assets/style.css?v=20260921-finish-progression1", self.html)
+        self.assertIn("assets/style.css?v=20261007-comparison2", self.html)
 
     def test_data_and_nolhaga_invariants_are_unchanged(self):
         self.assertEqual(
