@@ -17,6 +17,7 @@ class HeadToHeadAnalysisTests(unittest.TestCase):
         cls.index = (DOCS / "index.html").read_text(encoding="utf-8")
         cls.app = (ASSETS / "app.js").read_text(encoding="utf-8")
         cls.runtime = (ASSETS / "head-to-head.js").read_text(encoding="utf-8")
+        cls.replay = (ASSETS / "comparison-replay.js").read_text(encoding="utf-8")
         cls.adapter = (ASSETS / "data-adapter.js").read_text(encoding="utf-8")
         cls.style = (ASSETS / "style.css").read_text(encoding="utf-8")
 
@@ -92,7 +93,7 @@ const fs=require('fs'),vm=require('vm');global.window={};vm.runInThisContext(fs.
         self.assertIsNone(out["bad"])
 
     def test_runtime_wiring_is_scoped_and_reuses_map_and_duel(self):
-        for token in ('id="open-head-to-head"', 'assets/head-to-head.js?v=20260907-head-to-head1'):
+        for token in ('id="open-head-to-head"', 'assets/head-to-head.js?v=20261007-comparison2', 'assets/comparison-replay.js?v=20261007-comparison2'):
             self.assertIn(token, self.index)
         self.assertLess(self.index.index("map-duel.js"), self.index.index("head-to-head.js"))
         for token in ("GHeadToHead.open", "GHeadToHead.resolveUrl", "onKartduell", "state.duelIds=pair.map", "openDuelDialog()"):
@@ -104,7 +105,62 @@ const fs=require('fs'),vm=require('vm');global.window={};vm.runInThisContext(fs.
         self.assertIn(".head-to-head-dialog", self.style)
         self.assertIn("@media(max-width:620px)", self.style)
         self.assertNotIn("GRunnerReplay", self.runtime)
-        self.assertNotIn("audio", self.runtime.lower())
+        self.assertIn("GComparisonReplay.create", self.runtime)
+        self.assertIn("createAudioController", self.replay)
+
+    def test_selected_result_capabilities_and_sparse_dnf(self):
+        output = self.run_node(r"""
+const fs=require('fs'),vm=require('vm');global.window={};for(const f of ['data-adapter','comparison-replay'])vm.runInThisContext(fs.readFileSync('docs/assets/'+f+'.js','utf8'));
+const source=JSON.parse(fs.readFileSync('docs/data/results-2026.json')),route=JSON.parse(fs.readFileSync('docs/data/route.json')),elevation=JSON.parse(fs.readFileSync('docs/data/route-elevation-2026.json')),key='individual-75-2026';
+function make(data,assets=true){return window.GDataAdapter.create(data,assets?route:{},assets?elevation:null)}
+const adapter=make(source),race=adapter.race(key),pair=adapter.journeyCompleteProfiles(race).slice(0,2).map(x=>x.record),rich=adapter.headToHeadAnalysis(race,...pair),caps=window.GComparisonReplay.capabilities(adapter,rich,{audioSource:'sound.mp3'});
+const sparse=structuredClone(source),bib=pair[1].bib;sparse.splits=sparse.splits.filter(s=>!(s.race_key===key&&s.bib===bib&&s.checkpoint!=='skatas'));const sa=make(sparse),sh=sa.headToHeadAnalysis(key,...pair.map(x=>x.id)),sc=window.GComparisonReplay.capabilities(sa,sh,{audioSource:'sound.mp3'});
+const dnf=structuredClone(source),item=dnf.races[key].records.find(x=>x.bib===bib);item.status='DNF';item.finish_seconds=null;dnf.splits=dnf.splits.filter(s=>!(s.race_key===key&&s.bib===bib&&['kasjon','jonsered','lerum','floda','tollered','norsesund','vastra_bodarna','alingsas'].includes(s.checkpoint)));const da=make(dnf),dh=da.headToHeadAnalysis(key,...pair.map(x=>x.id)),steps=window.GComparisonReplay.sparseSteps(dh);
+const timingOnly=structuredClone(source),timingItem=timingOnly.races[key].records.find(x=>x.bib===bib);timingItem.status='DNF';timingItem.finish_seconds=null;timingOnly.splits=timingOnly.splits.filter(s=>!(s.race_key===key&&s.bib===bib&&s.checkpoint!=='nolhaga'));const ta=make(timingOnly),th=ta.headToHeadAnalysis(key,...pair.map(x=>x.id)),timingSteps=window.GComparisonReplay.sparseSteps(th);
+const dnfFinish=structuredClone(source),dnfFinishItem=dnfFinish.races[key].records.find(x=>x.bib===bib);dnfFinishItem.status='DNF';dnfFinishItem.finish_seconds=null;dnfFinish.splits=dnfFinish.splits.filter(s=>!(s.race_key===key&&s.bib===bib&&!['skatas','alingsas'].includes(s.checkpoint)));const dfa=make(dnfFinish),dfh=dfa.headToHeadAnalysis(key,...pair.map(x=>x.id)),dfc=window.GComparisonReplay.capabilities(dfa,dfh,{audioSource:'sound.mp3'}),dfSteps=window.GComparisonReplay.sparseSteps(dfh);
+const noRoute=make(source,false),rh=noRoute.headToHeadAnalysis(key,...pair.map(x=>x.id)),rc=window.GComparisonReplay.capabilities(noRoute,rh,{audioSource:'sound.mp3'});
+const partialRoute=structuredClone(route);partialRoute.points=partialRoute.points.filter(point=>Number(point[3])>race.startDistanceKm+1);const pa=window.GDataAdapter.create(source,partialRoute,elevation),ph=pa.headToHeadAnalysis(key,...pair.map(x=>x.id)),pc=window.GComparisonReplay.capabilities(pa,ph,{audioSource:'sound.mp3'});
+console.log(JSON.stringify({rich:caps,sparse:sc,route:rc,partialRoute:pc,dnfFinish:dfc,dnfFinishSteps:dfSteps.steps.map(x=>x.label),steps:steps.steps.map(x=>x.label),finish:steps.hasSharedFinish,timingSteps:timingSteps.steps.map(x=>x.label),timingShared:th.sharedCheckpoints.length,analytical:sh.segments.length,shared:sh.sharedCheckpoints.length}));
+""")
+        out = json.loads(output)
+        self.assertTrue(out["rich"]["animated_two_result_comparison"])
+        self.assertTrue(out["rich"]["elevation_seek"])
+        self.assertTrue(out["rich"]["audio"])
+        self.assertFalse(out["sparse"]["animated_two_result_comparison"])
+        self.assertFalse(out["sparse"]["audio"])
+        self.assertTrue(out["sparse"]["shareable_comparison_state"])
+        self.assertFalse(out["route"]["shared_course_context"])
+        self.assertFalse(out["route"]["animated_two_result_comparison"])
+        self.assertTrue(out["route"]["shareable_comparison_state"])
+        self.assertFalse(out["partialRoute"]["shared_course_context"])
+        self.assertFalse(out["partialRoute"]["animated_two_result_comparison"])
+        self.assertFalse(out["dnfFinish"]["animated_two_result_comparison"])
+        self.assertEqual(out["dnfFinishSteps"], ["START", "SISTA GEMENSAMMA OBSERVATION · Skatås"])
+        self.assertEqual(out["analytical"], 9)
+        self.assertEqual(out["shared"], 1)
+        self.assertFalse(out["finish"])
+        self.assertTrue(out["steps"][-1].startswith("SISTA GEMENSAMMA OBSERVATION"))
+        self.assertEqual(out["timingShared"], 0)
+        self.assertEqual(out["timingSteps"], ["START", "SISTA GEMENSAMMA OBSERVATION · Nolhaga"])
+
+    def test_comparison_url_restores_optional_time_without_null_becoming_zero(self):
+        output = self.run_node(r"""
+const fs=require('fs'),vm=require('vm');global.window={};for(const f of ['data-adapter','head-to-head'])vm.runInThisContext(fs.readFileSync('docs/assets/'+f+'.js','utf8'));
+const a=window.GDataAdapter.create(JSON.parse(fs.readFileSync('docs/data/results-2026.json')),JSON.parse(fs.readFileSync('docs/data/route.json')),JSON.parse(fs.readFileSync('docs/data/route-elevation-2026.json'))),ids=['individual-75-2026:785','individual-75-2026:777'],records=ids.map(id=>a.record(id)),url=window.GHeadToHead.shareUrl('https://example.test/','individual-75-2026',records,{time:1234,segment:3}),plain=window.GHeadToHead.resolveUrl('?race=individual-75-2026&compare='+ids.join(','),a),round=window.GHeadToHead.resolveUrl(new URL(url).search,a),bad=window.GHeadToHead.resolveUrl('?race=individual-75-2026&compare='+ids.join(',')+'&comparisonTime=no&comparisonSegment=-1',a);console.log(JSON.stringify({url,plain:[plain.time,plain.segment],round:[round.time,round.segment],bad:[bad.time,bad.segment]}));
+""")
+        out = json.loads(output)
+        self.assertEqual(out["round"], [1234, 3])
+        self.assertEqual(out["plain"], [None, None])
+        self.assertEqual(out["bad"], [None, None])
+
+    def test_placement_axis_labels_match_point_direction(self):
+        output = self.run_node(r"""
+const fs=require('fs'),vm=require('vm');global.window={};vm.runInThisContext(fs.readFileSync('docs/assets/charts.js','utf8'));const chart=window.GCharts.rankJourney([{name:'A',values:[1,5],distances:[1,2],color:'#000'}],['Start','Mål']);const labels=[...chart.matchAll(/<text x="[^"]+" y="([^"]+)" text-anchor="end">#(\d+)<\/text>/g)].map(x=>({y:Number(x[1]),rank:Number(x[2])}));const dots=[...chart.matchAll(/class="point journey-point"[^>]+cy="([^"]+)"/g)].map(x=>Number(x[1]));console.log(JSON.stringify({labels,dots}));
+""")
+        out = json.loads(output)
+        self.assertLess(out["labels"][0]["rank"], out["labels"][-1]["rank"])
+        self.assertLess(out["labels"][0]["y"], out["labels"][-1]["y"])
+        self.assertLess(out["dots"][0], out["dots"][1])
 
     def test_no_nolhaga_analysis_point_and_relay_is_team_based(self):
         output = self.run_node(r"""

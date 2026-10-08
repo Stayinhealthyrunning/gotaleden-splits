@@ -124,9 +124,9 @@ for(const [key,count] of Object.entries(expected)){
         self.assertIn("referenceValue:100", self.interactive)
         self.assertNotIn("Fart relativt hela loppet", self.html)
         self.assertIn("100 = varje series egen hel-loppsmedianfart", self.html)
-        self.assertIn("data-adapter.js?v=20260911-e4", self.html)
+        self.assertIn("data-adapter.js?v=20261007-comparison2", self.html)
         self.assertIn("interactive-analysis.js?v=20260921-finish-progression1", self.html)
-        self.assertIn("app.js?v=20260921-acceptance1", self.html)
+        self.assertIn("app.js?v=20261007-comparison2", self.html)
 
     def test_source_data_and_nolhaga_are_unchanged(self):
         self.assertEqual(

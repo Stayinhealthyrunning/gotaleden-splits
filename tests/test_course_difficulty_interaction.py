@@ -65,7 +65,7 @@ if(window.GCharts.elevation(points,checkpoints).includes('elevation-range-highli
         self.assertIn('.fallback-map>svg.dragging{cursor:grabbing}',self.style)
         self.assertNotIn('.route-map svg{',self.style)
         self.assertNotIn('.route-map svg.dragging',self.style)
-        self.assertIn('style.css?v=20260921-finish-progression1',self.html)
+        self.assertIn('style.css?v=20261007-comparison2',self.html)
 
     def test_elevation_exposes_one_keyboard_hit_area_per_complete_segment(self):
         self.run_node(r"""

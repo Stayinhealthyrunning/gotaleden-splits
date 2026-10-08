@@ -11,7 +11,7 @@ DOCS = ROOT / "docs"
 ASSETS = DOCS / "assets"
 EXPECTED_IDS = {
     "head-to-head-overview", "head-to-head-gap", "head-to-head-placement",
-    "head-to-head-segments", "head-to-head-field-pacing", "head-to-head-course",
+    "head-to-head-segments", "head-to-head-field-pacing", "head-to-head-course", "head-to-head-replay",
     "filters", "overview-kpis", "finish-distribution",
     "elevation-profile", "placement-engine", "target-time-simulator", "dnf-funnel",
     "segment-character", "advancement-ranking", "group-kpis",
@@ -59,7 +59,7 @@ console.log(JSON.stringify(window.GAnalysisHelpContent));
     def test_registry_has_exact_reviewed_entries_and_quality(self):
         registry = self.registry()
         self.assertEqual(set(registry), EXPECTED_IDS)
-        self.assertEqual(len(registry), 48)
+        self.assertEqual(len(registry), 49)
         for help_id, entry in registry.items():
             self.assertTrue(entry.get("title", "").strip(), help_id)
             self.assertTrue(entry.get("html", "").strip(), help_id)
@@ -155,11 +155,11 @@ if(!api.entry('filters')||typeof api.close!=='function'||typeof api.enhance!=='f
         for page in (self.index, self.map_page):
             self.assertLess(page.index("analysis-help-content.js"), page.index("analysis-help.js"))
             self.assertLess(page.index("analysis-help.js"), page.index("map-duel.js"))
-        self.assertIn("analysis-help-content.js?v=20260921-finish-progression1", self.index)
-        self.assertIn("analysis-help.js?v=20260908-goal-pace1", self.index)
-        self.assertIn("analysis-help-content.js?v=20260921-finish-progression1", self.map_page)
-        self.assertIn("analysis-help.js?v=20260907-head-to-head1", self.map_page)
-        self.assertIn("style.css?v=20260921-finish-progression1", self.index)
+        self.assertIn("analysis-help-content.js?v=20261007-comparison2", self.index)
+        self.assertIn("analysis-help.js?v=20261007-comparison2", self.index)
+        self.assertIn("analysis-help-content.js?v=20261007-comparison2", self.map_page)
+        self.assertIn("analysis-help.js?v=20261007-comparison2", self.map_page)
+        self.assertIn("style.css?v=20261007-comparison2", self.index)
         self.assertIn("style.css?v=20260921-finish-progression1", self.map_page)
 
     def test_dialog_css_is_scoped_responsive_and_motion_safe(self):
