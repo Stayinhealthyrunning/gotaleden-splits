@@ -6,8 +6,8 @@
   const clamp=(value,min,max)=>Math.max(min,Math.min(max,Number(value)||0));
   const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const clock=value=>{const s=Math.round(Math.max(0,Number(value)||0));return`${Math.floor(s/3600)}:${String(Math.floor(s%3600/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`};
-  // Start is a known baseline, but not a source-backed replay observation.
-  const sourceAnchors=profile=>profile.anchors.filter(anchor=>Boolean(anchor.source));
+  // Start is a known baseline, but not a source-backed replay observation. A non-FINISHED result never exposes a finish anchor even if inconsistent source timing contains one.
+  const sourceAnchors=profile=>profile.anchors.filter(anchor=>Boolean(anchor.source)&&(anchor.kind!=='finish'||profile.finish));
   function capabilities(adapter,analysis,media=window.GRaceMedia){
     const race=analysis.race,asset=adapter.courseAssets.get(race.courseVersion),route=asset?.route?.points||[],routeDistances=route.map(point=>Number(point[3])).filter(Number.isFinite),ownRoute=routeDistances.length>=2&&Math.min(...routeDistances)<=race.startDistanceKm&&Math.max(...routeDistances)>=race.endDistanceKm,profiles=[analysis.a.profile,analysis.b.profile],twoResults=analysis.a.record.id!==analysis.b.record.id,observed=profiles.every(profile=>sourceAnchors(profile).length>=2),animated=Boolean(twoResults&&ownRoute&&race.capabilities?.replay&&observed),elevation=Boolean(animated&&(asset?.elevation?.profile||asset?.elevation?.points||[]).length>1);
     return{finish_comparison:true,checkpoint_gap:true,placement_journey:true,segment_comparison:true,edition_field_normalization:true,shared_course_context:Boolean(ownRoute),animated_two_result_comparison:animated,elevation_seek:elevation,shareable_comparison_state:true,cross_edition_comparison:false,sparse_comparison_fallback:true,team_entity:race.participantEntity==='team',audio:Boolean(animated&&media?.audioSource)};
