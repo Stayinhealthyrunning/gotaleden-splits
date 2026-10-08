@@ -117,9 +117,10 @@ const adapter=make(source),race=adapter.race(key),pair=adapter.journeyCompletePr
 const sparse=structuredClone(source),bib=pair[1].bib;sparse.splits=sparse.splits.filter(s=>!(s.race_key===key&&s.bib===bib&&s.checkpoint!=='skatas'));const sa=make(sparse),sh=sa.headToHeadAnalysis(key,...pair.map(x=>x.id)),sc=window.GComparisonReplay.capabilities(sa,sh,{audioSource:'sound.mp3'});
 const dnf=structuredClone(source),item=dnf.races[key].records.find(x=>x.bib===bib);item.status='DNF';item.finish_seconds=null;dnf.splits=dnf.splits.filter(s=>!(s.race_key===key&&s.bib===bib&&['kasjon','jonsered','lerum','floda','tollered','norsesund','vastra_bodarna','alingsas'].includes(s.checkpoint)));const da=make(dnf),dh=da.headToHeadAnalysis(key,...pair.map(x=>x.id)),steps=window.GComparisonReplay.sparseSteps(dh);
 const timingOnly=structuredClone(source),timingItem=timingOnly.races[key].records.find(x=>x.bib===bib);timingItem.status='DNF';timingItem.finish_seconds=null;timingOnly.splits=timingOnly.splits.filter(s=>!(s.race_key===key&&s.bib===bib&&s.checkpoint!=='nolhaga'));const ta=make(timingOnly),th=ta.headToHeadAnalysis(key,...pair.map(x=>x.id)),timingSteps=window.GComparisonReplay.sparseSteps(th);
+const dnfFinish=structuredClone(source),dnfFinishItem=dnfFinish.races[key].records.find(x=>x.bib===bib);dnfFinishItem.status='DNF';dnfFinishItem.finish_seconds=null;dnfFinish.splits=dnfFinish.splits.filter(s=>!(s.race_key===key&&s.bib===bib&&!['skatas','alingsas'].includes(s.checkpoint)));const dfa=make(dnfFinish),dfh=dfa.headToHeadAnalysis(key,...pair.map(x=>x.id)),dfc=window.GComparisonReplay.capabilities(dfa,dfh,{audioSource:'sound.mp3'}),dfSteps=window.GComparisonReplay.sparseSteps(dfh);
 const noRoute=make(source,false),rh=noRoute.headToHeadAnalysis(key,...pair.map(x=>x.id)),rc=window.GComparisonReplay.capabilities(noRoute,rh,{audioSource:'sound.mp3'});
 const partialRoute=structuredClone(route);partialRoute.points=partialRoute.points.filter(point=>Number(point[3])>race.startDistanceKm+1);const pa=window.GDataAdapter.create(source,partialRoute,elevation),ph=pa.headToHeadAnalysis(key,...pair.map(x=>x.id)),pc=window.GComparisonReplay.capabilities(pa,ph,{audioSource:'sound.mp3'});
-console.log(JSON.stringify({rich:caps,sparse:sc,route:rc,partialRoute:pc,steps:steps.steps.map(x=>x.label),finish:steps.hasSharedFinish,timingSteps:timingSteps.steps.map(x=>x.label),timingShared:th.sharedCheckpoints.length,analytical:sh.segments.length,shared:sh.sharedCheckpoints.length}));
+console.log(JSON.stringify({rich:caps,sparse:sc,route:rc,partialRoute:pc,dnfFinish:dfc,dnfFinishSteps:dfSteps.steps.map(x=>x.label),steps:steps.steps.map(x=>x.label),finish:steps.hasSharedFinish,timingSteps:timingSteps.steps.map(x=>x.label),timingShared:th.sharedCheckpoints.length,analytical:sh.segments.length,shared:sh.sharedCheckpoints.length}));
 """)
         out = json.loads(output)
         self.assertTrue(out["rich"]["animated_two_result_comparison"])
@@ -133,6 +134,8 @@ console.log(JSON.stringify({rich:caps,sparse:sc,route:rc,partialRoute:pc,steps:s
         self.assertTrue(out["route"]["shareable_comparison_state"])
         self.assertFalse(out["partialRoute"]["shared_course_context"])
         self.assertFalse(out["partialRoute"]["animated_two_result_comparison"])
+        self.assertFalse(out["dnfFinish"]["animated_two_result_comparison"])
+        self.assertEqual(out["dnfFinishSteps"], ["START", "SISTA GEMENSAMMA OBSERVATION · Skatås"])
         self.assertEqual(out["analytical"], 9)
         self.assertEqual(out["shared"], 1)
         self.assertFalse(out["finish"])
