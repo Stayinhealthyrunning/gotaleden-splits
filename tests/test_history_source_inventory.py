@@ -51,6 +51,12 @@ class HistorySourceInventoryTests(unittest.TestCase):
             if split["checkpoint"] not in checkpoints:
                 checkpoints.append(split["checkpoint"])
         source_event = self.config["source_events"]["eqtiming-gotaleden-2026"]
+        public_expected = {
+            "individual-75-2026": (273, 2111, {"FINISHED": 205, "DNF": 13, "DNS": 55}),
+            "individual-35-2026": (163, 638, {"FINISHED": 127, "DNF": 2, "DNS": 34}),
+            "relay-75-2026": (121, 1077, {"FINISHED": 109, "DNF": 1, "DNS": 11}),
+            "relay-35-2026": (49, 223, {"FINISHED": 45, "DNF": 1, "DNS": 3}),
+        }
 
         self.assertEqual(set(expected), set(config_races))
         self.assertEqual(set(expected), set(self.web["races"]))
@@ -65,10 +71,13 @@ class HistorySourceInventoryTests(unittest.TestCase):
             )
             self.assertEqual(race_config["year"], 2026)
             self.assertEqual(race_config["course_version"], "course-v1")
-            self.assertEqual(web_result_counts[race_key], result_count)
-            self.assertEqual(web_split_counts[race_key], split_count)
+            public_results, public_splits, public_statuses = public_expected[race_key]
+            self.assertLessEqual(public_results, result_count)
+            self.assertLessEqual(public_splits, split_count)
+            self.assertEqual(web_result_counts[race_key], public_results)
+            self.assertEqual(web_split_counts[race_key], public_splits)
             self.assertEqual(
-                inventory_race["status_counts"],
+                public_statuses,
                 dict(collections.Counter(record["status"] for record in self.web["races"][race_key]["records"])),
             )
             self.assertEqual(inventory_race["normalized_checkpoint_keys"], web_checkpoint_keys[race_key])

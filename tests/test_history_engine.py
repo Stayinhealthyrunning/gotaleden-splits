@@ -131,7 +131,7 @@ assert(engine.personHistory('Same Team').appearanceCount===0,'team-name identity
 
     def test_real_export_has_four_single_edition_families_and_unchanged_metrics(self):
         self.run_node(r"""
-const expected={'individual-75-2026':[274,206,13,55],'individual-35-2026':[163,127,2,34],'relay-75-2026':[121,109,1,11],'relay-35-2026':[49,45,1,3]};
+const expected={'individual-75-2026':[273,205,13,55],'individual-35-2026':[163,127,2,34],'relay-75-2026':[121,109,1,11],'relay-35-2026':[49,45,1,3]};
 assert(engine.families().length===4,'family count');
 let total=0;
 for(const [key,values] of Object.entries(expected)){
@@ -140,7 +140,7 @@ for(const [key,values] of Object.entries(expected)){
   assert(engine.editions(summary.family).length===1,'fabricated edition '+key);
   assert(engine.compareEditions(key,key).comparability==='exact','self comparison '+key);
 }
-assert(total===607&&data.splits.length===4059,'canonical data parity');
+assert(total===606&&data.splits.length===4049,'privacy-safe canonical data parity');
 assert(engine.repeatParticipants().length===0,'false cross-year repeats');
 """, real=True)
 

@@ -47,7 +47,7 @@ const a=window.GDataAdapter.create({races:{},checkpoints:{}},{points:[],full_dis
     def test_real_course_profiles_use_stable_complete_cohorts(self):
         self.run_node(r"""
 const fs=require('fs'),vm=require('vm');global.window={};vm.runInThisContext(fs.readFileSync('docs/assets/data-adapter.js','utf8'));
-const a=window.GDataAdapter.create(JSON.parse(fs.readFileSync('docs/data/results-2026.json')),JSON.parse(fs.readFileSync('docs/data/route.json')),JSON.parse(fs.readFileSync('docs/data/route-elevation-2026.json'))),expected={'individual-75-2026':[205,9],'individual-35-2026':[127,4],'relay-75-2026':[94,9],'relay-35-2026':[43,4]};
+const a=window.GDataAdapter.create(JSON.parse(fs.readFileSync('docs/data/results-2026.json')),JSON.parse(fs.readFileSync('docs/data/route.json')),JSON.parse(fs.readFileSync('docs/data/route-elevation-2026.json'))),expected={'individual-75-2026':[204,9],'individual-35-2026':[127,4],'relay-75-2026':[94,9],'relay-35-2026':[43,4]};
 for(const [key,[count,length]] of Object.entries(expected)){const p=a.courseDifficultyProfile(key);if(p.cohortCount!==count||p.segments.length!==length)throw new Error(key);if(p.segments.some(s=>s.n!==count||!s.pace.bandAvailable||s.name.includes('Nolhaga')||s.distanceKm<=0||s.ascentM<0||s.descentM<0||s.pace.median<=0||s.paceIndex<=0))throw new Error('segments '+key);if(p.segments[0].placementMovementMedian!==null||p.segments[0].placementN!==0)throw new Error('start placement');for(const s of p.segments){if(Math.abs(s.paceIndex-p.baselinePace/s.pace.median*100)>.000001||Math.abs(s.slowdownPercent-(s.pace.median/p.baselinePace-1)*100)>.000001||Math.abs(s.paceIqrSeconds-(s.pace.q75-s.pace.q25))>.000001||Math.abs(s.paceIqrPercent-(s.pace.q75-s.pace.q25)/s.pace.median*100)>.000001)throw new Error('formula')}for(const [key,metric] of [['mostClimbing','ascentM'],['biggestSlowdown','slowdownPercent'],['biggestSpread','paceIqrPercent'],['mostPlacementMovement','placementMovementMedian']])if(p.standouts[key]&&p.standouts[key][metric]!==Math.max(...p.segments.filter(s=>Number.isFinite(s[metric])).map(s=>s[metric])))throw new Error('standout '+key)}
 """)
 
@@ -67,8 +67,8 @@ const a=window.GDataAdapter.create(data,{points:[[0,0,0,0],[1,1,0,1],[2,2,0,2]],
 
     def test_source_files_and_counts_remain_unchanged(self):
         data=json.loads((ROOT / "docs/data/results-2026.json").read_text(encoding="utf-8"))
-        self.assertEqual(sum(len(race["records"]) for race in data["races"].values()),607)
-        self.assertEqual(len(data["splits"]),4059)
+        self.assertEqual(sum(len(race["records"]) for race in data["races"].values()),606)
+        self.assertEqual(len(data["splits"]),4049)
 
 
 if __name__ == "__main__":

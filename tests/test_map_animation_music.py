@@ -111,9 +111,9 @@ if(media.audioSource!=='assets/gotaleden-ultra.mp3?v=20260901-music1')throw new 
 
     def test_data_and_course_invariants_are_unchanged(self):
         self.assertEqual(
-            sum(len(race["records"]) for race in self.results["races"].values()), 607
+            sum(len(race["records"]) for race in self.results["races"].values()), 606
         )
-        self.assertEqual(len(self.results["splits"]), 4059)
+        self.assertEqual(len(self.results["splits"]), 4049)
         expected_segments = {
             "individual-75-2026": 9,
             "individual-35-2026": 4,

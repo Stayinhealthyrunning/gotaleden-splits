@@ -38,7 +38,7 @@ for(const key of ['individual-75-2026','individual-35-2026','relay-75-2026','rel
 console.log(JSON.stringify(out));
 """)
         self.assertEqual(json.loads(output), {
-            "individual-75-2026": [9, 9, 9, 205, True, True],
+            "individual-75-2026": [9, 9, 9, 204, True, True],
             "individual-35-2026": [4, 4, 4, 127, True, True],
             "relay-75-2026": [9, 9, 9, 94, True, True],
             "relay-35-2026": [4, 4, 4, 43, True, True],

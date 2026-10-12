@@ -50,7 +50,7 @@ class AnalysisFoundationTests(unittest.TestCase):
             raw = json.loads(conn.execute("SELECT raw_json FROM results WHERE bib='717'").fetchone()[0])
             official_split_count = conn.execute("SELECT COUNT(1) FROM splits WHERE is_finish_only_export=0").fetchone()[0]
         self.assertIn("public_contestant_api", raw)
-        self.assertEqual(official_split_count, len(self.data["splits"]))
+        self.assertEqual(official_split_count - len(self.data["splits"]), 10)
         self.assertTrue(all(split["elapsed_seconds"] > 0 for split in self.data["splits"]))
 
     def test_static_site_references_existing_analysis_assets(self):

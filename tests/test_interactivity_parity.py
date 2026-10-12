@@ -30,9 +30,9 @@ class InteractivityParityTests(unittest.TestCase):
 
     def test_source_counts_are_unchanged(self):
         self.assertEqual(
-            sum(len(race["records"]) for race in self.results["races"].values()), 607
+            sum(len(race["records"]) for race in self.results["races"].values()), 606
         )
-        self.assertEqual(len(self.results["splits"]), 4059)
+        self.assertEqual(len(self.results["splits"]), 4049)
 
     def test_reference_profiles_are_real_complete_and_cached(self):
         for token in (

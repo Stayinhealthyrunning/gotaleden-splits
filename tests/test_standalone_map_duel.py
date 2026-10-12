@@ -127,7 +127,7 @@ if(!state.stopped||state.finished||state.distance!==profile.maxDistance||state.d
 """
         self.run_node(script)
         segments = {"individual-75-2026": 9, "individual-35-2026": 4, "relay-75-2026": 9, "relay-35-2026": 4}
-        self.assertEqual(sum(split["checkpoint"] == "nolhaga" for split in self.results["splits"]), 481)
+        self.assertEqual(sum(split["checkpoint"] == "nolhaga" for split in self.results["splits"]), 480)
         for race_key, count in segments.items():
             checkpoints = self.results["checkpoints"][race_key]
             boundaries = [item for item in checkpoints if item["analysis_boundary"] is not False]

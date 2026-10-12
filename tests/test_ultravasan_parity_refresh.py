@@ -91,7 +91,7 @@ for(const token of ['data-edge-padding="8"','cx="64" cy="28"','cx="892" cy="264"
     def test_placement_coverage_is_complete_so_no_fallback_is_needed(self):
         missing = lambda value: value is None or value == ""
         expected = {
-            "individual-75-2026": 2121,
+            "individual-75-2026": 2111,
             "individual-35-2026": 638,
             "relay-75-2026": 1077,
             "relay-35-2026": 223,
@@ -108,8 +108,8 @@ for(const token of ['data-edge-padding="8"','cx="64" cy="28"','cx="892" cy="264"
         self.assertNotIn("deriveOverallPlacements", self.interactive)
 
     def test_product_invariants_and_social_metadata_remain_intact(self):
-        self.assertEqual(sum(len(race["records"]) for race in self.results["races"].values()), 607)
-        self.assertEqual(len(self.results["splits"]), 4059)
+        self.assertEqual(sum(len(race["records"]) for race in self.results["races"].values()), 606)
+        self.assertEqual(len(self.results["splits"]), 4049)
         expected_segments = {
             "individual-75-2026": 9,
             "individual-35-2026": 4,

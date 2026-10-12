@@ -67,14 +67,14 @@ const assert=(condition,message)=>{if(!condition)throw new Error(message)};
     def test_real_public_export_remains_2026_only_and_unchanged(self):
         data = __import__("json").loads((ROOT / "docs/data/results.json").read_text(encoding="utf-8"))
         expected = {
-            "individual-75-2026": 274,
+            "individual-75-2026": 273,
             "individual-35-2026": 163,
             "relay-75-2026": 121,
             "relay-35-2026": 49,
         }
         self.assertEqual(set(data["races"]), set(expected))
-        self.assertEqual(sum(len(data["races"][key]["records"]) for key in expected), 607)
-        self.assertEqual(len(data["splits"]), 4059)
+        self.assertEqual(sum(len(data["races"][key]["records"]) for key in expected), 606)
+        self.assertEqual(len(data["splits"]), 4049)
         for key, count in expected.items():
             self.assertEqual(len(data["races"][key]["records"]), count)
             self.assertEqual(data["races"][key]["year"], 2026)
