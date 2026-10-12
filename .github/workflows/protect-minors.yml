@@ -1,0 +1,49 @@
+name: Protect minors in Gotaleden public results
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/public_minor_suppression.py'
+      - 'tools/redact_published_minors.py'
+      - 'tools/build_official_data.py'
+      - '.github/workflows/protect-minors.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+concurrency:
+  group: gotaleden-minors-protection
+  cancel-in-progress: false
+jobs:
+  protect:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Remove identifiable minor identities from public JSON
+        run: |
+          python tools/redact_published_minors.py
+          python tools/redact_published_minors.py --check
+      - name: Commit privacy-safe race data
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/data/results.json docs/data/results-2026.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Protect minors in public Gotaleden results'
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+      - uses: actions/deploy-pages@v4
