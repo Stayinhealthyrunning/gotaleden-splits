@@ -130,9 +130,9 @@ for(const [key,count] of Object.entries(expected)){
 
     def test_source_data_and_nolhaga_are_unchanged(self):
         self.assertEqual(
-            sum(len(race["records"]) for race in self.results["races"].values()), 607
+            sum(len(race["records"]) for race in self.results["races"].values()), 606
         )
-        self.assertEqual(len(self.results["splits"]), 4059)
+        self.assertEqual(len(self.results["splits"]), 4049)
         for race_key, expected in {
             "individual-75-2026": 9,
             "individual-35-2026": 4,

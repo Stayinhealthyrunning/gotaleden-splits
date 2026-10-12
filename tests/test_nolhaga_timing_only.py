@@ -59,13 +59,13 @@ class NolhagaTimingOnlyTests(unittest.TestCase):
 
     def test_nolhaga_passages_and_source_counts_remain_intact(self):
         records = [record for race in self.results["races"].values() for record in race["records"]]
-        self.assertEqual(len(records), 607)
-        self.assertEqual(len(self.results["splits"]), 4059)
+        self.assertEqual(len(records), 606)
+        self.assertEqual(len(self.results["splits"]), 4049)
         self.assertEqual(
             {race_key: sum(split["race_key"] == race_key and split["checkpoint"] == "nolhaga" for split in self.results["splits"])
              for race_key in self.results["races"]},
             {
-                "individual-75-2026": 203,
+                "individual-75-2026": 202,
                 "individual-35-2026": 127,
                 "relay-75-2026": 107,
                 "relay-35-2026": 44,
@@ -95,7 +95,7 @@ class NolhagaTimingOnlyTests(unittest.TestCase):
                         int(vastra["place_overall"]) - int(finish["place_overall"]),
                     )
                 checked += 1
-        self.assertEqual(checked, 486)
+        self.assertEqual(checked, 485)
 
     def test_known_runner_proves_nolhaga_is_not_used_in_final_segment_math(self):
         key = "individual-75-2026"

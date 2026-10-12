@@ -16,7 +16,7 @@ if str(TOOLS) not in sys.path:
     sys.path.insert(0, str(TOOLS))
 
 from eqtiming_official_import import build_relay_assignments, eqtiming_source_context  # noqa: E402
-from build_project_data import write_payload  # noqa: E402
+from build_project_data import WEB_RESULTS, WEB_RESULTS_COMPAT, write_payload  # noqa: E402
 
 
 EXPECTED_SOURCE_HASHES = {
@@ -55,13 +55,13 @@ class ProjectDataTests(unittest.TestCase):
 
     def test_four_races_and_base_counts(self):
         expected = {
-            "individual-75-2026": 274,
+            "individual-75-2026": 273,
             "individual-35-2026": 163,
             "relay-75-2026": 121,
             "relay-35-2026": 49,
         }
         self.assertEqual(set(self.results["races"]), set(expected))
-        self.assertEqual(sum(expected.values()), 607)
+        self.assertEqual(sum(expected.values()), 606)
         for key, count in expected.items():
             self.assertEqual(len(self.results["races"][key]["records"]), count)
 
@@ -181,22 +181,30 @@ class ProjectDataTests(unittest.TestCase):
 
     def test_rebuild_is_idempotent(self):
         command = [sys.executable, str(ROOT / "tools/build_project_data.py")]
+        public_outputs = (WEB_RESULTS, *WEB_RESULTS_COMPAT)
+        protected_public_bytes = {path: path.read_bytes() for path in public_outputs}
         def rebuild():
             completed = subprocess.run(command, cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
             self.assertEqual(completed.returncode, 0, completed.stderr)
 
-        rebuild()
-        with self.connect() as conn:
-            first = tuple(conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0] for table in
-                          ("results", "teams", "team_members", "relay_leg_assignments"))
-            first_person_keys = conn.execute("SELECT person_key FROM athletes ORDER BY person_key").fetchall()
-        rebuild()
-        with self.connect() as conn:
-            second = tuple(conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0] for table in
-                           ("results", "teams", "team_members", "relay_leg_assignments"))
-            second_person_keys = conn.execute("SELECT person_key FROM athletes ORDER BY person_key").fetchall()
-        self.assertEqual(first, second)
-        self.assertEqual(first_person_keys, second_person_keys)
+        try:
+            rebuild()
+            with self.connect() as conn:
+                first = tuple(conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0] for table in
+                              ("results", "teams", "team_members", "relay_leg_assignments"))
+                first_person_keys = conn.execute("SELECT person_key FROM athletes ORDER BY person_key").fetchall()
+            rebuild()
+            with self.connect() as conn:
+                second = tuple(conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0] for table in
+                               ("results", "teams", "team_members", "relay_leg_assignments"))
+                second_person_keys = conn.execute("SELECT person_key FROM athletes ORDER BY person_key").fetchall()
+            self.assertEqual(first, second)
+            self.assertEqual(first_person_keys, second_person_keys)
+        finally:
+            # Rebuild validates immutable source/database idempotence. It must
+            # not leave an unsuppressed browser bundle behind for later tests.
+            for path, content in protected_public_bytes.items():
+                path.write_bytes(content)
 
     def test_web_payload_write_is_atomic_and_retries_transient_replace_errors(self):
         output = ROOT / "reports" / f".atomic-write-{os.getpid()}-windows.json"

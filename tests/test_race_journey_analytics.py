@@ -47,7 +47,7 @@ class RaceJourneyAnalyticsTests(unittest.TestCase):
 const fs=require('fs'),vm=require('vm');global.window={};
 vm.runInThisContext(fs.readFileSync('docs/assets/data-adapter.js','utf8'));
 const adapter=window.GDataAdapter.create(JSON.parse(fs.readFileSync('docs/data/results-2026.json')),JSON.parse(fs.readFileSync('docs/data/route.json')),JSON.parse(fs.readFileSync('docs/data/route-elevation-2026.json')));
-const expected={'individual-75-2026':[205,9],'individual-35-2026':[127,4],'relay-75-2026':[94,9],'relay-35-2026':[43,4]};
+const expected={'individual-75-2026':[204,9],'individual-35-2026':[127,4],'relay-75-2026':[94,9],'relay-35-2026':[43,4]};
 for(const [key,[count,segments]] of Object.entries(expected)){
   const race=adapter.race(key),cohort=adapter.journeyCompleteProfiles(race);
   if(cohort.length!==count)throw new Error('count '+key+' '+cohort.length);
@@ -159,8 +159,8 @@ if((rank.match(/data-journey-distance=/g)||[]).length!==2)throw new Error('missi
             self.assertIn(token, self.css if token.startswith(".") or token.startswith("@") else self.journey)
 
     def test_source_counts_and_nolhaga_metadata_are_unchanged(self):
-        self.assertEqual(sum(len(race["records"]) for race in self.results["races"].values()), 607)
-        self.assertEqual(len(self.results["splits"]), 4059)
+        self.assertEqual(sum(len(race["records"]) for race in self.results["races"].values()), 606)
+        self.assertEqual(len(self.results["splits"]), 4049)
         for key, expected in (("individual-75-2026", 9), ("relay-75-2026", 9), ("individual-35-2026", 4), ("relay-35-2026", 4)):
             checkpoints = self.results["checkpoints"][key]
             self.assertEqual(sum(checkpoint.get("analysis_boundary") is not False for checkpoint in checkpoints) - 1, expected)

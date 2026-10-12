@@ -23,8 +23,8 @@ class GpxAndNormalizationTests(unittest.TestCase):
 
     def test_result_and_positive_passage_counts(self):
         records = [record for race in self.data["races"].values() for record in race["records"]]
-        self.assertEqual(len(records), 607)
-        self.assertEqual(len(self.data["splits"]), 4059)
+        self.assertEqual(len(records), 606)
+        self.assertEqual(len(self.data["splits"]), 4049)
         self.assertTrue(all(split["elapsed_seconds"] > 0 for split in self.data["splits"]))
         self.assertEqual(
             {key: value["imported_passages"] for key, value in self.coverage["races"].items()},

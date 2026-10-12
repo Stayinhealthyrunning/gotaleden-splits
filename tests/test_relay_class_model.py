@@ -33,8 +33,8 @@ if(override.ranked||override.competitionType!=='non_competitive')throw new Error
 
     def test_relay_classes_are_normalized_without_changing_counts(self):
         data = json.loads((ROOT / "docs/data/results-2026.json").read_text(encoding="utf-8"))
-        self.assertEqual(sum(len(race["records"]) for race in data["races"].values()), 607)
-        self.assertEqual(len(data["splits"]), 4059)
+        self.assertEqual(sum(len(race["records"]) for race in data["races"].values()), 606)
+        self.assertEqual(len(data["splits"]), 4049)
 
 
 if __name__ == "__main__":

@@ -25,7 +25,7 @@ class GroupDistributionBandTests(unittest.TestCase):
     def test_individual_and_relay_counts_apply_thresholds(self):
         self.run_node(r"""
 const fs=require('fs'),vm=require('vm');global.window={};vm.runInThisContext(fs.readFileSync('docs/assets/data-adapter.js','utf8'));const a=window.GDataAdapter.create(JSON.parse(fs.readFileSync('docs/data/results-2026.json')),JSON.parse(fs.readFileSync('docs/data/route.json')),JSON.parse(fs.readFileSync('docs/data/route-elevation-2026.json')));
-const i75=a.race('individual-75-2026'),sex=Object.fromEntries(['F','M'].map(id=>[id,a.segmentGroupDistribution(i75,r=>r.sex===id)]));if(sex.F.count!==42||sex.M.count!==163||[...sex.F.segments,...sex.M.segments].some(s=>!s.pace.bandAvailable))throw new Error('sex');
+const i75=a.race('individual-75-2026'),sex=Object.fromEntries(['F','M'].map(id=>[id,a.segmentGroupDistribution(i75,r=>r.sex===id)]));if(sex.F.count!==42||sex.M.count!==162||[...sex.F.segments,...sex.M.segments].some(s=>!s.pace.bandAvailable))throw new Error('sex');
 const expected={'relay-75-2026':{men:16,women:3,'mixed-ranked':13,'mixed-free':62},'relay-35-2026':{men:2,women:5,'mixed-ranked':15,'mixed-free':21}};for(const [key,counts] of Object.entries(expected)){const race=a.race(key);for(const group of a.relayClassGroups(race.records,race)){const d=a.segmentGroupDistribution(race,r=>a.relayClassMeta(r).id===group.id),n=counts[group.id];if(d.count!==n||d.segments.some(s=>s.pace.bandAvailable!==(n>=10)||s.pace.available!==(n>=5)))throw new Error(key+' '+group.id)}}
 """)
 

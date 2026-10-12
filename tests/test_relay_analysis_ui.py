@@ -131,10 +131,10 @@ if(!men.length||whole.length<=men.length)throw new Error(`whole=${whole.length},
         self.assertEqual(self.data["races"]["individual-75-2026"]["ui_labels"]["age_analysis"], "Klass & ålder")
         for text in ("Hela fältet", "Min klass", "Mitt kön"):
             self.assertIn(text, self.replay)
-        self.assertEqual(sum(len(r["records"]) for r in self.data["races"].values()), 607)
-        self.assertEqual(len(self.data["splits"]), 4059)
+        self.assertEqual(sum(len(r["records"]) for r in self.data["races"].values()), 606)
+        self.assertEqual(len(self.data["splits"]), 4049)
         self.assertEqual({k: len(v["records"]) for k, v in self.data["races"].items()}, {
-            "individual-75-2026": 274, "individual-35-2026": 163,
+            "individual-75-2026": 273, "individual-35-2026": 163,
             "relay-75-2026": 121, "relay-35-2026": 49,
         })
         for key, expected in (("individual-75-2026", 9), ("relay-75-2026", 9), ("individual-35-2026", 4), ("relay-35-2026", 4)):
