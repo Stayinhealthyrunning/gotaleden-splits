@@ -43,6 +43,7 @@ from eqtiming_official_import import (
     write_json,
 )
 from privacy import load_rules, sanitize_identity, opaque_result_id
+from public_minor_suppression import suppress_payload
 from course_versions import (
     CourseConfigError,
     race_course_geometry,
@@ -977,7 +978,9 @@ def import_all_official() -> None:
         "races": web_races, "splits": web_splits, "teams": web_teams,
         "team_members": web_members,
     }
+    under18_masked=suppress_payload(web_payload)
     write_payload(WEB_RESULTS, web_payload, WEB_RESULTS_COMPAT)
+    print(f"PUBLIC MINOR PRIVACY: {under18_masked} verified under-18 rows protected")
     report = {
         "event": config["event"],
         "course_versions": {
