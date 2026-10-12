@@ -1,4 +1,7 @@
 name: Protect minors in Gotaleden public results
+env:
+  LOPPANALYS_PRIVACY_REGISTRY_B64: ${{ secrets.LOPPANALYS_PRIVACY_REGISTRY_B64 }}
+  LOPPANALYS_REQUIRE_PRIVATE_REGISTRY: "1"
 on:
   push:
     branches: [main]
@@ -29,6 +32,7 @@ jobs:
           python-version: '3.12'
       - name: Remove identifiable minor identities from public JSON
         run: |
+          python tools/remove_protected_public_results.py
           python tools/redact_published_minors.py
           python tools/redact_published_minors.py --check
       - name: Commit privacy-safe race data

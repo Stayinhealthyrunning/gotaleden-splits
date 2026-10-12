@@ -1,0 +1,40 @@
+name: GDPR publication gate
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  privacy-registry:
+    runs-on: ubuntu-latest
+    env:
+      LOPPANALYS_PRIVACY_REGISTRY_B64: ${{ secrets.LOPPANALYS_PRIVACY_REGISTRY_B64 }}
+      LOPPANALYS_REQUIRE_PRIVATE_REGISTRY: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Require and validate access-controlled registry
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+          sys.path.insert(0, "tools")
+          from privacy import load_rules
+          rules = load_rules(Path("config/privacy-suppressions.json"), require_private=True)
+          if not rules.get("_registry_loaded"):
+              raise SystemExit("Private registry was not loaded")
+          public = Path("config/privacy-suppressions.json").read_text(encoding="utf-8")
+          if "suppressed_name_sha256" in public:
+              raise SystemExit("Public policy contains subject fingerprints")
+          print("Private registry loaded; public policy contains no subject list")
+          PY
+      - name: Run registry contract tests
+        run: python -m unittest tests.test_private_privacy_registry -v
