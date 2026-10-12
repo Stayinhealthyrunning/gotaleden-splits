@@ -11,9 +11,8 @@ def audit(doc,path):
     for rk,race in (doc.get("races") or {}).items():
         for r in race.get("records",[]):
             if minor(r,race.get("year")):unsafe.append(rk)
-            if r.get("name")=="Anonym löpare" and (r.get("club") or r.get("first_name") or r.get("last_name")):
-                unsafe.append(rk)
-    if unsafe:raise ValueError(f"{path.name}: identifiable under-18 record or leaked anonymous name fields")
+            if r.get("name")=="Anonym löpare":unsafe.append(rk)
+    if unsafe:raise ValueError(f"{path.name}: under-18 or pseudonymous individual row remains")
 
 def run(check=False):
     total=0;count=0
