@@ -50,6 +50,10 @@ class PrivatePrivacyRegistryTests(unittest.TestCase):
         self.assertTrue(record_is_suppressed({"name": "Protected Person", "source_result_id": "123"}, rules, scope="race-a"))
         with self.assertRaisesRegex(RuntimeError, "manual review"):
             record_is_suppressed({"name": "Protected Person", "source_result_id": "999"}, rules, scope="race-a")
+        # Empty identifier approval must not authorize every same-name runner.
+        rules["_entries"][0]["approved_matches"] = [{"scope": "race-a", "identifiers": {}}]
+        with self.assertRaisesRegex(RuntimeError, "manual review"):
+            record_is_suppressed({"name": "Protected Person", "source_result_id": "123"}, rules, scope="race-a")
         self.assertFalse(record_is_suppressed({"name": "Different Person"}, rules))
 
 
