@@ -123,7 +123,7 @@ def scan_csv(path: Path, protected_fingerprints: set[str]) -> tuple[int, int, in
         sample = inp.read(8192)
         inp.seek(0)
         try:
-            dialect = csv.Sniffer().sniff(sample, delimiters=";,\\t")
+            dialect = csv.Sniffer().sniff(sample, delimiters=";,")
         except csv.Error:
             dialect = csv.excel
         for row in csv.DictReader(inp, dialect=dialect):
