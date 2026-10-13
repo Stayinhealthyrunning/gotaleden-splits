@@ -42,7 +42,8 @@ from eqtiming_official_import import (
     source_dir,
     write_json,
 )
-from privacy import load_rules, sanitize_identity, opaque_result_id
+from privacy import load_rules
+from public_privacy_payload import public_relay_diagnostics, withhold_protected_rows
 from public_minor_suppression import suppress_payload
 from course_versions import (
     CourseConfigError,
@@ -839,17 +840,20 @@ def _import_eqtiming_event(
         ],
     }
     files_analysis = analyze_source_files(source_event, bindings)
-    _write_reports(files_analysis, relay_report, report, source_event_key, source_event, compatibility)
+    # GitHub reports and Actions logs are public. The per-person conflict
+    # evidence must not be copied into those outputs.
+    safe_relay_report = public_relay_diagnostics(relay_report)
+    _write_reports(files_analysis, safe_relay_report, report, source_event_key, source_event, compatibility)
     return {
         "web_races": web_races, "report_races": report_races, "web_splits": web_splits,
         "web_teams": web_teams, "web_members": web_members, "split_coverage": split_coverage,
-        "relay_report": relay_report, "report": report,
+        "relay_report": safe_relay_report, "report": report,
     }
 
 
 def import_all_official() -> None:
     config = json.loads(CONFIG.read_text(encoding="utf-8"))
-    privacy_rules = load_rules(ROOT / "config" / "privacy-suppressions.json")
+    privacy_rules = load_rules(ROOT / "config" / "privacy-suppressions.json", require_private=True)
     groups = group_source_bindings(config)
 
     courses = resolve_all_courses(config, ROOT)
@@ -914,29 +918,9 @@ def import_all_official() -> None:
     conn.commit()
     conn.close()
     analyzable = set(web_races)
-    # Public identity suppression is applied after source import so the local
-    # analytical database can retain source provenance while the distributed
-    # browser payload does not expose suppressed identity fields.
-    suppressed_bibs: dict[tuple[str, str], str] = {}
-    for race_key, race in web_races.items():
-        for record in race.get("records", []):
-            original_bib = str(record.get("bib") or "")
-            if sanitize_identity(record, privacy_rules):
-                public_id = opaque_result_id(race_key, original_bib or record.get("source_result_id"))
-                suppressed_bibs[(race_key, original_bib)] = public_id
-                record["source_result_id"] = public_id
-                record["bib"] = public_id
-                record["person_key"] = None
-                record["identity_status"] = "source_local"
-                record["identity_scope"] = "race_result"
-    for split in web_splits:
-        key = (str(split.get("race_key") or ""), str(split.get("bib") or ""))
-        if key in suppressed_bibs:
-            split["bib"] = suppressed_bibs[key]
-    for member in web_members:
-        original_bib = str(member.get("bib") or "")
-        if sanitize_identity(member, privacy_rules) and original_bib:
-            member["bib"] = opaque_result_id(member.get("race_key"), original_bib)
+    # Public blocking is applied after source import so aggregate reports keep
+    # their source-backed totals. Individual rows and their relationships are
+    # removed completely; deterministic pseudonyms would remain reidentifiable.
 
     web_payload = {
         "meta": {
@@ -978,6 +962,7 @@ def import_all_official() -> None:
         "races": web_races, "splits": web_splits, "teams": web_teams,
         "team_members": web_members,
     }
+    withhold_summary = withhold_protected_rows(web_payload, privacy_rules)
     under18_masked=suppress_payload(web_payload)
     write_payload(WEB_RESULTS, web_payload, WEB_RESULTS_COMPAT)
     print(f"PUBLIC MINOR PRIVACY: {under18_masked} verified under-18 rows protected")
