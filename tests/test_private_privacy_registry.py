@@ -54,6 +54,11 @@ class PrivatePrivacyRegistryTests(unittest.TestCase):
         rules["_entries"][0]["approved_matches"] = [{"scope": "race-a", "identifiers": {}}]
         with self.assertRaisesRegex(RuntimeError, "manual review"):
             record_is_suppressed({"name": "Protected Person", "source_result_id": "123"}, rules, scope="race-a")
+        # Missing and blank fields must never satisfy an identity approval.
+        rules["_entries"][0]["approved_matches"] = [{"scope": "race-a", "identifiers": {"source_result_id": ""}}]
+        for row in ({"name": "Protected Person"}, {"name": "Protected Person", "source_result_id": ""}):
+            with self.assertRaisesRegex(RuntimeError, "manual review"):
+                record_is_suppressed(row, rules, scope="race-a")
         self.assertFalse(record_is_suppressed({"name": "Different Person"}, rules))
 
 
