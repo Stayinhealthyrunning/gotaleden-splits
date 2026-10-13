@@ -43,6 +43,7 @@ def _candidate_names(record: dict) -> set[str]:
                 visit(item, depth + 1)
         elif isinstance(obj, dict):
             parts = {str(k).casefold(): v for k, v in obj.items()}
+            parts.update({key.replace(" ", "").replace("_", ""): value for key, value in list(parts.items())})
             for key, value in parts.items():
                 if key in NAME_FIELDS and isinstance(value, str) and value.strip():
                     names.add(value.strip())
@@ -123,7 +124,7 @@ def scan_csv(path: Path, protected_fingerprints: set[str]) -> tuple[int, int, in
         sample = inp.read(8192)
         inp.seek(0)
         try:
-            dialect = csv.Sniffer().sniff(sample, delimiters=";,")
+            dialect = csv.Sniffer().sniff(sample, delimiters=";," + chr(9))
         except csv.Error:
             dialect = csv.excel
         for row in csv.DictReader(inp, dialect=dialect):
