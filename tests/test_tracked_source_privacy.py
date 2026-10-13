@@ -9,7 +9,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
-from audit_tracked_source_privacy import scan_sqlite  # noqa: E402
+from audit_tracked_source_privacy import scan_csv, scan_sqlite  # noqa: E402
 from privacy import name_fingerprint  # noqa: E402
 
 
@@ -33,6 +33,12 @@ class TrackedSourcePrivacyTests(unittest.TestCase):
             with db.open("rb") as source, gzip.open(compressed, "wb") as out:
                 out.write(source.read())
             self.assertEqual(scan_sqlite(compressed, {name_fingerprint("Runner Example")}), (2, 1, 1))
+
+    def test_semicolon_source_csv_is_checked(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "original.csv"
+            path.write_text('FirstName;LastName;Age\\nExample;Athlete;17\\nOther;Person;20\\n', encoding="utf-8")
+            self.assertEqual(scan_csv(path, {name_fingerprint("Example Athlete")}), (2, 1, 1))
 
     def test_nested_relay_identity_and_clean_source(self):
         with tempfile.TemporaryDirectory() as temp:
