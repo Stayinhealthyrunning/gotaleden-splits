@@ -1,0 +1,24 @@
+name: Audit privacy of publicly tracked source data
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  private-source-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      LOPPANALYS_PRIVACY_REGISTRY_B64: ${{ secrets.LOPPANALYS_PRIVACY_REGISTRY_B64 }}
+      LOPPANALYS_REQUIRE_PRIVATE_REGISTRY: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Test source identity detector with synthetic names
+        run: python -m unittest discover -s tests -p test_tracked_source_privacy.py -v
+      - name: Audit source archive without logging any identity
+        run: python tools/audit_tracked_source_privacy.py "data/gotaleden.sqlite"
