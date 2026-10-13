@@ -1,0 +1,44 @@
+name: Restore private Gotaleden sources
+description: Obtain a short-lived read token and restore verified source files
+inputs:
+  app-id:
+    description: GitHub App ID with read access to loppanalys-private-data
+    required: true
+  private-key:
+    description: GitHub App private key
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Require private source credentials
+      shell: bash
+      env:
+        SOURCE_APP_ID: ${{ inputs.app-id }}
+        SOURCE_APP_PRIVATE_KEY: ${{ inputs.private-key }}
+      run: |
+        set -euo pipefail
+        test -n "$SOURCE_APP_ID" || { echo "Private source App ID is missing; build stopped"; exit 1; }
+        test -n "$SOURCE_APP_PRIVATE_KEY" || { echo "Private source App key is missing; build stopped"; exit 1; }
+    - name: Create short-lived private source token
+      id: source-token
+      uses: actions/create-github-app-token@v2
+      with:
+        app-id: ${{ inputs.app-id }}
+        private-key: ${{ inputs.private-key }}
+        owner: Stayinhealthyrunning
+        repositories: loppanalys-private-data
+    - name: Checkout only the private Gotaleden source tree
+      uses: actions/checkout@v4
+      with:
+        repository: Stayinhealthyrunning/loppanalys-private-data
+        token: ${{ steps.source-token.outputs.token }}
+        path: .private-source
+        persist-credentials: false
+        sparse-checkout: |
+          gotaleden
+    - name: Restore and verify private sources
+      shell: bash
+      run: python3 tools/restore_private_sources.py --private-root .private-source
+    - name: Remove private checkout from the public job workspace
+      shell: bash
+      run: rm -rf -- .private-source
