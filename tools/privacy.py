@@ -152,7 +152,7 @@ def suppression_action(record: dict[str, Any], rules: dict[str, Any], *, scope: 
                 approved = any(
                     str(item.get("scope", "*")) in {"*", scope}
                     and bool(item.get("identifiers"))
-                    and all(str(record.get(key, "")) == str(value) for key, value in item["identifiers"].items())
+                    and all(key in record and record[key] not in (None, "") and value not in (None, "") and str(record[key]) == str(value) for key, value in item["identifiers"].items())
                     for item in entry.get("approved_matches", [])
                 )
                 if not approved:
