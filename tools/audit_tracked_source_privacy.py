@@ -152,7 +152,8 @@ def main() -> int:
     for source in args.sources:
         if not source.is_file():
             raise SystemExit("Source audit blocked: required tracked source file not found")
-        count, hits, minors = (scan_csv(source, fingerprints) if source.suffix.casefold() == ".csv"\n                              else scan_sqlite(source, fingerprints))
+        count, hits, minors = (scan_csv(source, fingerprints) if source.suffix.casefold() == ".csv"
+                              else scan_sqlite(source, fingerprints))
         if not count:
             raise SystemExit("Source audit blocked: database had no inspectable named records")
         # The public build log must not include person-level evidence or exact records.
