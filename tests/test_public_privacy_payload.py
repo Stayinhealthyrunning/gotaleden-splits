@@ -1,7 +1,6 @@
 """Synthetic regression tests for Gotaleden public individual and relay data."""
 from __future__ import annotations
 
-import copy
 import sys
 import unittest
 from pathlib import Path
@@ -9,7 +8,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 from privacy import DISPLAY_NAME, name_fingerprint  # noqa: E402
-from public_privacy_payload import withhold_protected_rows  # noqa: E402
+from public_privacy_payload import public_relay_diagnostics, withhold_protected_rows  # noqa: E402
 
 
 def registry(name="Protected Person", scopes=None):
@@ -72,6 +71,16 @@ class PublicPrivacyPayloadTests(unittest.TestCase):
         withhold_protected_rows(payload, registry(scopes=["relay"]))
         self.assertEqual(len(payload["races"]["solo"]["records"]), 2)
         self.assertEqual(len(payload["teams"][0]["team_members"]), 1)
+
+    def test_public_relay_reports_remove_individual_conflict_evidence(self):
+        raw = {"races": {"relay": {"conflicts": 1}},
+               "conflicts": [{"xml_value": "Protected Person",
+                              "result_list_value": "Safe Runner", "team_bib": "92"}]}
+        safe = public_relay_diagnostics(raw)
+        self.assertEqual(safe["individual_conflict_details_withheld"], 1)
+        self.assertEqual(safe["conflicts"], [])
+        self.assertNotIn("Protected Person", str(safe))
+        self.assertEqual(safe["races"]["relay"]["conflicts"], 1)
 
     def test_pseudonymous_record_and_nested_member_removed(self):
         payload = fixture()
