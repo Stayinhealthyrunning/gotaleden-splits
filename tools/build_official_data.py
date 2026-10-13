@@ -42,7 +42,8 @@ from eqtiming_official_import import (
     source_dir,
     write_json,
 )
-from privacy import load_rules, record_is_suppressed
+from privacy import load_rules
+from public_privacy_payload import withhold_protected_rows
 from public_minor_suppression import suppress_payload
 from course_versions import (
     CourseConfigError,
@@ -917,27 +918,6 @@ def import_all_official() -> None:
     # Public blocking is applied after source import so aggregate reports keep
     # their source-backed totals. Individual rows and their relationships are
     # removed completely; deterministic pseudonyms would remain reidentifiable.
-    suppressed_bibs: set[tuple[str, str]] = set()
-    for race_key, race in web_races.items():
-        kept_records = []
-        for record in race.get("records", []):
-            original_bib = str(record.get("bib") or "")
-            if record_is_suppressed(record, privacy_rules, scope=race_key):
-                suppressed_bibs.add((race_key, original_bib))
-            else:
-                kept_records.append(record)
-        race["records"] = kept_records
-    web_splits = [
-        split for split in web_splits
-        if (str(split.get("race_key") or ""), str(split.get("bib") or "")) not in suppressed_bibs
-    ]
-    web_members = [
-        member for member in web_members
-        if (str(member.get("race_key") or ""), str(member.get("bib") or "")) not in suppressed_bibs
-        and not record_is_suppressed(
-            member, privacy_rules, scope=str(member.get("race_key") or "*")
-        )
-    ]
 
     web_payload = {
         "meta": {
@@ -979,6 +959,7 @@ def import_all_official() -> None:
         "races": web_races, "splits": web_splits, "teams": web_teams,
         "team_members": web_members,
     }
+    withhold_summary = withhold_protected_rows(web_payload, privacy_rules)
     under18_masked=suppress_payload(web_payload)
     write_payload(WEB_RESULTS, web_payload, WEB_RESULTS_COMPAT)
     print(f"PUBLIC MINOR PRIVACY: {under18_masked} verified under-18 rows protected")
