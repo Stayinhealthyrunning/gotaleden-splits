@@ -184,7 +184,10 @@ class ProjectDataTests(unittest.TestCase):
         public_outputs = (WEB_RESULTS, *WEB_RESULTS_COMPAT)
         protected_public_bytes = {path: path.read_bytes() for path in public_outputs}
         def rebuild():
-            completed = subprocess.run(command, cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
+            completed = subprocess.run(command, cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True,
+                                       env={**os.environ, 'LOPPANALYS_PRIVACY_REGISTRY_B64': __import__('base64').b64encode(
+                                           b'{\"schema_version\":2,\"entries\":[]}').decode('ascii'),
+                                           'LOPPANALYS_PRIVACY_REGISTRY_PATH': ''})
             self.assertEqual(completed.returncode, 0, completed.stderr)
 
         try:
