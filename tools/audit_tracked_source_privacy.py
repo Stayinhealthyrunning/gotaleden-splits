@@ -88,33 +88,42 @@ def scan_sqlite(path: Path, protected_fingerprints: set[str]) -> tuple[int, int,
             source = tmpdir / "source.sqlite"
             with gzip.open(path, "rb") as inp, source.open("wb") as out:
                 shutil.copyfileobj(inp, out)
-        uri = source.resolve().as_uri() + "?mode=ro"
-        conn = stack.enter_context(sqlite3.connect(uri, uri=True))
-        conn.execute("PRAGMA query_only=ON")
-        tables = [row[0] for row in conn.execute(
+        # The audited file is an immutable snapshot. immutable=1 prevents
+        # SQLite from creating journal state or retaining a Windows file lock.
+        uri = source.resolve().as_uri() + "?mode=ro&immutable=1"
+        conn = sqlite3.connect(uri, uri=True)
+        stack.callback(conn.close)
+        with contextlib.closing(conn.execute("PRAGMA query_only=ON")):
+            pass
+        with contextlib.closing(conn.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
-        )]
+        )) as cursor:
+            tables = [row[0] for row in cursor]
         for table in tables:
-            columns = [row[1] for row in conn.execute(f"PRAGMA table_info({_quoted(table)})")]
+            with contextlib.closing(
+                conn.execute(f"PRAGMA table_info({_quoted(table)})")
+            ) as cursor:
+                columns = [row[1] for row in cursor]
             selected = [c for c in columns if c.casefold() in NAME_FIELDS | JSON_FIELDS]
             if not selected:
                 continue
             extra = [c for c in columns if c.casefold() == "age"]
             selected += [c for c in extra if c not in selected]
             query = "SELECT " + ",".join(_quoted(c) for c in selected) + " FROM " + _quoted(table)
-            for record in conn.execute(query):
-                row = dict(zip(selected, record))
-                names = _candidate_names(row)
-                if not names:
-                    continue
-                rows_seen += 1
-                if protected_fingerprints and any(
-                    name_fingerprint(name) in protected_fingerprints for name in names
-                ):
-                    protected_matches += 1
-                age = row.get("age")
-                if isinstance(age, int) and not isinstance(age, bool) and 0 <= age < 18:
-                    minors += 1
+            with contextlib.closing(conn.execute(query)) as cursor:
+                for record in cursor:
+                    row = dict(zip(selected, record))
+                    names = _candidate_names(row)
+                    if not names:
+                        continue
+                    rows_seen += 1
+                    if protected_fingerprints and any(
+                        name_fingerprint(name) in protected_fingerprints for name in names
+                    ):
+                        protected_matches += 1
+                    age = row.get("age")
+                    if isinstance(age, int) and not isinstance(age, bool) and 0 <= age < 18:
+                        minors += 1
     return rows_seen, protected_matches, minors
 
 
