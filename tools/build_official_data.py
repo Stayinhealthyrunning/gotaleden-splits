@@ -853,7 +853,7 @@ def _import_eqtiming_event(
 
 def import_all_official() -> None:
     config = json.loads(CONFIG.read_text(encoding="utf-8"))
-    privacy_rules = load_rules(ROOT / "config" / "privacy-suppressions.json")
+    privacy_rules = load_rules(ROOT / "config" / "privacy-suppressions.json", require_private=True)
     groups = group_source_bindings(config)
 
     courses = resolve_all_courses(config, ROOT)
