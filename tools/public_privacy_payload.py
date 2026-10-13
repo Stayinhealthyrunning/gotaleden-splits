@@ -88,3 +88,16 @@ def withhold_protected_rows(payload: dict, rules: dict) -> dict[str, int]:
         "removed_team_members": removed_members,
         "removed_nested_team_members": removed_nested,
     }
+
+
+def public_relay_diagnostics(report: dict) -> dict:
+    """Keep useful aggregate relay QA counts without publishing person-level conflicts.
+
+    The original conflict evidence belongs in access-controlled source
+    diagnostics, never in GitHub reports or Actions logs for a public repo.
+    """
+    return {
+        **report,
+        "conflicts": [],
+        "individual_conflict_details_withheld": len(report.get("conflicts", [])),
+    }
