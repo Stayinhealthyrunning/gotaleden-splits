@@ -43,7 +43,7 @@ from eqtiming_official_import import (
     write_json,
 )
 from privacy import load_rules
-from public_privacy_payload import withhold_protected_rows
+from public_privacy_payload import public_relay_diagnostics, withhold_protected_rows
 from public_minor_suppression import suppress_payload
 from course_versions import (
     CourseConfigError,
@@ -840,11 +840,14 @@ def _import_eqtiming_event(
         ],
     }
     files_analysis = analyze_source_files(source_event, bindings)
-    _write_reports(files_analysis, relay_report, report, source_event_key, source_event, compatibility)
+    # GitHub reports and Actions logs are public. The per-person conflict
+    # evidence must not be copied into those outputs.
+    safe_relay_report = public_relay_diagnostics(relay_report)
+    _write_reports(files_analysis, safe_relay_report, report, source_event_key, source_event, compatibility)
     return {
         "web_races": web_races, "report_races": report_races, "web_splits": web_splits,
         "web_teams": web_teams, "web_members": web_members, "split_coverage": split_coverage,
-        "relay_report": relay_report, "report": report,
+        "relay_report": safe_relay_report, "report": report,
     }
 
 
