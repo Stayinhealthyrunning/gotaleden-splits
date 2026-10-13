@@ -37,7 +37,7 @@ class TrackedSourcePrivacyTests(unittest.TestCase):
     def test_semicolon_source_csv_is_checked(self):
         with tempfile.TemporaryDirectory() as temp:
             path = Path(temp) / "original.csv"
-            path.write_text('FirstName;LastName;Age\\nExample;Athlete;17\\nOther;Person;20\\n', encoding="utf-8")
+            path.write_text('FirstName;LastName;Age\nExample;Athlete;17\nOther;Person;20\n', encoding="utf-8")
             self.assertEqual(scan_csv(path, {name_fingerprint("Example Athlete")}), (2, 1, 1))
 
     def test_nested_relay_identity_and_clean_source(self):
