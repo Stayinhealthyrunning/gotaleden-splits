@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+import csv
 import gzip
 import json
 import shutil
@@ -24,6 +25,7 @@ NAME_FIELDS = {
     "member_name_as_published", "runner_name_as_published", "published_name",
     "first_name", "last_name", "firstname", "lastname", "surname",
     "team_name", "listed_contact_name", "navnformatert", "fornavn", "etternavn",
+    "namn", "deltagare", "runner", "participant", "member",
 }
 GIVEN_FIELDS = {"first_name", "firstname", "fornavn"}
 FAMILY_FIELDS = {"last_name", "lastname", "surname", "etternavn"}
@@ -115,6 +117,28 @@ def scan_sqlite(path: Path, protected_fingerprints: set[str]) -> tuple[int, int,
     return rows_seen, protected_matches, minors
 
 
+def scan_csv(path: Path, protected_fingerprints: set[str]) -> tuple[int, int, int]:
+    rows_seen = protected_matches = minors = 0
+    with path.open("r", encoding="utf-8-sig", errors="replace", newline="") as inp:
+        sample = inp.read(8192)
+        inp.seek(0)
+        try:
+            dialect = csv.Sniffer().sniff(sample, delimiters=";,\\t")
+        except csv.Error:
+            dialect = csv.excel
+        for row in csv.DictReader(inp, dialect=dialect):
+            names = _candidate_names(row)
+            if not names:
+                continue
+            rows_seen += 1
+            if any(name_fingerprint(name) in protected_fingerprints for name in names):
+                protected_matches += 1
+            age = row.get("age") or row.get("Age")
+            if age is not None and str(age).strip().isdigit() and 0 <= int(age) < 18:
+                minors += 1
+    return rows_seen, protected_matches, minors
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("sources", nargs="+", type=Path)
@@ -128,7 +152,7 @@ def main() -> int:
     for source in args.sources:
         if not source.is_file():
             raise SystemExit("Source audit blocked: required tracked source file not found")
-        count, hits, minors = scan_sqlite(source, fingerprints)
+        count, hits, minors = (scan_csv(source, fingerprints) if source.suffix.casefold() == ".csv"\n                              else scan_sqlite(source, fingerprints))
         if not count:
             raise SystemExit("Source audit blocked: database had no inspectable named records")
         # The public build log must not include person-level evidence or exact records.
