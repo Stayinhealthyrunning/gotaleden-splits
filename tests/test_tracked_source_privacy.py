@@ -5,6 +5,7 @@ import sqlite3
 import sys
 import tempfile
 import unittest
+from contextlib import closing
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -17,7 +18,7 @@ class TrackedSourcePrivacyTests(unittest.TestCase):
     def test_protected_name_reverse_format_and_age(self):
         with tempfile.TemporaryDirectory() as temp:
             db = Path(temp) / "source.sqlite"
-            with sqlite3.connect(db) as conn:
+            with closing(sqlite3.connect(db)) as conn, conn:
                 conn.execute("CREATE TABLE results(name TEXT, age INTEGER, raw_json TEXT)")
                 conn.execute(
                     "INSERT INTO results VALUES (?, ?, ?)",
@@ -43,7 +44,7 @@ class TrackedSourcePrivacyTests(unittest.TestCase):
     def test_nested_relay_identity_and_clean_source(self):
         with tempfile.TemporaryDirectory() as temp:
             db = Path(temp) / "teams.sqlite"
-            with sqlite3.connect(db) as conn:
+            with closing(sqlite3.connect(db)) as conn, conn:
                 conn.execute("CREATE TABLE relay(raw_json TEXT)")
                 conn.execute(
                     "INSERT INTO relay VALUES (?)",
