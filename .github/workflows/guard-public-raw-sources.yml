@@ -1,0 +1,59 @@
+name: Privacy guard - no public raw source changes
+
+# Prevent routine pull requests and direct pushes from changing raw participant
+# source paths in the public repository. This does not erase Git history.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  guard-public-raw-sources:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Reject additions, edits and deletion diffs of private-source paths
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os
+          import subprocess
+
+          protected = ["data/gotaleden.sqlite","data/source/eqtiming/","data/source/gpx/","raw/","data/raw/"]
+          base = os.environ.get("BASE_SHA", "").strip()
+          if not base or base == "0" * 40:
+              base = subprocess.check_output(
+                  ["git", "rev-parse", "HEAD^"], text=True
+              ).strip()
+          subprocess.run(
+              ["git", "cat-file", "-e", f"{base}^{{commit}}"],
+              check=True,
+              stdout=subprocess.DEVNULL,
+          )
+          names = subprocess.check_output(
+              ["git", "diff", "--name-only", "-z", base, "HEAD"]
+          ).decode("utf-8", errors="surrogateescape").split("\0")
+          blocked = sum(
+              1 for path in names
+              if path and any(
+                  path == prefix or path.startswith(prefix)
+                  for prefix in protected
+              )
+          )
+          if blocked:
+              raise SystemExit(
+                  f"PUBLIC RAW-SOURCE GUARD: {blocked} protected path(s) "
+                  "changed. Do not expose source additions or deletion diffs "
+                  "in a public PR. Use the reviewed private-source migration "
+                  "and history-cleanup procedure."
+              )
+          print("Public raw-source change guard: PASS")
+          PY
