@@ -1,0 +1,63 @@
+name: Verify sanitized public branch and tag histories
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-sanitized-history.yml'
+      - 'privacy/sensitive-history-paths.txt'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify clean reachable histories in read-only complete mirror
+        env:
+          REPOSITORY: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --mirror --quiet "https://github.com/$REPOSITORY.git" "$RUNNER_TEMP/history-audit.git"
+          python3 - <<'PY'
+          import os
+          import subprocess
+          from pathlib import Path
+          repo = Path(os.environ["RUNNER_TEMP"]) / "history-audit.git"
+          paths = [v.strip() for v in Path("privacy/sensitive-history-paths.txt").read_text(encoding="utf-8").splitlines() if v.strip()]
+          if not paths or len(paths) != len(set(paths)):
+              raise SystemExit("Invalid or duplicate sensitive path policy")
+          def git(*args):
+              return subprocess.run(["git", "-C", str(repo), *args], text=True, capture_output=True, check=True).stdout
+          refs = [x for x in git("for-each-ref", "--format=%(refname)").splitlines() if x.startswith(("refs/heads/", "refs/tags/"))]
+          if not refs or "refs/heads/main" not in refs:
+              raise SystemExit("Public branch reference inventory is incomplete")
+          failures = []
+          for item in paths:
+              hits = git("log", "--all", "--format=%H", "--", item).strip()
+              if hits:
+                  failures.append(item)
+          if failures:
+              raise SystemExit(f"Sanitized Git history FAILED: {len(failures)} protected path groups still reachable")
+          summary = f"""## Sanitized history audit (read-only)
+          - Branch and tag references checked: {len(refs)}
+          - Protected paths/groups checked: {len(paths)}
+          - Reachable commits containing protected source paths: 0
+          - Rewritten source checks: PASS
+          - This does **not** cover GitHub pull-request refs/caches, forks, old checkout clones, or third-party caches
+          """
+          print(summary)
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as f:
+              f.write(summary)
+          PY
+      - name: Count provider-managed pull-request references separately
+        shell: bash
+        run: |
+          set -euo pipefail
+          n="$(git ls-remote "https://github.com/$GITHUB_REPOSITORY.git" 'refs/pull/*' | wc -l | tr -d ' ')"
+          echo "Provider-managed PR refs currently advertised: $n"
+          echo "Provider-managed PR refs (not rewritable by a normal branch push): $n" >> "$GITHUB_STEP_SUMMARY"
