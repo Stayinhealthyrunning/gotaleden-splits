@@ -25,6 +25,19 @@ jobs:
         run: |
           set -euo pipefail
           git clone --mirror --quiet "https://github.com/$GITHUB_REPOSITORY.git" "$RUNNER_TEMP/support-mirror.git"
+          # Record earliest path-changing commits while original PR refs are still in the disposable mirror.
+          python3 - <<'PY'
+          import json, os, subprocess
+          from pathlib import Path
+          mirror=Path(os.environ["RUNNER_TEMP"])/"support-mirror.git"
+          paths=[p.strip() for p in Path("privacy/sensitive-history-paths.txt").read_text().splitlines() if p.strip()]
+          first=[]
+          for item in paths:
+              commits=subprocess.check_output(["git","-C",str(mirror),"log","--all","--reverse","--format=%H","--",item],text=True).splitlines()
+              if commits:
+                  first.append({"path":item,"earliest_original_commit":commits[0]})
+          (Path(os.environ["RUNNER_TEMP"])/"early-source-commits.json").write_text(json.dumps(first),encoding="utf-8")
+          PY
           git -C "$RUNNER_TEMP/support-mirror.git" filter-repo --force --sensitive-data-removal --invert-paths \
             --paths-from-file "$GITHUB_WORKSPACE/privacy/sensitive-history-paths.txt" \
             >"$RUNNER_TEMP/support-filter.log" 2>&1
@@ -40,11 +53,17 @@ jobs:
           log=(tmp/"support-filter.log").read_text(encoding="utf-8",errors="replace")
           match=re.search(r"First Changed Commit\(s\):([\s\S]*?)(?:\n\s*NOTE:|\n\s*$|\n\s*New history)",log)
           first=(match.group(1).strip() if match else "Not reported by filter-repo; request manual inspection")
+          candidates=__import__("json").loads((tmp/"early-source-commits.json").read_text(encoding="utf-8"))
+          earliest=", ".join(sorted({x["earliest_original_commit"] for x in candidates}))
+          if first.startswith("Not reported"):
+              first="Not emitted by this mirror invocation; candidate earliest source-introducing commits below"
+
           output=f"""## GitHub Support request preparation (read-only)
           - Repository: {os.environ["GITHUB_REPOSITORY"]}
           - Affected PR numbers by rewritten refs: {len(pr_numbers)}
           - Affected PR identifiers: {", ".join(map(str,pr_numbers))}
           - First Changed Commit(s): {first}
+          - Earliest original path-changing commit candidates: {earliest}
           - Raw metadata was not uploaded; no source records were read to job summary
           - These changed-refs were generated in a throwaway mirror, with no push
           """
