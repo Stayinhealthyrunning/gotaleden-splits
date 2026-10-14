@@ -40,5 +40,6 @@ runs:
       shell: bash
       run: python3 tools/restore_private_sources.py --private-root .private-source
     - name: Remove private checkout from the public job workspace
+      if: ${{ always() }}
       shell: bash
       run: rm -rf -- .private-source
