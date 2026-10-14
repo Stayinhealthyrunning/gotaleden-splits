@@ -1,0 +1,3 @@
+data/gotaleden.sqlite
+data/source/eqtiming/
+data/source/gpx/
