@@ -20,6 +20,7 @@ jobs:
       - name: Reject additions, edits and deletion diffs of private-source paths
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          FORCED_PUSH: ${{ github.event.forced }}
         shell: bash
         run: |
           set -euo pipefail
@@ -33,14 +34,36 @@ jobs:
               base = subprocess.check_output(
                   ["git", "rev-parse", "HEAD^"], text=True
               ).strip()
-          subprocess.run(
-              ["git", "cat-file", "-e", f"{base}^{{commit}}"],
-              check=True,
-              stdout=subprocess.DEVNULL,
-          )
-          names = subprocess.check_output(
-              ["git", "diff", "--name-only", "-z", base, "HEAD"]
-          ).decode("utf-8", errors="surrogateescape").split("\0")
+          forced = os.environ.get("FORCED_PUSH", "").lower() == "true"
+          if forced:
+              # Force-with-lease history cleanup must be absent from the entire
+              # reachable new main history, not merely from the latest tree.
+              current_paths = subprocess.check_output(
+                  ["git", "ls-tree", "-r", "--name-only", "HEAD"], text=True
+              ).splitlines()
+              names = [
+                  p for p in current_paths if any(
+                      p == prefix or p.startswith(prefix) for prefix in protected
+                  )
+              ]
+              for prefix in protected:
+                  old = subprocess.check_output(
+                      ["git", "log", "--format=%H", "HEAD", "--", prefix],
+                      text=True,
+                  ).strip()
+                  if old:
+                      raise SystemExit(
+                          "Protected raw-source path remains in rewritten main history."
+                      )
+          else:
+              subprocess.run(
+                  ["git", "cat-file", "-e", f"{base}^{{commit}}"],
+                  check=True,
+                  stdout=subprocess.DEVNULL,
+              )
+              names = subprocess.check_output(
+                  ["git", "diff", "--name-only", "-z", base, "HEAD"]
+              ).decode("utf-8", errors="surrogateescape").split("\0")
           blocked = sum(
               1 for path in names
               if path and any(
