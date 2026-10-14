@@ -33,21 +33,30 @@ jobs:
               raise SystemExit("Invalid or duplicate sensitive path policy")
           def git(*args):
               return subprocess.run(["git", "-C", str(repo), *args], text=True, capture_output=True, check=True).stdout
-          refs = [x for x in git("for-each-ref", "--format=%(refname)").splitlines() if x.startswith(("refs/heads/", "refs/tags/"))]
+          all_refs = git("for-each-ref", "--format=%(refname)").splitlines()
+          refs = [x for x in all_refs if x.startswith(("refs/heads/", "refs/tags/"))]
+          pull_refs = [x for x in all_refs if x.startswith("refs/pull/")]
           if not refs or "refs/heads/main" not in refs:
               raise SystemExit("Public branch reference inventory is incomplete")
           failures = []
           for item in paths:
-              hits = git("log", "--all", "--format=%H", "--", item).strip()
+              hits = git("log", *refs, "--format=%H", "--", item).strip()
               if hits:
                   failures.append(item)
           if failures:
               raise SystemExit(f"Sanitized Git history FAILED: {len(failures)} protected path groups still reachable")
+          affected_pull_refs = 0
+          for ref in pull_refs:
+              if any(git("log", "-1", "--format=%H", ref, "--", path).strip() for path in paths):
+                  affected_pull_refs += 1
           summary = f"""## Sanitized history audit (read-only)
           - Branch and tag references checked: {len(refs)}
           - Protected paths/groups checked: {len(paths)}
           - Reachable commits containing protected source paths: 0
           - Rewritten source checks: PASS
+          - Hidden provider PR refs found in mirrored Git: {len(pull_refs)}
+          - Hidden PR refs with selected historical source paths: {affected_pull_refs}
+          - Provider-managed refs are outside ordinary Git branch/tag rewrite and require GitHub Support cleanup
           - This does **not** cover GitHub pull-request refs/caches, forks, old checkout clones, or third-party caches
           """
           print(summary)
