@@ -3,3 +3,7 @@ __pycache__/
 node_modules/
 test-results/
 playwright-report/
+.private-source/
+/data/gotaleden.sqlite
+/data/source/eqtiming/
+/data/source/gpx/
