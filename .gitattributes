@@ -1,3 +1,7 @@
 # Source captures are immutable byte-for-byte inputs; never normalize line endings.
 # Their original CRLF endings are data, not trailing whitespace.
 data/source/** -text whitespace=cr-at-eol
+# Suppress rendering of historical raw inputs in deletion diffs.
+data/gotaleden.sqlite -text -diff
+data/source/eqtiming/** -text -diff
+data/source/gpx/** -text -diff
