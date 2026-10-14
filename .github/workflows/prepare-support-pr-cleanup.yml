@@ -1,0 +1,55 @@
+name: Prepare GitHub Support PR-ref cleanup metadata
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/prepare-support-pr-cleanup.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install required git-filter-repo version
+        run: python -m pip install --disable-pip-version-check 'git-filter-repo==2.47.0'
+      - name: Compute GitHub Support inputs without changing remote history
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --mirror --quiet "https://github.com/$GITHUB_REPOSITORY.git" "$RUNNER_TEMP/support-mirror.git"
+          git -C "$RUNNER_TEMP/support-mirror.git" filter-repo --force --sensitive-data-removal --invert-paths \
+            --paths-from-file "$GITHUB_WORKSPACE/privacy/sensitive-history-paths.txt" \
+            >"$RUNNER_TEMP/support-filter.log" 2>&1
+          python3 - <<'PY'
+          import os, re
+          from pathlib import Path
+          tmp=Path(os.environ["RUNNER_TEMP"])
+          folder=tmp/"support-mirror.git"
+          changed=folder/"filter-repo"/"changed-refs"
+          refs=changed.read_text(encoding="utf-8").splitlines() if changed.is_file() else []
+          pr_numbers=sorted({int(m.group(1)) for line in refs
+                             if (m:=re.match(r"refs/pull/(\d+)/(?:head|merge)$",line))})
+          log=(tmp/"support-filter.log").read_text(encoding="utf-8",errors="replace")
+          match=re.search(r"First Changed Commit\(s\):([\s\S]*?)(?:\n\s*NOTE:|\n\s*$|\n\s*New history)",log)
+          first=(match.group(1).strip() if match else "Not reported by filter-repo; request manual inspection")
+          output=f"""## GitHub Support request preparation (read-only)
+          - Repository: {os.environ["GITHUB_REPOSITORY"]}
+          - Affected PR numbers by rewritten refs: {len(pr_numbers)}
+          - Affected PR identifiers: {", ".join(map(str,pr_numbers))}
+          - First Changed Commit(s): {first}
+          - Raw metadata was not uploaded; no source records were read to job summary
+          - These changed-refs were generated in a throwaway mirror, with no push
+          """
+          print(output)
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a",encoding="utf-8") as f:f.write(output)
+          if not pr_numbers:
+              raise SystemExit("Expected affected PR references; verify filter output before support request")
+          PY
